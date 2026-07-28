@@ -39,8 +39,9 @@ const CACHE_KEY = "SIMPEEL_CACHE_" + currentTenantId.toUpperCase();
 console.log(`[SiMPeEL] Berjalan untuk ID: ${currentTenantId}`);
 
 
+
 // ==========================================
-// 🛡️ API CALL ENGINE (Aman dari CORS & Hacker)
+// 🛡️ API CALL ENGINE (Aman & Fix Bug Login)
 // ==========================================
 async function apiCall(action, data = null) {
     if (!API_URL) return { success: false, message: "Aplikasi sedang offline / tidak terhubung ke API" };
@@ -48,15 +49,22 @@ async function apiCall(action, data = null) {
         const response = await fetch(API_URL, {
             method: 'POST',
             body: JSON.stringify({ 
-                apiKey: API_KEY, // Kunci Rahasia
+                apiKey: API_KEY, 
                 action: action, 
                 data: data 
             }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
         const result = await response.json();
-        if (result && result.success && result.data !== undefined) return result.data;
+        
+        // --- PERBAIKAN BUG DI SINI ---
+        // Jika perintahnya untuk mengambil data (berawalan 'get'), kembalikan isi datanya (Array/Object)
+        if (action.startsWith('get')) {
+            return (result && result.success) ? result.data : null;
+        }
+        // Jika perintahnya aksi (login, save, delete, batchSync), kembalikan seluruh statusnya (Sukses/Gagal)
         return result;
+
     } catch (e) {
         console.error("API Call Error:", e);
         return { success: false, message: e.message };
