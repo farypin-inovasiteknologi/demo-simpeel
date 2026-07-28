@@ -1,50 +1,45 @@
 // ==========================================
 // 🏢 MULTI-TENANT CONFIGURATION (?id=) & SECURITY
+// VERSI ONLINE (REAL-TIME DIRECT TO DATABASE)
 // ==========================================
 
 // 1. Daftar Instansi (ID) dan Link Exec masing-masing
 const TENANT_CONFIG = {
-    "demo": "https://script.google.com/macros/s/AKfycbyVmRT-AnOYKZ4PBjvU9fX0H5VpO3WbE_YMR4fRLS_18fQ8BDcWBizHBqouotSJnKPh/exec", // Ganti dengan link Exec Sekolah 1
-    "sekolah2": "https://script.google.com/macros/s/AKfycb..._link_sekolah2/exec", // Ganti dengan link Exec Sekolah 2
-    "dinas": "https://script.google.com/macros/s/AKfycb..._link_dinas/exec"         // Ganti dengan link Exec Dinas
-    // Tambahkan ID lainnya di sini...
+     "demo": "https://script.google.com/macros/s/AKfycbyVmRT-AnOYKZ4PBjvU9fX0H5VpO3WbE_YMR4fRLS_18fQ8BDcWBizHBqouotSJnKPh/exec", // Ganti dengan link Exec
+    "sekolah2": "https://script.google.com/macros/s/AKfycb..._link_sekolah2/exec", 
+    "dinas": "https://script.google.com/macros/s/AKfycb..._link_dinas/exec"         
 };
 
 // 2. Deteksi ID dari URL (Contoh: namaweb.com/?id=sekolah1)
 const urlParams = new URLSearchParams(window.location.search);
 let currentTenantId = urlParams.get('id');
 
-// Jika tidak ada di URL, cek memori browser (siapa tahu sebelumnya sudah pernah buka)
 if (!currentTenantId) {
     currentTenantId = localStorage.getItem('SIMPEEL_ACTIVE_ID');
 }
 
-// Jika masih kosong atau ID tidak terdaftar, arahkan ke default
 if (!currentTenantId || !TENANT_CONFIG[currentTenantId]) {
-    currentTenantId = "sekolah1"; // Default ID jika tidak mengetikkan ?id=
+    currentTenantId = "sekolah1"; // Default
 }
 
-// Simpan ID aktif ke memori
 localStorage.setItem('SIMPEEL_ACTIVE_ID', currentTenantId);
 
 // 3. Set API URL & Konstanta Keamanan
 const API_URL = TENANT_CONFIG[currentTenantId];
-const API_KEY = "SIMPEEL_SECURE_2026_XYZ_999"; // Harus sama dengan di Code.gs
+const API_KEY = "SIMPEEL_SECURE_2026_XYZ_999"; 
 
-// Isolasi Penyimpanan (Agar data sekolah 1 dan 2 tidak bercampur di laptop yang sama)
+// Isolasi Penyimpanan Memory
 const TOKEN_KEY = "SIMPEEL_TOKEN_" + currentTenantId.toUpperCase();
-const QUEUE_KEY = "SIMPEEL_QUEUE_" + currentTenantId.toUpperCase();
 const CACHE_KEY = "SIMPEEL_CACHE_" + currentTenantId.toUpperCase();
 
-console.log(`[SiMPeEL] Berjalan untuk ID: ${currentTenantId}`);
-
+console.log(`[SiMPeEL Online] Berjalan untuk ID: ${currentTenantId}`);
 
 
 // ==========================================
-// 🛡️ API CALL ENGINE (Aman & Fix Bug Login)
+// 🛡️ API CALL ENGINE (Direct Server Access)
 // ==========================================
 async function apiCall(action, data = null) {
-    if (!API_URL) return { success: false, message: "Aplikasi sedang offline / tidak terhubung ke API" };
+    if (!API_URL) return { success: false, message: "Aplikasi tidak terhubung ke API" };
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
@@ -57,12 +52,10 @@ async function apiCall(action, data = null) {
         });
         const result = await response.json();
         
-        // --- PERBAIKAN BUG DI SINI ---
-        // Jika perintahnya untuk mengambil data (berawalan 'get'), kembalikan isi datanya (Array/Object)
+        // Membedakan perintah GET (tarik data) dan perintah POST (simpan/hapus)
         if (action.startsWith('get')) {
             return (result && result.success) ? result.data : null;
         }
-        // Jika perintahnya aksi (login, save, delete, batchSync), kembalikan seluruh statusnya (Sukses/Gagal)
         return result;
 
     } catch (e) {
@@ -73,74 +66,25 @@ async function apiCall(action, data = null) {
 
 
 // ==========================================
-// 📥 SISTEM ANTREAN LOKAL (Batch Sync)
-// ==========================================
-window.queueManager = {
-    getQueue: function() {
-        return JSON.parse(localStorage.getItem(QUEUE_KEY)) || [];
-    },
-    addQueue: function(actionType, dataPayload) {
-        let queue = this.getQueue();
-        queue.push({ action: actionType, data: dataPayload, timestamp: new Date().getTime() });
-        localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
-        this.updateBadge();
-    },
-    clearQueue: function() {
-        localStorage.removeItem(QUEUE_KEY);
-        this.updateBadge();
-    },
-    updateBadge: function() {
-        const q = this.getQueue();
-        console.log(`[Antrean] Tersisa: ${q.length} data menunggu sinkronisasi.`);
-        // Jika Anda ingin membuat notifikasi di tombol Sync, bisa ditambahkan logikanya di sini
-    },
-    syncToServer: async function() {
-        const queue = this.getQueue();
-        if (queue.length === 0) {
-            Swal.fire('Info', 'Tidak ada data antrean yang perlu disinkronkan.', 'info');
-            return;
-        }
-
-        Swal.fire({
-            title: 'Sinkronisasi...',
-            text: `Mengirim ${queue.length} antrean ke server. Jangan tutup halaman ini.`,
-            allowOutsideClick: false,
-            didOpen: () => { Swal.showLoading(); }
-        });
-
-        const res = await apiCall('batchSync', queue);
-        
-        if (res && res.success) {
-            this.clearQueue();
-            Swal.fire('✅ Sukses!', res.message || 'Sinkronisasi berhasil', 'success');
-            await dbManager.forceFetchFromServer(); // Refresh data utama
-        } else {
-            Swal.fire('❌ Gagal', 'Sinkronisasi gagal. Coba lagi saat koneksi internet stabil.', 'error');
-        }
-    }
-};
-
-
-// ==========================================
-// 🗄️ DATABASE MANAGER (Cache & Queue)
+// 🗄️ DATABASE MANAGER (Real-Time Database)
 // ==========================================
 const dbManager = {
-    // Variabel penyimpan data sementara (Cache) agar super cepat
+    // Cache Lokal HANYA untuk kecepatan BACA data di layar
     localData: JSON.parse(localStorage.getItem(CACHE_KEY)) || [],
 
     init: async function() { 
         if (API_URL) this.forceFetchFromServer();
-        window.queueManager.updateBadge();
         return true; 
     },
 
+    // Tarik data terbaru dari Server secara Background
     forceFetchFromServer: async function() {
         if (!API_URL) return;
         const res = await apiCall('getAllPegawai');
         if (Array.isArray(res)) {
             this.localData = res;
             localStorage.setItem(CACHE_KEY, JSON.stringify(res));
-            // Otomatis refresh UI di background (opsional)
+            // Otomatis refresh UI 
             if (document.getElementById('wrapper').classList.contains('d-none') === false) {
                 initApp(); 
             }
@@ -148,32 +92,49 @@ const dbManager = {
     },
 
     getAllPegawai: async function() {
-        return this.localData; // Selalu panggil lokal agar 0 detik loading
+        return this.localData; // Baca dari memori agar pindah menu tidak ada loading
     },
 
+    // LANGSUNG SIMPAN KE SERVER GOOGLE SHEETS
     savePegawai: async function(data) {
-        // Update Cache Lokal
-        let index = this.localData.findIndex(p => p.nip === data.nip);
-        if (index !== -1) this.localData[index] = data;
-        else this.localData.push(data);
-        localStorage.setItem(CACHE_KEY, JSON.stringify(this.localData));
-
-        // Tambah ke Antrean (Untuk dikirim ke Server saat Sinkronisasi)
-        window.queueManager.addQueue('SAVE', data);
-        return { success: true };
+        if (!API_URL) throw new Error("Aplikasi offline / tidak terhubung ke API");
+        
+        // Menampilkan loading UI saat menembak ke server
+        Swal.fire({ title: 'Menyimpan ke Server...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+        
+        const res = await apiCall('savePegawai', data);
+        
+        if (res && res.success) {
+            // Jika sukses di server, baru kita update memori lokal agar UI ikut terupdate
+            let index = this.localData.findIndex(p => p.nip === data.nip);
+            if (index !== -1) this.localData[index] = data;
+            else this.localData.push(data);
+            localStorage.setItem(CACHE_KEY, JSON.stringify(this.localData));
+            return res;
+        } else {
+            throw new Error((res && res.message) ? res.message : "Gagal menyimpan ke database");
+        }
     },
 
+    // LANGSUNG HAPUS DARI SERVER GOOGLE SHEETS
     deletePegawai: async function(nip) {
-        // Hapus dari Cache Lokal
-        this.localData = this.localData.filter(p => p.nip !== nip);
-        localStorage.setItem(CACHE_KEY, JSON.stringify(this.localData));
-
-        // Tambah ke Antrean
-        window.queueManager.addQueue('DELETE', nip);
-        return { success: true };
+        if (!API_URL) throw new Error("Aplikasi offline / tidak terhubung ke API");
+        
+        Swal.fire({ title: 'Menghapus dari Server...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+        
+        const res = await apiCall('deletePegawai', nip);
+        
+        if (res && res.success) {
+            // Hapus dari memori lokal
+            this.localData = this.localData.filter(p => p.nip !== nip);
+            localStorage.setItem(CACHE_KEY, JSON.stringify(this.localData));
+            return res;
+        } else {
+            throw new Error((res && res.message) ? res.message : "Gagal menghapus dari database");
+        }
     },
 
-    // Pengaturan & Keamanan (Langsung ke API, tanpa antrean)
+    // Pengaturan & Keamanan (Langsung ke Server)
     savePengaturan: async function(data) {
         if (!API_URL) return { success: false };
         return await apiCall('savePengaturan', data);
@@ -212,7 +173,6 @@ async function simpanPengaturan() {
 async function simpanTemaBackground() {
     const existingData = await dbManager.getPengaturan();
     const bgImg = document.getElementById('previewBgLanding').src;
-    // Don't save default placeholder as background
     const bgToSave = bgImg.includes('logo-simpeel.png') ? '' : bgImg;
     
     const data = {
@@ -453,7 +413,6 @@ function nav(page) {
     const targetNav = document.querySelector(`.nav-item[data-page="${page}"]`);
     if (targetNav) targetNav.classList.add('active');
 
-    // Memicu render tabel dari pegawai.js
     if (page === 'pegawai') renderTabelPNS();
     if (page === 'duk') renderTabelDUK();
     if (page === 'gaji') renderTabelKGB();
