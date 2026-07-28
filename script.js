@@ -4,7 +4,7 @@
 
 // 1. Daftar Instansi (ID) dan Link Exec masing-masing
 const TENANT_CONFIG = {
-    "sekolah1": "https://script.google.com/macros/s/AKfycb..._link_sekolah1/exec", // Ganti dengan link Exec Sekolah 1
+    "demo": "https://script.google.com/macros/s/AKfycbyVmRT-AnOYKZ4PBjvU9fX0H5VpO3WbE_YMR4fRLS_18fQ8BDcWBizHBqouotSJnKPh/exec", // Ganti dengan link Exec Sekolah 1
     "sekolah2": "https://script.google.com/macros/s/AKfycb..._link_sekolah2/exec", // Ganti dengan link Exec Sekolah 2
     "dinas": "https://script.google.com/macros/s/AKfycb..._link_dinas/exec"         // Ganti dengan link Exec Dinas
     // Tambahkan ID lainnya di sini...
