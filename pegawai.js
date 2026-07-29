@@ -186,6 +186,8 @@ async function simpanPegawai() {
         agama: document.getElementById('peg_agama')?.value || '',
         statusKawin: document.getElementById('peg_status_kawin')?.value || '',
         alamat: document.getElementById('peg_alamat')?.value || '',
+        alamatProvinsi: document.getElementById('peg_alamat_provinsi')?.value || '',
+        alamatKabKota: document.getElementById('peg_alamat_kabkota')?.value || '',
         nipLama: document.getElementById('peg_nip_lama')?.value || '',
         noHp: document.getElementById('peg_no_hp')?.value || '',
         email: document.getElementById('peg_email')?.value || '',
@@ -794,6 +796,26 @@ async function editPegawai(nip) {
     setVal('peg_agama', p.agama || 'Islam');
     setVal('peg_status_kawin', p.statusKawin || 'Kawin');
     setVal('peg_alamat', p.alamat || '');
+
+    // Isi dropdown Provinsi & Kab/Kota
+    const selProv = document.getElementById('peg_alamat_provinsi');
+    const selKab = document.getElementById('peg_alamat_kabkota');
+    if (selProv && p.alamatProvinsi) {
+        selProv.value = p.alamatProvinsi;
+        // Populate kab/kota sesuai provinsi
+        if (selKab && typeof dataWilayah !== 'undefined' && dataWilayah[p.alamatProvinsi]) {
+            selKab.innerHTML = '<option value="">-- Pilih Kab/Kota --</option>';
+            dataWilayah[p.alamatProvinsi].forEach(kab => {
+                if (!kab.endsWith('(PROV)')) {
+                    const opt = document.createElement('option');
+                    opt.value = kab;
+                    opt.textContent = kab;
+                    selKab.appendChild(opt);
+                }
+            });
+            selKab.value = p.alamatKabKota || '';
+        }
+    }
 
     setVal('statusPegawai', p.statusPegawai || 'PNS');
     if (typeof toggleSKFields === 'function') toggleSKFields(p.statusPegawai || 'PNS');
