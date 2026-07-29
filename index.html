@@ -365,8 +365,7 @@
                                 <button class="btn btn-success shadow-sm me-2" data-bs-toggle="modal"
                                     data-bs-target="#modalImport"><i class="fas fa-file-excel fa-sm text-white-50"></i>
                                     Import Data</button>
-                                <button class="btn btn-primary shadow-sm" data-bs-toggle="modal"
-                                    data-bs-target="#modalPegawai"><i class="fas fa-plus fa-sm text-white-50"></i>
+                                <button class="btn btn-primary shadow-sm" onclick="bukaModalTambah()"><i class="fas fa-plus fa-sm text-white-50"></i>
                                     Tambah Pegawai</button>
                             </div>
                         </div>
@@ -612,7 +611,7 @@
                                                 <thead class="bg-primary text-white">
                                                     <tr>
                                                         <th>Nama Lengkap</th>
-                                                        <th>NIP/NI PPPK</th>
+                                                        <th>NIP/NIPPPK</th>
                                                         <th>Pangkat/Gol Terbaru</th>
                                                         <th>Jabatan Terbaru</th>
                                                         <th>Pendidikan Terakhir</th>
@@ -1318,7 +1317,7 @@
                                     <label class="form-label label-required">NIK <span
                                             class="req-asterisk">*</span></label>
                                     <input type="text" class="form-control input-required" id="peg_nik" required
-                                        placeholder="16 digit NIK" onblur="validasiNIK(this)">
+                                        placeholder="16 digit NIK" onblur="validasiNIK(this)" maxlength="16" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                 </div>
                                 <div class="col-md-8">
                                     <label class="form-label label-required">Nama Lengkap (tanpa gelar) <span
@@ -1328,8 +1327,9 @@
                                 </div>
                             </div>
                             <div class="row mb-3">
-                                <div class="col-md-4"><label class="form-label">Tempat Lahir</label><input type="text"
-                                        class="form-control" id="peg_tempat_lahir" placeholder="Kota tempat lahir">
+                                <div class="col-md-4"><label class="form-label">Tempat Lahir (setingkat
+                                        Kab/Kota)</label><input type="text" class="form-control" id="peg_tempat_lahir"
+                                        placeholder="Kota tempat lahir">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label label-required">Tanggal Lahir <span
@@ -1436,7 +1436,7 @@
                                             class="req-asterisk">*</span></label>
                                     <input type="text" class="form-control input-required"
                                         style="border-left-color:#1cc88a !important; border-color:#1cc88a !important; background-color:#f0fff8 !important;"
-                                        id="peg_nip" required placeholder="18 digit NIP" onblur="validasiNIP(this)">
+                                        id="peg_nip" required placeholder="18 digit NIP" onblur="validasiNIP(this)" maxlength="18" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                 </div>
                                 <div class="col-md-4"><label class="form-label">NIP Lama</label><input type="text"
                                         class="form-control" id="peg_nip_lama" placeholder="Opsional"></div>
@@ -1689,7 +1689,7 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th>Nama Anak</th>
-                                            <th>Tempat Lahir</th>
+                                            <th>Kota Tempat Lahir</th>
                                             <th>Tanggal Lahir</th>
                                             <th>Status Keluarga</th>
                                             <th>Aksi</th>
@@ -2014,6 +2014,7 @@
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../assets/js/wilayah.js"></script>
     <script src="script.js"></script>
     <script src="pegawai.js"></script>
 </body>
