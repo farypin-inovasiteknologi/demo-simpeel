@@ -1198,6 +1198,7 @@ async function cetakCV(nip) {
     <head>
         <meta charset="utf-8">
         <style>
+            @page { size: 8.5in 13.0in; margin: 1in; }
             body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; }
             table { width: 100%; border-collapse: collapse; }
             th, td { border: 1px solid black; padding: 5px; }
@@ -1209,6 +1210,9 @@ async function cetakCV(nip) {
             .kop-tengah3 { font-size: 10pt; font-style: italic; }
             .title { text-align: center; font-size: 14pt; font-weight: bold; margin: 20px 0; text-decoration: underline; }
             .section-title { font-weight: bold; margin-top: 15px; background: #eee; padding: 5px; border: 1px solid black; }
+            .signature-box { width: 300px; float: right; text-align: center; margin-top: 40px; }
+            .signature-box p { margin: 5px 0; }
+            .signature-name { font-weight: bold; text-decoration: underline; margin-top: 70px; }
         </style>
     </head>
     <body>
@@ -1232,7 +1236,7 @@ async function cetakCV(nip) {
             <tr style="border: none;"><td style="border: none; padding-left: 20px;">6. Status Perkawinan</td><td style="border: none;">: ${p.statusKawin || ''}</td></tr>
             <tr style="border: none;"><td style="border: none; padding-left: 20px;">7. Golongan Darah</td><td style="border: none;">: ${p.golDarah || '-'}</td></tr>
             <tr style="border: none;"><td style="border: none; padding-left: 20px;">8. Tinggi / Berat Badan</td><td style="border: none;">: ${p.tinggiBadan || '-'} cm / ${p.beratBadan || '-'} kg</td></tr>
-            <tr style="border: none;"><td style="border: none; padding-left: 20px;">9. Alamat Rumah</td><td style="border: none;">: ${p.alamat || ''}</td></tr>
+            <tr style="border: none;"><td style="border: none; padding-left: 20px;">9. Alamat Rumah</td><td style="border: none;">: ${[p.alamat, p.alamatKabKota, (p.alamatProvinsi ? 'Prov. ' + p.alamatProvinsi : '')].filter(Boolean).join(', ')}</td></tr>
             <tr style="border: none;"><td style="border: none; padding-left: 20px;">10. No. HP / WA</td><td style="border: none;">: ${p.noHp || ''}</td></tr>
             <tr style="border: none;"><td style="border: none; padding-left: 20px;">11. Email</td><td style="border: none;">: ${p.email || ''}</td></tr>
             <tr style="border: none;"><td style="border: none; padding-left: 20px;">12. Hobby</td><td style="border: none;">: ${p.hobby || ''}</td></tr>
@@ -1267,6 +1271,41 @@ async function cetakCV(nip) {
             <tr><th>Tingkat</th><th>Nama Sekolah/Univ</th><th>Jurusan</th><th>Tahun Masuk</th><th>Tahun Lulus</th></tr>
             ${(p.riwayatPendidikan && p.riwayatPendidikan.length > 0) ? p.riwayatPendidikan.map(r => `<tr><td style="text-align: center;">${r[0]}</td><td style="text-align: center;">${r[1]}</td><td style="text-align: center;">${r[2]}</td><td style="text-align: center;">${r[3]}</td><td style="text-align: center;">${r[4]}</td></tr>`).join('') : '<tr><td colspan="5" style="text-align:center;">Tidak ada data</td></tr>'}
         </table>
+        <br>
+        
+        <div class="section-title">VI. RIWAYAT GAJI BERKALA (KGB)</div>
+        <table>
+            <tr><th>No SK</th><th>Tanggal SK</th><th>TMT KGB</th><th>Gaji Pokok</th><th>Masa Kerja</th></tr>
+            ${(p.riwayatKGB && p.riwayatKGB.length > 0) ? p.riwayatKGB.map(r => `<tr><td style="text-align: center;">${r[0]}</td><td style="text-align: center;">${r[1]}</td><td style="text-align: center;">${r[2]}</td><td style="text-align: center;">${r[3]}</td><td style="text-align: center;">${r[4]} Thn ${r[5]} Bln</td></tr>`).join('') : '<tr><td colspan="5" style="text-align:center;">Tidak ada data</td></tr>'}
+        </table>
+        <br>
+
+        <div class="section-title">VII. RIWAYAT KONTRAK (PPPK/HONORER)</div>
+        <table>
+            <tr><th>Jabatan</th><th>TMT Mulai</th><th>TMT Selesai</th><th>No SK</th><th>Gaji/Honor</th></tr>
+            ${(p.riwayatKontrak && p.riwayatKontrak.length > 0) ? p.riwayatKontrak.map(r => `<tr><td style="text-align: center;">${r[0]}</td><td style="text-align: center;">${r[2]}</td><td style="text-align: center;">${r[3]}</td><td style="text-align: center;">${r[4]}</td><td style="text-align: center;">${r[7]}</td></tr>`).join('') : '<tr><td colspan="5" style="text-align:center;">Tidak ada data</td></tr>'}
+        </table>
+        <br>
+
+        <div class="section-title">VIII. DATA KELUARGA</div>
+        <table>
+            <tr><th>Nama Anggota Keluarga</th><th>Tempat, Tanggal Lahir</th><th>Status Hubungan</th></tr>
+            ${(p.riwayatAnak && p.riwayatAnak.length > 0) ? p.riwayatAnak.map(r => `<tr><td style="text-align: center;">${r[0]}</td><td style="text-align: center;">${r[1]}, ${r[2]}</td><td style="text-align: center;">${r[3]}</td></tr>`).join('') : '<tr><td colspan="3" style="text-align:center;">Tidak ada data</td></tr>'}
+        </table>
+        <br>
+
+        <div class="section-title">IX. RIWAYAT KURSUS / DIKLAT</div>
+        <table>
+            <tr><th>Nama Diklat</th><th>Penyelenggara</th><th>Tahun</th><th>Jumlah Jam</th><th>No Sertifikat</th></tr>
+            ${(p.riwayatDiklat && p.riwayatDiklat.length > 0) ? p.riwayatDiklat.map(r => `<tr><td style="text-align: center;">${r[0]}</td><td style="text-align: center;">${r[1]}</td><td style="text-align: center;">${r[2]}</td><td style="text-align: center;">${r[3]}</td><td style="text-align: center;">${r[4]}</td></tr>`).join('') : '<tr><td colspan="5" style="text-align:center;">Tidak ada data</td></tr>'}
+        </table>
+        <br><br>
+
+        <div class="signature-box">
+            <p>Pegawai Yang Bersangkutan,</p>
+            <p class="signature-name">${p.nama.toUpperCase()}</p>
+            <p>NIP. ${p.nip}</p>
+        </div>
         
     </body>
     </html>
