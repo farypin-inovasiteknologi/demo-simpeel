@@ -286,7 +286,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // === AUTOCOMPLETE TEMPAT LAHIR ===
     const inputLahir = document.getElementById('peg_tempat_lahir');
     const listLahir = document.getElementById('tempat_lahir_list');
-    
+
     if (inputLahir && listLahir && typeof dataWilayah !== 'undefined') {
         let allKabKota = [];
         for (let prov in dataWilayah) {
@@ -301,17 +301,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             }
         }
-        
-        inputLahir.addEventListener('input', function() {
+
+        inputLahir.addEventListener('input', function () {
             const val = this.value.toLowerCase();
             listLahir.innerHTML = '';
             if (!val) {
                 listLahir.style.display = 'none';
                 return;
             }
-            
+
             const matches = allKabKota.filter(k => k.label.toLowerCase().includes(val)).slice(0, 5);
-            
+
             if (matches.length > 0) {
                 listLahir.style.display = 'block';
                 matches.forEach(m => {
@@ -329,8 +329,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 listLahir.style.display = 'none';
             }
         });
-        
-        document.addEventListener('click', function(e) {
+
+        document.addEventListener('click', function (e) {
             if (e.target !== inputLahir) {
                 listLahir.style.display = 'none';
             }
@@ -347,8 +347,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             opt.textContent = prov;
             selProv.appendChild(opt);
         });
-        
-        selProv.addEventListener('change', function() {
+
+        selProv.addEventListener('change', function () {
             const provName = this.value;
             selKab.innerHTML = '<option value="">-- Pilih Kab/Kota --</option>';
             if (provName && dataWilayah[provName]) {
@@ -384,7 +384,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
     // === FIX DATE INPUT YEAR 6 DIGIT ISSUE ===
-    document.addEventListener('focusin', function(e) {
+    document.addEventListener('focusin', function (e) {
         if (e.target.tagName === 'INPUT' && e.target.type === 'date') {
             if (!e.target.getAttribute('max')) {
                 e.target.setAttribute('max', '9999-12-31');
@@ -658,9 +658,9 @@ function doCrop() {
 // ==========================================
 async function exportToExcel(tableId, fileName) {
     const table = $('#' + tableId).DataTable();
-    const data = table.rows({ search: 'applied' }).data().toArray();
-    
-    if (data.length === 0) {
+    const originalData = table.rows({ search: 'applied' }).data().toArray(); 
+
+    if (originalData.length === 0) {
         Swal.fire('Peringatan', 'Tidak ada data untuk di-export!', 'warning');
         return;
     }
@@ -670,13 +670,81 @@ async function exportToExcel(tableId, fileName) {
         headers.push($(this).text().trim());
     });
 
+    let hasAksi = false;
     if (headers[headers.length - 1].toLowerCase() === 'aksi') {
         headers.pop();
-        data.forEach(row => row.pop());
+        hasAksi = true;
     }
+
+    let allPegawaiMap = {};
+    if (typeof dbManager !== 'undefined') {
+        try {
+            const allPegawai = await dbManager.getAllPegawai();
+            allPegawai.forEach(p => allPegawaiMap[p.nip] = p);
+        } catch (e) { }
+    }
+
+    const isDUK = tableId.startsWith('tblDUK');
+
+    if (!isDUK) {
+        headers.unshift('No.');
+        headers.push('Status Pegawai', 'Tempat Tanggal Lahir', 'Jenis Kelamin', 'Masa Kerja', 'Pendidikan Terakhir');
+    }
+
+    const data = [];
+    let urut = 1;
+    originalData.forEach(row => {
+        const rawRow = [...row];
+
+        let nipMatch = '';
+        for (let j = rawRow.length - 1; j >= 0; j--) {
+            const match = String(rawRow[j]).match(/lihatPegawai\(['"](\d+)['"]\)/);
+            if (match) { nipMatch = match[1]; break; }
+        }
+
+        if (hasAksi) {
+            rawRow.pop();
+        }
+
+        const cleanRow = rawRow.map(html => {
+            if (typeof html === 'string') {
+                html = html.replace(/<br\s*\/?>/gi, ' \n');
+            }
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            return (temp.textContent || temp.innerText || '').trim();
+        });
+
+        if (!isDUK) {
+            cleanRow.unshift(urut++);
+            const p = allPegawaiMap[nipMatch];
+            if (p) {
+                cleanRow.push(p.statusPegawai || '-');
+                cleanRow.push((p.tempatLahir || '') + (p.tempatLahir && p.tglLahir ? ', ' : '') + (p.tglLahir || '-'));
+                cleanRow.push(p.kelamin || '-');
+
+                let mk = '-';
+                if (p.riwayatPangkat && p.riwayatPangkat.length > 0) {
+                    const lp = p.riwayatPangkat[0]; 
+                    if (lp && lp.length >= 7) mk = `${lp[5]} Thn ${lp[6]} Bln`;
+                }
+                if (mk === '-' && p.riwayatKGB && p.riwayatKGB.length > 0) {
+                    const lk = p.riwayatKGB[0];
+                    if (lk && lk.length >= 6) mk = `${lk[4]} Thn ${lk[5]} Bln`;
+                }
+                cleanRow.push(mk);
+                cleanRow.push(p.pendidikan || '-');
+            } else {
+                cleanRow.push('-', '-', '-', '-', '-');
+            }
+        }
+
+        data.push(cleanRow);
+    });
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Data');
+
     const totalCols = headers.length;
     const lastColLetter = String.fromCharCode(64 + totalCols);
 
@@ -709,15 +777,7 @@ async function exportToExcel(tableId, fileName) {
     });
 
     let currentRow = 6;
-    data.forEach(rowData => {
-        const cleanRow = rowData.map(html => {
-            if (typeof html === 'string') {
-                html = html.replace(/<br\s*\/?>/gi, ' \n');
-            }
-            const temp = document.createElement('div');
-            temp.innerHTML = html;
-            return (temp.textContent || temp.innerText || '').trim();
-        });
+    data.forEach(cleanRow => {
         const r = worksheet.getRow(currentRow);
         cleanRow.forEach((val, i) => {
             const cell = r.getCell(i + 1);
@@ -739,7 +799,7 @@ async function exportToExcel(tableId, fileName) {
             let maxLineLength = Math.max(...lines.map(l => l.length));
             if (maxLineLength > maxLength) maxLength = maxLineLength;
         });
-        
+
         if (i === 1) {
             column.width = 6;
         } else {
