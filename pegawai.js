@@ -1,10 +1,46 @@
 // === PEGAWAI.JS - LOGIKA DATA PEGAWAI ===
 
+function getLatestRiwayat(riwayatArray, dateIndex, isYear = false) {
+    if (!riwayatArray || riwayatArray.length === 0) return null;
+    return riwayatArray.reduce((latest, current) => {
+        let dateLatest = latest[dateIndex];
+        let dateCurrent = current[dateIndex];
+
+        if (isYear) {
+            return (parseInt(dateCurrent) || 0) >= (parseInt(dateLatest) || 0) ? current : latest;
+        } else {
+            let dLatest = new Date(dateLatest);
+            let dCurrent = new Date(dateCurrent);
+            if (isNaN(dLatest.getTime())) return current;
+            if (isNaN(dCurrent.getTime())) return latest;
+            return dCurrent >= dLatest ? current : latest;
+        }
+    });
+}
+
+function sortRiwayatArray(riwayatArray, dateIndex, isYear = false) {
+    if (!riwayatArray || riwayatArray.length === 0) return riwayatArray;
+    return riwayatArray.sort((a, b) => {
+        let valA = a[dateIndex];
+        let valB = b[dateIndex];
+
+        if (isYear) {
+            return (parseInt(valA) || 0) - (parseInt(valB) || 0);
+        } else {
+            let dA = new Date(valA);
+            let dB = new Date(valB);
+            let timeA = isNaN(dA.getTime()) ? 0 : dA.getTime();
+            let timeB = isNaN(dB.getTime()) ? 0 : dB.getTime();
+            return timeA - timeB;
+        }
+    });
+}
+
 async function simpanPegawai() {
-    const nipVal    = (document.getElementById('peg_nip')?.value || '').trim();
-    const namaVal   = (document.getElementById('peg_nama')?.value || '').trim();
-    const tglLahir  = (document.getElementById('peg_tgl_lahir')?.value || '').trim();
-    const kelamin   = (document.getElementById('peg_kelamin')?.value || '').trim();
+    const nipVal = (document.getElementById('peg_nip')?.value || '').trim();
+    const namaVal = (document.getElementById('peg_nama')?.value || '').trim().toUpperCase();
+    const tglLahir = (document.getElementById('peg_tgl_lahir')?.value || '').trim();
+    const kelamin = (document.getElementById('peg_kelamin')?.value || '').trim();
     const statusPgw = (document.getElementById('statusPegawai')?.value || '').trim();
 
     // Validasi wajib: alert per field
@@ -13,6 +49,28 @@ async function simpanPegawai() {
         document.getElementById('peg_nip')?.focus();
         return;
     }
+
+    // CEK DUPLIKASI NIP / NIK
+    const allPegawai = await dbManager.getAllPegawai();
+    const currentNipLama = (document.getElementById('peg_nip_lama')?.value || '').trim();
+    const nikVal = (document.getElementById('peg_nik')?.value || '').trim();
+
+    if (nipVal) {
+        const existNip = allPegawai.find(p => p.nip === nipVal && p.nip !== currentNipLama);
+        if (existNip) {
+            Swal.fire('Error', `NIP ${nipVal} sudah dipakai atas nama ${existNip.nama}. Data tidak bisa disimpan untuk mencegah tertimpa!`, 'error');
+            return;
+        }
+    }
+
+    if (nikVal) {
+        const existNik = allPegawai.find(p => p.nik === nikVal && p.nip !== currentNipLama);
+        if (existNik) {
+            Swal.fire('Error', `NIK ${nikVal} sudah dipakai atas nama ${existNik.nama}. Data tidak bisa disimpan!`, 'error');
+            return;
+        }
+    }
+
     if (!namaVal) {
         Swal.fire('Peringatan', 'Kolom Nama wajib diisi!', 'warning');
         document.getElementById('peg_nama')?.focus();
@@ -34,6 +92,21 @@ async function simpanPegawai() {
         return;
     }
 
+    // KONFIRMASI SEBELUM SIMPAN
+    const confirmSave = await Swal.fire({
+        title: 'Konfirmasi Simpan',
+        text: 'Pastikan data NIP dan data lainnya sudah benar. Yakin ingin menyimpan?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Simpan',
+        cancelButtonText: 'Tidak',
+        reverseButtons: true
+    });
+
+    if (!confirmSave.isConfirmed) {
+        return;
+    }
+
     // Extract array data
     const extractTableData = (tableId, columnCount) => {
         const rows = document.querySelectorAll(`#${tableId} tbody tr`);
@@ -43,10 +116,24 @@ async function simpanPegawai() {
         });
     };
 
-    const riwayatPangkat = extractTableData('tabelPangkat', 7);
-    const riwayatKontrak = extractTableData('tabelKontrak', 9);
-    const riwayatJabatan = extractTableData('tabelJabatan', 7);
-    const riwayatKGB = extractTableData('tabelKGB', 6);
+    let riwayatPangkat = extractTableData('tabelPangkat', 7);
+    let riwayatKontrak = extractTableData('tabelKontrak', 9);
+    let riwayatJabatan = extractTableData('tabelJabatan', 7);
+    let riwayatKGB = extractTableData('tabelKGB', 6);
+    let riwayatPendidikan = extractTableData('tabelPendidikan', 6);
+    let riwayatAnak = extractTableData('tabelAnak', 4);
+    let riwayatDiklat = extractTableData('tabelDiklat', 5);
+
+    riwayatPangkat = sortRiwayatArray(riwayatPangkat, 1);
+    riwayatKontrak = sortRiwayatArray(riwayatKontrak, 2);
+    riwayatJabatan = sortRiwayatArray(riwayatJabatan, 4);
+    riwayatKGB = sortRiwayatArray(riwayatKGB, 2);
+    riwayatPendidikan = sortRiwayatArray(riwayatPendidikan, 4, true);
+    riwayatAnak = sortRiwayatArray(riwayatAnak, 2).map(r => {
+        if (r[0]) r[0] = r[0].toUpperCase();
+        return r;
+    });
+    riwayatDiklat = sortRiwayatArray(riwayatDiklat, 2, true);
 
     // Get latest data for main table
     let golongan = '';
@@ -55,72 +142,89 @@ async function simpanPegawai() {
     let tmtKgbLalu = '';
     let gajiPokok = '';
 
-    if (riwayatPangkat.length > 0) {
-        golongan = riwayatPangkat[riwayatPangkat.length - 1][0]; // Golongan
-    } else if (riwayatKontrak.length > 0) {
-        golongan = riwayatKontrak[riwayatKontrak.length - 1][1]; // Golongan Kontrak
-    }
-
     let unitKerja = '';
-    if (riwayatJabatan.length > 0) {
-        jabatan = riwayatJabatan[riwayatJabatan.length - 1][2]; // Nama Jabatan
-        unitKerja = riwayatJabatan[riwayatJabatan.length - 1][3]; // Unit Kerja
-        tmtJabatan = riwayatJabatan[riwayatJabatan.length - 1][4]; // TMT Jabatan
-    } else if (riwayatKontrak.length > 0) {
-        jabatan = riwayatKontrak[riwayatKontrak.length - 1][0]; // Nama Jabatan Kontrak
+    const latestPendidikan = getLatestRiwayat(riwayatPendidikan, 4, true);
+    if (latestPendidikan) {
+        pendidikan = latestPendidikan[0];
     }
 
-    if (riwayatKGB.length > 0) {
-        tmtKgbLalu = riwayatKGB[riwayatKGB.length - 1][2]; // TMT KGB
-        gajiPokok = riwayatKGB[riwayatKGB.length - 1][3]; // Jumlah Gaji Pokok
+    const latestPangkat = getLatestRiwayat(riwayatPangkat, 1);
+    const latestKontrak = getLatestRiwayat(riwayatKontrak, 2);
+
+    if (latestPangkat) {
+        golongan = latestPangkat[0]; // Golongan
+    } else if (latestKontrak) {
+        golongan = latestKontrak[1]; // Golongan Kontrak
+    }
+
+    const latestJabatan = getLatestRiwayat(riwayatJabatan, 4);
+    if (latestJabatan) {
+        jabatan = latestJabatan[2]; // Nama Jabatan
+        unitKerja = latestJabatan[3]; // Unit Kerja
+        tmtJabatan = latestJabatan[4]; // TMT Jabatan
+    } else if (latestKontrak) {
+        jabatan = latestKontrak[0]; // Nama Jabatan Kontrak
+    }
+
+    const latestKGB = getLatestRiwayat(riwayatKGB, 2);
+    if (latestKGB) {
+        tmtKgbLalu = latestKGB[2]; // TMT KGB
+        gajiPokok = latestKGB[3]; // Jumlah Gaji Pokok
     }
 
     let kgbDate = tmtKgbLalu
-        ? (parseInt(tmtKgbLalu.substring(0,4)) + 2) + tmtKgbLalu.substring(4)
+        ? (parseInt(tmtKgbLalu.substring(0, 4)) + 2) + tmtKgbLalu.substring(4)
         : '';
 
     const data = {
-        nip:              nipVal,
-        nik:              document.getElementById('peg_nik')?.value || '',
-        nama:             namaVal,
-        tempatLahir:      document.getElementById('peg_tempat_lahir')?.value || '',
-        tglLahir:         tglLahir,
-        kelamin:          kelamin,
-        agama:            document.getElementById('peg_agama')?.value || '',
-        statusKawin:      document.getElementById('peg_status_kawin')?.value || '',
-        alamat:           document.getElementById('peg_alamat')?.value || '',
-        nipLama:          document.getElementById('peg_nip_lama')?.value || '',
-        noHp:             document.getElementById('peg_no_hp')?.value || '',
-        email:            document.getElementById('peg_email')?.value || '',
-        golDarah:         document.getElementById('peg_gol_darah')?.value || '',
-        tinggiBadan:      document.getElementById('peg_tinggi_badan')?.value || '',
-        beratBadan:       document.getElementById('peg_berat_badan')?.value || '',
-        hobby:            document.getElementById('peg_hobby')?.value || '',
-        isKebutuhanKhusus:document.getElementById('peg_is_kebutuhan_khusus')?.value || 'Tidak',
-        uraianKebutuhanKhusus:document.getElementById('peg_uraian_kebutuhan_khusus')?.value || '',
-        statusPegawai:    statusPgw,
-        golongan:         golongan,
-        jabatan:          jabatan,
-        tmtJabatan:       tmtJabatan,
-        pendidikan:       '',
-        unitKerja:        unitKerja || 'Dinas',
-        statusKepegawaian:'Aktif',
-        gajiPokok:        gajiPokok,
-        tmtKgbLalu:       tmtKgbLalu,
-        tmtKgbBaru:       kgbDate,
-        tmtPensiun:       '',
-        riwayatPangkat:   riwayatPangkat,
-        riwayatKontrak:   riwayatKontrak,
-        riwayatJabatan:   riwayatJabatan,
-        riwayatKGB:       riwayatKGB
+        nip: nipVal,
+        nik: document.getElementById('peg_nik')?.value || '',
+        nama: namaVal,
+        tempatLahir: document.getElementById('peg_tempat_lahir')?.value || '',
+        tglLahir: tglLahir,
+        kelamin: kelamin,
+        agama: document.getElementById('peg_agama')?.value || '',
+        statusKawin: document.getElementById('peg_status_kawin')?.value || '',
+        alamat: document.getElementById('peg_alamat')?.value || '',
+        nipLama: document.getElementById('peg_nip_lama')?.value || '',
+        noHp: document.getElementById('peg_no_hp')?.value || '',
+        email: document.getElementById('peg_email')?.value || '',
+        golDarah: document.getElementById('peg_gol_darah')?.value || '',
+        tinggiBadan: document.getElementById('peg_tinggi_badan')?.value || '',
+        beratBadan: document.getElementById('peg_berat_badan')?.value || '',
+        hobby: document.getElementById('peg_hobby')?.value || '',
+        isKebutuhanKhusus: document.getElementById('peg_is_kebutuhan_khusus')?.value || 'Tidak',
+        uraianKebutuhanKhusus: document.getElementById('peg_uraian_kebutuhan_khusus')?.value || '',
+        statusPegawai: statusPgw,
+        golongan: golongan,
+        jabatan: jabatan,
+        tmtJabatan: tmtJabatan,
+        pendidikan: '',
+        unitKerja: unitKerja || 'Dinas',
+        statusKepegawaian: 'Aktif',
+        gajiPokok: gajiPokok,
+        tmtKgbLalu: tmtKgbLalu,
+        tmtKgbBaru: kgbDate,
+        tmtPensiun: '',
+        riwayatPangkat: riwayatPangkat,
+        riwayatKontrak: riwayatKontrak,
+        riwayatJabatan: riwayatJabatan,
+        riwayatKGB: riwayatKGB,
+        riwayatPendidikan: riwayatPendidikan,
+        riwayatAnak: riwayatAnak,
+        riwayatDiklat: riwayatDiklat
     };
 
     try {
-        await dbManager.savePegawai(data);
+        const res = await dbManager.savePegawai(data);
+        if (res && res.success === false) {
+            Swal.fire('Error', 'Gagal menyimpan data: ' + res.message, 'error');
+            return;
+        }
         Swal.fire('Berhasil!', 'Data Pegawai berhasil disimpan!', 'success');
         // Tutup modal jika ada
         const modal = bootstrap?.Modal?.getInstance(document.getElementById('modalTambahPegawai'))
-                   || bootstrap?.Modal?.getInstance(document.getElementById('modalPegawai'));
+            || bootstrap?.Modal?.getInstance(document.getElementById('modalPegawai'));
         if (modal) modal.hide();
         // Refresh semua tabel
         renderTabelPNS();
@@ -128,7 +232,7 @@ async function simpanPegawai() {
         renderTabelKGB();
         renderTabelRekap();
         renderTabelRiwayat();
-    } catch(e) {
+    } catch (e) {
         Swal.fire('Gagal!', 'Gagal menyimpan data: ' + e.message, 'error');
     }
 }
@@ -143,7 +247,7 @@ async function hapusPegawaiData(nip) {
         cancelButtonColor: '#3085d6',
         confirmButtonText: 'Ya, hapus!'
     });
-    if(result.isConfirmed) {
+    if (result.isConfirmed) {
         await dbManager.deletePegawai(nip);
         Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
         renderTabelPNS();
@@ -158,7 +262,7 @@ function toggleKebutuhanKhusus() {
     const isKhusus = document.getElementById('peg_is_kebutuhan_khusus')?.value;
     const div = document.getElementById('div_kebutuhan_khusus');
     if (div) {
-        if(isKhusus === 'Ya') {
+        if (isKhusus === 'Ya') {
             div.classList.remove('d-none');
         } else {
             div.classList.add('d-none');
@@ -170,11 +274,11 @@ function toggleKebutuhanKhusus() {
 
 async function renderTabelPNS() {
     const allPegawai = await dbManager.getAllPegawai();
-    
+
     const renderTabelInduk = (id, statusPegawaiFilter) => {
         if ($.fn.DataTable.isDataTable(id)) $(id).DataTable().destroy();
         const data = allPegawai.filter(p => p.statusPegawai === statusPegawaiFilter && p.statusKepegawaian === 'Aktif');
-        
+
         const formatted = data.map(p => [
             p.nip, p.nama, p.golongan, p.jabatan, p.unitKerja,
             `<button class='btn btn-sm btn-info text-white me-1' title='Lihat Profil' onclick='lihatPegawai("${p.nip}")'><i class='fas fa-eye'></i></button>
@@ -188,28 +292,28 @@ async function renderTabelPNS() {
     };
 
     const dtPNS = renderTabelInduk('#tblPNS', 'PNS');
-    $('#filterNamaPNS').off('keyup').on('keyup', function() { dtPNS.search(this.value).draw(); });
-    $('#filterGolPNS').off('change').on('change', function() { dtPNS.column(2).search(this.value).draw(); });
+    $('#filterNamaPNS').off('keyup').on('keyup', function () { dtPNS.search(this.value).draw(); });
+    $('#filterGolPNS').off('change').on('change', function () { dtPNS.column(2).search(this.value).draw(); });
 
     const dtPPPK = renderTabelInduk('#tblPPPK', 'PPPK');
-    $('#filterNamaPPPK').off('keyup').on('keyup', function() { dtPPPK.search(this.value).draw(); });
+    $('#filterNamaPPPK').off('keyup').on('keyup', function () { dtPPPK.search(this.value).draw(); });
 
     const dtPPPKPW = renderTabelInduk('#tblPPPKPW', 'PPPK Paruh Waktu');
-    $('#filterNamaPPPKPW').off('keyup').on('keyup', function() { dtPPPKPW.search(this.value).draw(); });
+    $('#filterNamaPPPKPW').off('keyup').on('keyup', function () { dtPPPKPW.search(this.value).draw(); });
 
     const dtHonorer = renderTabelInduk('#tblHonorer', 'Honorer');
-    $('#filterNamaHonorer').off('keyup').on('keyup', function() { dtHonorer.search(this.value).draw(); });
+    $('#filterNamaHonorer').off('keyup').on('keyup', function () { dtHonorer.search(this.value).draw(); });
 }
 
 async function renderTabelDUK() {
     if ($.fn.DataTable.isDataTable('#tblDUKPNS')) $('#tblDUKPNS').DataTable().destroy();
     if ($.fn.DataTable.isDataTable('#tblDUKPPPK')) $('#tblDUKPPPK').DataTable().destroy();
     const allPegawai = await dbManager.getAllPegawai();
-    
+
     const hitungMK = (tmtStr, thnSK = 0, blnSK = 0) => {
-        if(!tmtStr || tmtStr === '-') return { thn: thnSK, bln: blnSK, elThn: 0, elBln: 0 };
+        if (!tmtStr || tmtStr === '-') return { thn: thnSK, bln: blnSK, elThn: 0, elBln: 0 };
         const tmt = new Date(tmtStr);
-        if(isNaN(tmt)) return { thn: thnSK, bln: blnSK, elThn: 0, elBln: 0 };
+        if (isNaN(tmt)) return { thn: thnSK, bln: blnSK, elThn: 0, elBln: 0 };
         const now = new Date();
         let years = now.getFullYear() - tmt.getFullYear();
         let months = now.getMonth() - tmt.getMonth();
@@ -233,14 +337,14 @@ async function renderTabelDUK() {
             let golTmt = p.golongan || '-';
 
             if (p.riwayatPangkat && p.riwayatPangkat.length > 0) {
-                const lastPangkat = p.riwayatPangkat[p.riwayatPangkat.length - 1];
+                const lastPangkat = getLatestRiwayat(p.riwayatPangkat, 1) || p.riwayatPangkat[p.riwayatPangkat.length - 1];
                 tmtPangkat = lastPangkat[1] || '-';
                 const res = hitungMK(tmtPangkat, lastPangkat[5] || '0', lastPangkat[6] || '0');
                 mkKeseluruhan = `${res.thn} Thn ${res.bln} Bln`;
                 mkGolRuang = `${res.elThn} Thn ${res.elBln} Bln`;
                 golTmt = `${p.golongan || '-'}<br><small>${tmtPangkat}</small>`;
             } else if (p.riwayatKontrak && p.riwayatKontrak.length > 0) {
-                const lastKontrak = p.riwayatKontrak[p.riwayatKontrak.length - 1];
+                const lastKontrak = getLatestRiwayat(p.riwayatKontrak, 2) || p.riwayatKontrak[p.riwayatKontrak.length - 1];
                 tmtPangkat = lastKontrak[2] || '-'; // TMT Mulai
                 const res = hitungMK(tmtPangkat, lastKontrak[7] || '0', lastKontrak[8] || '0');
                 mkKeseluruhan = `${res.thn} Thn ${res.bln} Bln`;
@@ -261,28 +365,28 @@ async function renderTabelDUK() {
     };
 
     const dtPNS = $('#tblDUKPNS').DataTable({ data: processData('PNS'), pageLength: 5, dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" });
-    $('#filterNamaDUKPNS').off('keyup').on('keyup', function() { dtPNS.search(this.value).draw(); });
-    $('#filterGolDUKPNS').off('keyup').on('keyup', function() { dtPNS.column(3).search(this.value).draw(); });
+    $('#filterNamaDUKPNS').off('keyup').on('keyup', function () { dtPNS.search(this.value).draw(); });
+    $('#filterGolDUKPNS').off('keyup').on('keyup', function () { dtPNS.column(3).search(this.value).draw(); });
 
     const dtPPPK = $('#tblDUKPPPK').DataTable({ data: processData('PPPK'), pageLength: 5, dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" });
-    $('#filterNamaDUKPPPK').off('keyup').on('keyup', function() { dtPPPK.search(this.value).draw(); });
-    $('#filterGolDUKPPPK').off('keyup').on('keyup', function() { dtPPPK.column(3).search(this.value).draw(); });
+    $('#filterNamaDUKPPPK').off('keyup').on('keyup', function () { dtPPPK.search(this.value).draw(); });
+    $('#filterGolDUKPPPK').off('keyup').on('keyup', function () { dtPPPK.column(3).search(this.value).draw(); });
 }
 
 async function renderTabelKGB() {
     if ($.fn.DataTable.isDataTable('#tblKGB')) $('#tblKGB').DataTable().destroy();
     const allPegawai = await dbManager.getAllPegawai();
     const dataAktif = allPegawai.filter(p => p.statusKepegawaian === 'Aktif');
-    
+
     const currDate = new Date();
-    
+
     const formatted = dataAktif.map(p => {
         let statusBadge = `<span class='badge bg-warning text-dark'><i class='fas fa-clock'></i> Menunggu</span>`;
         if (p.tmtKgbBaru) {
             const kgbDate = new Date(p.tmtKgbBaru);
             const diffTime = kgbDate - currDate;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
+
             if (diffDays <= 90 && diffDays >= 0) {
                 statusBadge = `<span class='badge bg-danger'><i class='fas fa-exclamation-triangle'></i> Segera Proses</span>`;
             } else if (diffDays < 0) {
@@ -291,10 +395,10 @@ async function renderTabelKGB() {
         }
 
         return [
-            p.nama, 
-            `<span class='badge bg-primary'>${p.statusPegawai}</span>`, 
-            p.gajiPokok || '-', 
-            p.tmtKgbLalu || '-', 
+            p.nama,
+            `<span class='badge bg-primary'>${p.statusPegawai}</span>`,
+            p.gajiPokok || '-',
+            p.tmtKgbLalu || '-',
             `<b>${p.tmtKgbBaru || '-'}</b>`,
             statusBadge,
             `<button class='btn btn-sm btn-info text-white me-1' title='Lihat Profil' onclick='lihatPegawai("${p.nip}")'><i class='fas fa-eye'></i></button>`
@@ -302,22 +406,21 @@ async function renderTabelKGB() {
     });
 
     const dt = $('#tblKGB').DataTable({ data: formatted, pageLength: 5, dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" });
-    $('#filterNamaKGB').off('keyup').on('keyup', function() { dt.search(this.value).draw(); });
-    $('#filterStatusKGB').off('change').on('change', function() { dt.column(1).search(this.value).draw(); });
+    $('#filterNamaKGB').off('keyup').on('keyup', function () { dt.search(this.value).draw(); });
+    $('#filterStatusKGB').off('change').on('change', function () { dt.column(1).search(this.value).draw(); });
 }
 
 async function renderTabelRekap() {
     const allPegawai = await dbManager.getAllPegawai();
-    
+
     const renderTabelAktif = (id, statusFilter) => {
         if ($.fn.DataTable.isDataTable(id)) $(id).DataTable().destroy();
         const data = allPegawai.filter(p => p.statusPegawai === statusFilter && p.statusKepegawaian === 'Aktif');
-        
+
         const formatted = data.map(p => [
             p.nama, p.nip, p.golongan || '-', p.jabatan || '-', p.pendidikan || '-', `<span class='badge bg-success'>Aktif</span>`,
             `<button class='btn btn-sm btn-info text-white me-1' title='Lihat Profil' onclick='lihatPegawai("${p.nip}")'><i class='fas fa-eye'></i></button>
-             <button class='btn btn-sm btn-secondary text-white me-1' title='Edit Status' onclick='editStatusPegawai("${p.nip}")'><i class='fas fa-user-edit'></i></button>
-             <button class='btn btn-sm btn-success text-white me-1' title='Cetak CV (Word)' onclick='cetakCV("${p.nip}")'><i class='fas fa-print'></i></button>`
+             <button class='btn btn-sm btn-secondary text-white me-1' title='Edit Status' onclick='editStatusPegawai("${p.nip}")'><i class='fas fa-user-edit'></i></button>`
         ]);
 
         const dt = $(id).DataTable({ data: formatted, pageLength: 5, dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" });
@@ -325,31 +428,31 @@ async function renderTabelRekap() {
     };
 
     const dtPNS = renderTabelAktif('#tblRekapPNS', 'PNS');
-    $('#filterNamaAktifPNS').off('keyup').on('keyup', function() { dtPNS.search(this.value).draw(); });
-    $('#filterGolAktifPNS').off('change').on('change', function() { dtPNS.column(2).search(this.value).draw(); });
+    $('#filterNamaAktifPNS').off('keyup').on('keyup', function () { dtPNS.search(this.value).draw(); });
+    $('#filterGolAktifPNS').off('change').on('change', function () { dtPNS.column(2).search(this.value).draw(); });
 
     const dtPPPK = renderTabelAktif('#tblRekapPPPK', 'PPPK');
-    $('#filterNamaRekapPPPK').off('keyup').on('keyup', function() { dtPPPK.search(this.value).draw(); });
+    $('#filterNamaRekapPPPK').off('keyup').on('keyup', function () { dtPPPK.search(this.value).draw(); });
 
     const dtPPPKPW = renderTabelAktif('#tblRekapPPPKPW', 'PPPK Paruh Waktu');
-    $('#filterNamaRekapPPPKPW').off('keyup').on('keyup', function() { dtPPPKPW.search(this.value).draw(); });
+    $('#filterNamaRekapPPPKPW').off('keyup').on('keyup', function () { dtPPPKPW.search(this.value).draw(); });
 
     const dtHonorer = renderTabelAktif('#tblRekapHonorer', 'Honorer');
-    $('#filterNamaRekapHonorer').off('keyup').on('keyup', function() { dtHonorer.search(this.value).draw(); });
+    $('#filterNamaRekapHonorer').off('keyup').on('keyup', function () { dtHonorer.search(this.value).draw(); });
 }
 
 async function renderTabelRiwayat() {
     const allPegawai = await dbManager.getAllPegawai();
-    
+
     const renderTabel = (id, statusFilter, mapFn) => {
         if ($.fn.DataTable.isDataTable(id)) $(id).DataTable().destroy();
         const data = allPegawai.filter(p => p.statusKepegawaian === statusFilter);
         const formatted = data.map(mapFn);
         $(id).DataTable({ data: formatted, pageLength: 5 });
     };
-    
+
     const badgeMap = { PNS: 'bg-primary', PPPK: 'bg-success', Honorer: 'bg-warning' };
-    const getBadge = (s) => `<span class='badge ${badgeMap[s] || 'bg-secondary'}'>${s||'-'}</span>`;
+    const getBadge = (s) => `<span class='badge ${badgeMap[s] || 'bg-secondary'}'>${s || '-'}</span>`;
     const getAksi = (nip) => `<button class='btn btn-sm btn-info text-white me-1' title='Lihat Profil' onclick='lihatPegawai("${nip}")'><i class='fas fa-eye'></i></button><button class='btn btn-sm btn-secondary text-white' title='Edit Status' onclick='editStatusPegawai("${nip}")'><i class='fas fa-user-edit'></i></button>`;
 
     renderTabel('#tblPensiun', 'Pensiun', p => [p.nip, p.nama, getBadge(p.statusPegawai), p.tmtPensiun || '-', p.jabatan, getAksi(p.nip)]);
@@ -360,8 +463,8 @@ async function renderTabelRiwayat() {
 
 function tambahBaris(tabelId) {
     let tr = document.createElement('tr');
-    
-    if(tabelId === 'tabelPangkat') {
+
+    if (tabelId === 'tabelPangkat') {
         tr.innerHTML = `
             <td>
                 <select class='form-select form-select-sm'>
@@ -392,7 +495,7 @@ function tambahBaris(tabelId) {
             <td><input type='number' class='form-control form-control-sm' placeholder='Bln'></td>
             <td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
         `;
-    } else if(tabelId === 'tabelJabatan') {
+    } else if (tabelId === 'tabelJabatan') {
         tr.innerHTML = `
             <td>
                 <select class='form-select form-select-sm' onchange='toggleEselon(this)'>
@@ -418,7 +521,7 @@ function tambahBaris(tabelId) {
             <td><input type='date' class='form-control form-control-sm'></td>
             <td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
         `;
-    } else if(tabelId === 'tabelPendidikan') {
+    } else if (tabelId === 'tabelPendidikan') {
         tr.innerHTML = `
             <td><select class='form-select form-select-sm'><option>SD</option><option>SMP</option><option>SMA</option><option>D3</option><option>S1</option><option>S2</option><option>S3</option></select></td>
             <td><input type='text' class='form-control form-control-sm'></td>
@@ -428,7 +531,7 @@ function tambahBaris(tabelId) {
             <td><input type='text' class='form-control form-control-sm'></td>
             <td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
         `;
-    } else if(tabelId === 'tabelDiklat') {
+    } else if (tabelId === 'tabelDiklat') {
         tr.innerHTML = `
             <td><input type='text' class='form-control form-control-sm'></td>
             <td><input type='text' class='form-control form-control-sm'></td>
@@ -437,7 +540,7 @@ function tambahBaris(tabelId) {
             <td><input type='text' class='form-control form-control-sm'></td>
             <td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
         `;
-    } else if(tabelId === 'tabelAnak') {
+    } else if (tabelId === 'tabelAnak') {
         tr.innerHTML = `
             <td><input type='text' class='form-control form-control-sm'></td>
             <td><input type='text' class='form-control form-control-sm'></td>
@@ -445,7 +548,7 @@ function tambahBaris(tabelId) {
             <td><select class='form-select form-select-sm'><option>Kandung</option><option>Tiri</option><option>Angkat</option></select></td>
             <td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
         `;
-    } else if(tabelId === 'tabelKontrak') {
+    } else if (tabelId === 'tabelKontrak') {
         tr.innerHTML = `
             <td><input type='text' class='form-control form-control-sm'></td>
             <td>
@@ -467,7 +570,7 @@ function tambahBaris(tabelId) {
             <td><input type='number' class='form-control form-control-sm' placeholder='Bln'></td>
             <td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
         `;
-    } else if(tabelId === 'tabelKGB') {
+    } else if (tabelId === 'tabelKGB') {
         tr.innerHTML = `
             <td><input type='text' class='form-control form-control-sm'></td>
             <td><input type='date' class='form-control form-control-sm'></td>
@@ -478,7 +581,7 @@ function tambahBaris(tabelId) {
             <td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
         `;
     }
-    
+
     document.querySelector(`#${tabelId} tbody`).appendChild(tr);
 }
 
@@ -538,19 +641,19 @@ function toggleFormStatus(status) {
     document.getElementById('form-resign').classList.add('d-none');
     document.getElementById('form-mutasi').classList.add('d-none');
 
-    if(status === 'Pensiun' || status === 'Meninggal') {
+    if (status === 'Pensiun' || status === 'Meninggal') {
         document.getElementById('form-pensiun-meninggal').classList.remove('d-none');
         document.getElementById('labelTglPensiunMeninggal').innerText = status === 'Pensiun' ? 'Tanggal Pensiun' : 'Tanggal Meninggal';
-    } else if(status === 'Resign') {
+    } else if (status === 'Resign') {
         document.getElementById('form-resign').classList.remove('d-none');
-    } else if(status === 'Mutasi') {
+    } else if (status === 'Mutasi') {
         document.getElementById('form-mutasi').classList.remove('d-none');
     }
 }
 
 function simpanStatusPegawai() {
     const status = document.getElementById('statusPegawaiDropdown').value;
-    if(status !== 'Aktif') {
+    if (status !== 'Aktif') {
         Swal.fire('Status Diubah!', 'Status diubah ke ' + status + '. Pegawai telah dipindahkan ke menu Pegawai Non Aktif.', 'info');
     } else {
         Swal.fire('Berhasil!', 'Status berhasil diupdate!', 'success');
@@ -558,32 +661,107 @@ function simpanStatusPegawai() {
     bootstrap.Modal.getInstance(document.getElementById('modalEditStatusAktif')).hide();
 }
 
-function validasiNIK(el) {
+async function validasiNIK(el) {
     const val = el.value.trim();
-    if(val === '') return;
-    if(!/^\d+$/.test(val)) {
-        Swal.fire('Format Salah', 'NIK harus berupa angka!', 'error');
+    if (val === '') {
+        el.classList.remove('is-invalid');
+        return;
+    }
+    if (!/^\d+$/.test(val)) {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'NIK harus berupa angka!', showConfirmButton: false, timer: 3000 });
         el.value = '';
-    } else if(val.length !== 16) {
-        Swal.fire('Format Salah', 'NIK harus tepat 16 digit angka! (Saat ini: ' + val.length + ' digit)', 'error');
+        el.classList.add('is-invalid');
+        return;
+    } else if (val.length !== 16) {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'NIK harus pas 16 digit!', showConfirmButton: false, timer: 3000 });
+        el.classList.add('is-invalid');
+        return;
+    }
+
+    if (typeof dbManager !== 'undefined') {
+        const allPegawai = await dbManager.getAllPegawai();
+        const currentNipLama = document.getElementById('peg_nip_lama')?.value || '';
+        const existing = allPegawai.find(p => p.nik === val && p.nipLama !== currentNipLama && p.nip !== currentNipLama);
+        if (existing) {
+            Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: `NIK ini sudah ada atas nama ${existing.nama}`, showConfirmButton: false, timer: 4000 });
+            el.classList.add('is-invalid');
+        } else {
+            el.classList.remove('is-invalid');
+        }
     }
 }
 
-function validasiNIP(el) {
+async function validasiNIP(el) {
     const val = el.value.trim();
-    if(val === '') return;
-    if(!/^\d+$/.test(val)) {
-        Swal.fire('Format Salah', 'NIP harus berupa angka!', 'error');
-        el.value = '';
-    } else if(val.length !== 18) {
-        Swal.fire('Format Salah', 'NIP harus tepat 18 digit angka! (Saat ini: ' + val.length + ' digit)', 'error');
+    if (val === '') {
+        el.classList.remove('is-invalid');
+        return;
     }
+
+    if (!/^\d+$/.test(val)) {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'NIP harus berupa angka!', showConfirmButton: false, timer: 3000 });
+        el.value = '';
+        el.classList.add('is-invalid');
+        return;
+    } else if (val.length !== 18) {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'NIP harus pas 18 digit!', showConfirmButton: false, timer: 3000 });
+        el.classList.add('is-invalid');
+        return;
+    }
+
+    if (typeof dbManager !== 'undefined') {
+        const allPegawai = await dbManager.getAllPegawai();
+        const currentNipLama = document.getElementById('peg_nip_lama')?.value || '';
+        const existing = allPegawai.find(p => p.nip === val && p.nipLama !== currentNipLama && p.nip !== currentNipLama);
+        if (existing) {
+            Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: `NIP ini sudah ada atas nama ${existing.nama}`, showConfirmButton: false, timer: 4000 });
+            el.classList.add('is-invalid');
+        } else {
+            el.classList.remove('is-invalid');
+        }
+    }
+}
+
+function bukaModalTambah() {
+    // Kosongkan form secara manual karena tidak ada tag <form>
+    const modalEl = document.getElementById('modalPegawai');
+    if (modalEl) {
+        modalEl.querySelectorAll('input, select, textarea').forEach(el => {
+            if (el.type === 'checkbox' || el.type === 'radio') {
+                el.checked = false;
+            } else {
+                el.value = '';
+            }
+        });
+    }
+
+    document.getElementById('peg_nik')?.classList.remove('is-invalid');
+    document.getElementById('peg_nip')?.classList.remove('is-invalid');
+
+    const preview = document.getElementById('previewFotoPegawai');
+    if (preview) preview.src = 'https://via.placeholder.com/150';
+
+    ['tabelPangkat', 'tabelKontrak', 'tabelJabatan', 'tabelKGB', 'tabelPendidikan', 'tabelAnak', 'tabelDiklat'].forEach(id => {
+        const tbody = document.querySelector(`#${id} tbody`);
+        if (tbody) tbody.innerHTML = '';
+    });
+
+    // Reset combo alamat (karena wilayah.js mengubah struktur DOM saat kosong)
+    const selKab = document.getElementById('peg_alamat_kabkota');
+    if (selKab) selKab.innerHTML = '<option value="">-- Pilih Kab/Kota --</option>';
+
+    // Enable NIP input
+    const nipInput = document.getElementById('peg_nip');
+    if (nipInput) nipInput.readOnly = false;
+
+    const modal = new bootstrap.Modal(document.getElementById('modalPegawai'));
+    modal.show();
 }
 
 async function editPegawai(nip) {
     const allPegawai = await dbManager.getAllPegawai();
     const p = allPegawai.find(x => x.nip === nip);
-    if(!p) {
+    if (!p) {
         Swal.fire('Error', 'Data pegawai tidak ditemukan!', 'error');
         return;
     }
@@ -595,7 +773,10 @@ async function editPegawai(nip) {
 
     // Populate Data
     setVal('peg_nip', p.nip || '');
-    setVal('peg_nip_lama', p.nipLama || '');
+    setVal('peg_nip_lama', p.nip || ''); // Kunci NIP asli
+    const nipInput = document.getElementById('peg_nip');
+    if (nipInput) nipInput.readOnly = true; // Tidak bisa diedit
+
     setVal('peg_no_hp', p.noHp || '');
     setVal('peg_email', p.email || '');
     setVal('peg_gol_darah', p.golDarah || '-');
@@ -604,7 +785,7 @@ async function editPegawai(nip) {
     setVal('peg_hobby', p.hobby || '');
     setVal('peg_is_kebutuhan_khusus', p.isKebutuhanKhusus || 'Tidak');
     setVal('peg_uraian_kebutuhan_khusus', p.uraianKebutuhanKhusus || '');
-    if(typeof toggleKebutuhanKhusus === 'function') toggleKebutuhanKhusus();
+    if (typeof toggleKebutuhanKhusus === 'function') toggleKebutuhanKhusus();
     setVal('peg_nik', p.nik || '');
     setVal('peg_nama', p.nama || '');
     setVal('peg_tempat_lahir', p.tempatLahir || '');
@@ -613,15 +794,15 @@ async function editPegawai(nip) {
     setVal('peg_agama', p.agama || 'Islam');
     setVal('peg_status_kawin', p.statusKawin || 'Kawin');
     setVal('peg_alamat', p.alamat || '');
-    
+
     setVal('statusPegawai', p.statusPegawai || 'PNS');
     if (typeof toggleSKFields === 'function') toggleSKFields(p.statusPegawai || 'PNS');
-    
+
     setVal('peg_gelar_depan', p.gelarDepan || '');
     setVal('peg_gelar_belakang', p.gelarBelakang || '');
     setVal('peg_pendidikan', p.pendidikan || 'S1');
-    
-        // Populate Tables from Arrays
+
+    // Populate Tables from Arrays
     const populateTable = (tableId, dataArray) => {
         const tbody = document.querySelector(`#${tableId} tbody`);
         tbody.innerHTML = '';
@@ -647,11 +828,14 @@ async function editPegawai(nip) {
     populateTable('tabelKontrak', p.riwayatKontrak);
     populateTable('tabelJabatan', p.riwayatJabatan);
     populateTable('tabelKGB', p.riwayatKGB);
-    
+    populateTable('tabelPendidikan', p.riwayatPendidikan);
+    populateTable('tabelAnak', p.riwayatAnak);
+    populateTable('tabelDiklat', p.riwayatDiklat);
+
     // Foto
     const imgEl = document.getElementById('previewFotoPegawai');
     if (imgEl) {
-        if(p.foto && p.foto.startsWith('data:')) {
+        if (p.foto && p.foto.startsWith('data:')) {
             imgEl.src = p.foto;
         } else {
             imgEl.src = 'https://via.placeholder.com/150';
@@ -668,70 +852,172 @@ async function editPegawai(nip) {
     }
 }
 
+async function downloadTemplateImport() {
+    const workbook = new ExcelJS.Workbook();
+
+    const addSheet = (name, headers, colorArgb) => {
+        const sheet = workbook.addWorksheet(name);
+        const headerRow = sheet.getRow(1);
+        headers.forEach((h, i) => {
+            const cell = headerRow.getCell(i + 1);
+            cell.value = h;
+            cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: colorArgb } };
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        });
+        sheet.columns = headers.map(() => ({ width: 25 }));
+        return sheet;
+    };
+
+    addSheet('Data Pribadi', ['NIP', 'NIK', 'Nama Lengkap', 'Tempat Lahir', 'Tgl Lahir (YYYY-MM-DD)', 'Kelamin', 'Agama', 'Status Kawin', 'Alamat', 'NIP Lama', 'No HP', 'Email', 'Gol Darah', 'Tinggi Badan', 'Berat Badan', 'Hobby', 'Kebutuhan Khusus', 'Uraian Kebutuhan Khusus', 'No SK CPNS', 'TMT CPNS (YYYY-MM-DD)', 'No SK PNS', 'TMT PNS (YYYY-MM-DD)', 'No SK PPPK', 'TMT PPPK Mulai', 'TMT PPPK Selesai', 'No SK Honor', 'TMT Honor', 'No Karpeg', 'NPWP', 'BPJS', 'Rekening', 'Status Pegawai (PNS/PPPK/Honorer)', 'Status Aktif (Aktif/Mutasi/Pensiun/dll)'], 'FF28a745');
+    addSheet('Riwayat Pangkat', ['NIP', 'Golongan / Ruang', 'TMT Pangkat (YYYY-MM-DD)', 'Nomor SK', 'Tanggal SK (YYYY-MM-DD)', 'Pejabat Penandatangan', 'MK Tahun', 'MK Bulan'], 'FF007bff');
+    addSheet('Riwayat Jabatan', ['NIP', 'Jenis Jabatan (Struktural/Fungsional Umum/dll)', 'Eselon', 'Nama Jabatan', 'Unit Kerja', 'TMT Jabatan (YYYY-MM-DD)', 'No SK Jabatan'], 'FFfd7e14');
+    addSheet('Riwayat KGB', ['NIP', 'No SK KGB', 'Tanggal SK (YYYY-MM-DD)', 'TMT KGB (YYYY-MM-DD)', 'Jumlah Gaji Pokok', 'MK Tahun', 'MK Bulan'], 'FFe83e8c');
+    addSheet('Riwayat Pendidikan', ['NIP', 'Tingkat (SD/SMP/SMA/S1/dll)', 'Nama Sekolah/Kampus', 'Jurusan', 'Tahun Masuk', 'Tahun Lulus', 'Nama Kepala/Rektor'], 'FF6f42c1');
+    addSheet('Riwayat Keluarga', ['NIP', 'Nama Keluarga', 'Tempat Lahir', 'Tanggal Lahir (YYYY-MM-DD)', 'Status (Anak Kandung/Suami/Istri/dll)'], 'FFffc107');
+    addSheet('Riwayat Diklat', ['NIP', 'Nama Diklat/Kursus', 'Penyelenggara', 'Tahun', 'Jumlah Jam', 'Nomor Sertifikat'], 'FF17a2b8');
+    addSheet('Riwayat Kontrak', ['NIP', 'Jabatan Kontrak', 'Golongan/Kelas', 'TMT Mulai (YYYY-MM-DD)', 'TMT Selesai (YYYY-MM-DD)', 'Nomor SK', 'Tanggal SK (YYYY-MM-DD)', 'Instansi/Penempatan', 'Gaji/Honor', 'Keterangan'], 'FF6c757d');
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, 'Template_Import_Pegawai_Online.xlsx');
+}
+
 async function prosesImportExcel() {
     const fileInput = document.getElementById('fileImportExcel');
-    if(fileInput.files.length === 0) {
+    if (fileInput.files.length === 0) {
         Swal.fire('Peringatan', 'Harap pilih file Excel terlebih dahulu!', 'warning');
         return;
     }
-
     const file = fileInput.files[0];
     const reader = new FileReader();
-
-    reader.onload = async function(e) {
+    reader.onload = async function (e) {
         try {
             const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, {type: 'array'});
-            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-            const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-            
-            if(jsonData.length === 0) {
-                Swal.fire('Peringatan', 'File Excel kosong atau tidak valid!', 'warning');
-                return;
-            }
+            const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+
+            const sheetPribadi = workbook.Sheets['Data Pribadi'];
+            if (!sheetPribadi) throw new Error("Sheet 'Data Pribadi' tidak ditemukan! Pastikan menggunakan template yang baru.");
+            const jsonPribadi = XLSX.utils.sheet_to_json(sheetPribadi, { defval: '' });
 
             let successCount = 0;
             let errorRows = [];
 
-            for(let i = 0; i < jsonData.length; i++) {
-                const row = jsonData[i];
-                const rNum = i + 2; // +1 for 0-index, +1 for header
-                
-                let nip = row['NIP'] || row['NIP Baru'] || row['nip'] || '';
-                let nik = row['NIK'] || row['nik'] || '';
-                let nama = row['Nama'] || row['nama'] || '';
-                
-                nip = String(nip).trim();
-                nik = String(nik).trim();
-                
-                if(!nip && !nik && !nama) continue; // skip completely empty rows
-                
-                if(!/^\d{18}$/.test(nip)) {
+            const getDataSheet = (name) => {
+                const sheet = workbook.Sheets[name];
+                return sheet ? XLSX.utils.sheet_to_json(sheet, { defval: '' }) : [];
+            };
+
+            const listPangkat = getDataSheet('Riwayat Pangkat');
+            const listJabatan = getDataSheet('Riwayat Jabatan');
+            const listKGB = getDataSheet('Riwayat KGB');
+            const listPendidikan = getDataSheet('Riwayat Pendidikan');
+            const listKeluarga = getDataSheet('Riwayat Keluarga');
+            const listDiklat = getDataSheet('Riwayat Diklat');
+            const listKontrak = getDataSheet('Riwayat Kontrak');
+
+            const formatDate = (val) => {
+                if (!val) return '';
+                if (val instanceof Date) {
+                    val.setMinutes(val.getMinutes() - val.getTimezoneOffset());
+                    return val.toISOString().split('T')[0];
+                }
+                return String(val).trim();
+            };
+
+            for (let i = 0; i < jsonPribadi.length; i++) {
+                const row = jsonPribadi[i];
+                const rNum = i + 2;
+                let nip = String(row['NIP'] || '').trim();
+                let nik = String(row['NIK'] || '').trim();
+                let nama = String(row['Nama Lengkap'] || '').trim();
+
+                if (!nip && !nama) continue;
+                if (!/^\d{18}$/.test(nip)) {
                     errorRows.push(`Baris ${rNum} (${nama || 'Tanpa Nama'}): NIP harus 18 digit angka.`);
                     continue;
                 }
-                if(!/^\d{16}$/.test(nik)) {
-                    errorRows.push(`Baris ${rNum} (${nama || 'Tanpa Nama'}): NIK harus 16 digit angka.`);
-                    continue;
-                }
-                
+
+                let rPangkat = listPangkat.filter(r => String(r.NIP).trim() === nip).map(r => [
+                    r['Golongan / Ruang'], formatDate(r['TMT Pangkat (YYYY-MM-DD)']), r['Nomor SK'], formatDate(r['Tanggal SK (YYYY-MM-DD)']), r['Pejabat Penandatangan'], r['MK Tahun'], r['MK Bulan']
+                ]);
+                let rJabatan = listJabatan.filter(r => String(r.NIP).trim() === nip).map(r => [
+                    r['Jenis Jabatan (Struktural/Fungsional Umum/dll)'], r['Eselon'], r['Nama Jabatan'], r['Unit Kerja'], formatDate(r['TMT Jabatan (YYYY-MM-DD)']), r['No SK Jabatan']
+                ]);
+                let rKGB = listKGB.filter(r => String(r.NIP).trim() === nip).map(r => [
+                    r['No SK KGB'], formatDate(r['Tanggal SK (YYYY-MM-DD)']), formatDate(r['TMT KGB (YYYY-MM-DD)']), r['Jumlah Gaji Pokok'], r['MK Tahun'], r['MK Bulan']
+                ]);
+                let rPendidikan = listPendidikan.filter(r => String(r.NIP).trim() === nip).map(r => [
+                    r['Tingkat (SD/SMP/SMA/S1/dll)'], r['Nama Sekolah/Kampus'], r['Jurusan'], r['Tahun Masuk'], r['Tahun Lulus'], r['Nama Kepala/Rektor']
+                ]);
+                let rKeluarga = listKeluarga.filter(r => String(r.NIP).trim() === nip).map(r => [
+                    r['Nama Keluarga'], r['Tempat Lahir'], formatDate(r['Tanggal Lahir (YYYY-MM-DD)']), r['Status (Anak Kandung/Suami/Istri/dll)']
+                ]);
+                let rDiklat = listDiklat.filter(r => String(r.NIP).trim() === nip).map(r => [
+                    r['Nama Diklat/Kursus'], r['Penyelenggara'], r['Tahun'], r['Jumlah Jam'], r['Nomor Sertifikat']
+                ]);
+                let rKontrak = listKontrak.filter(r => String(r.NIP).trim() === nip).map(r => [
+                    r['Jabatan Kontrak'], r['Golongan/Kelas'], formatDate(r['TMT Mulai (YYYY-MM-DD)']), formatDate(r['TMT Selesai (YYYY-MM-DD)']), r['Nomor SK'], formatDate(r['Tanggal SK (YYYY-MM-DD)']), r['Instansi/Penempatan'], r['Gaji/Honor'], r['Keterangan']
+                ]);
+
+                rPangkat = sortRiwayatArray(rPangkat, 1);
+                rJabatan = sortRiwayatArray(rJabatan, 4);
+                rKGB = sortRiwayatArray(rKGB, 2);
+                rPendidikan = sortRiwayatArray(rPendidikan, 4, true);
+                rKeluarga = sortRiwayatArray(rKeluarga, 2);
+                rDiklat = sortRiwayatArray(rDiklat, 2, true);
+                rKontrak = sortRiwayatArray(rKontrak, 2);
+
+                let golongan = ''; let jabatan = ''; let unitKerja = ''; let tmtJabatan = ''; let pendidikan = ''; let tmtKgbLalu = ''; let gajiPokok = '';
+
+                const lPangkat = getLatestRiwayat(rPangkat, 1);
+                const lKontrak = getLatestRiwayat(rKontrak, 2);
+                if (lPangkat) golongan = lPangkat[0];
+                else if (lKontrak) golongan = lKontrak[1];
+
+                const lJabatan = getLatestRiwayat(rJabatan, 4);
+                if (lJabatan) { jabatan = lJabatan[2]; unitKerja = lJabatan[3]; tmtJabatan = lJabatan[4]; }
+                else if (lKontrak) { jabatan = lKontrak[0]; }
+
+                const lPend = getLatestRiwayat(rPendidikan, 4, true);
+                if (lPend) pendidikan = lPend[0];
+
+                const lKGB = getLatestRiwayat(rKGB, 2);
+                if (lKGB) { tmtKgbLalu = lKGB[2]; gajiPokok = lKGB[3]; }
+
+                let kgbDate = tmtKgbLalu ? (parseInt(tmtKgbLalu.substring(0, 4)) + 2) + tmtKgbLalu.substring(4) : '';
+
                 const p = {
-                    nip: nip,
-                    nik: nik,
-                    nama: nama,
-                    statusPegawai: row['Status Pegawai'] || 'PNS',
-                    statusKepegawaian: 'Aktif',
-                    kelamin: row['Kelamin'] || row['Jenis Kelamin'] || 'Laki-Laki',
-                    golongan: row['Golongan'] || '',
-                    jabatan: row['Jabatan'] || '',
-                    pendidikan: row['Pendidikan'] || ''
+                    nip: nip, nik: nik, nama: nama,
+                    tempatLahir: row['Tempat Lahir'] || '', tglLahir: formatDate(row['Tgl Lahir (YYYY-MM-DD)']),
+                    kelamin: row['Kelamin'] || 'Laki-Laki', agama: row['Agama'] || '', statusKawin: row['Status Kawin'] || '',
+                    alamat: row['Alamat'] || '', nipLama: row['NIP Lama'] || '', noHp: row['No HP'] || '',
+                    email: row['Email'] || '', golDarah: row['Gol Darah'] || '-', tinggiBadan: row['Tinggi Badan'] || '',
+                    beratBadan: row['Berat Badan'] || '', hobby: row['Hobby'] || '', isKebutuhanKhusus: row['Kebutuhan Khusus'] || 'Tidak',
+                    uraianKebutuhanKhusus: row['Uraian Kebutuhan Khusus'] || '', noSkCpns: row['No SK CPNS'] || '',
+                    tmtCpns: formatDate(row['TMT CPNS (YYYY-MM-DD)']), noSkPns: row['No SK PNS'] || '',
+                    tmtPns: formatDate(row['TMT PNS (YYYY-MM-DD)']), noSkPppk: row['No SK PPPK'] || '',
+                    tmtPppkMulai: formatDate(row['TMT PPPK Mulai']), tmtPppkSelesai: formatDate(row['TMT PPPK Selesai']),
+                    noSkHonor: row['No SK Honor'] || '', tmtHonor: formatDate(row['TMT Honor']),
+                    karpeg: row['No Karpeg'] || '', npwp: row['NPWP'] || '', bpjs: row['BPJS'] || '',
+                    rekening: row['Rekening'] || '', foto: '',
+                    statusPegawai: row['Status Pegawai (PNS/PPPK/Honorer)'] || 'PNS',
+                    statusKepegawaian: row['Status Aktif (Aktif/Mutasi/Pensiun/dll)'] || 'Aktif',
+                    golongan: golongan, jabatan: jabatan, tmtJabatan: tmtJabatan, pendidikan: pendidikan, unitKerja: unitKerja || 'Dinas',
+                    gajiPokok: gajiPokok, tmtKgbLalu: tmtKgbLalu, tmtKgbBaru: kgbDate, tmtPensiun: '',
+                    riwayatPangkat: rPangkat, riwayatKontrak: rKontrak, riwayatJabatan: rJabatan,
+                    riwayatKGB: rKGB, riwayatPendidikan: rPendidikan, riwayatAnak: rKeluarga, riwayatDiklat: rDiklat
                 };
-                
-                await dbManager.savePegawai(p);
-                successCount++;
+
+                const res = await dbManager.savePegawai(p);
+                if (res && res.success === false) {
+                    errorRows.push(`Baris ${rNum} (${nama}): ${res.message}`);
+                } else {
+                    successCount++;
+                }
             }
 
-            if(errorRows.length > 0) {
+            if (errorRows.length > 0) {
                 const errorHtml = errorRows.map(e => `<li>${e}</li>`).join('');
                 Swal.fire({
                     title: 'Import Selesai dengan Catatan',
@@ -746,7 +1032,7 @@ async function prosesImportExcel() {
                     .then(() => location.reload());
             }
 
-        } catch(err) {
+        } catch (err) {
             Swal.fire('Error', 'Terjadi kesalahan saat memproses Excel: ' + err.message, 'error');
         }
     };
@@ -756,7 +1042,7 @@ async function prosesImportExcel() {
 async function lihatPegawai(nip) {
     const allPegawai = await dbManager.getAllPegawai();
     const p = allPegawai.find(x => x.nip === nip);
-    if(p) {
+    if (p) {
         document.getElementById('lihat_nama').innerText = p.nama || '-';
         document.getElementById('lihat_nip').innerText = p.nip || '-';
         document.getElementById('lihat_statusPegawai').innerText = p.statusPegawai || '-';
@@ -768,7 +1054,7 @@ async function lihatPegawai(nip) {
         document.getElementById('lihat_tmtJabatan').innerText = p.tmtJabatan || '-';
         document.getElementById('lihat_gajiPokok').innerText = p.gajiPokok || '-';
         document.getElementById('lihat_statusKepegawaian').innerText = p.statusKepegawaian || 'Aktif';
-        
+
         const modal = new bootstrap.Modal(document.getElementById('modalLihatPegawai'));
         modal.show();
     }
@@ -810,16 +1096,16 @@ async function editStatusPegawai(nip) {
         Swal.fire('Error', 'Data pegawai tidak ditemukan!', 'error');
         return;
     }
-    
+
     window.currentEditStatusNip = nip;
     const modalEl = document.getElementById('modalEditStatusAktif');
-    if(modalEl) {
+    if (modalEl) {
         const dropdown = document.getElementById('statusPegawaiDropdown');
         if (dropdown) dropdown.value = p.statusKepegawaian || 'Aktif';
-        
+
         // Trigger toggle if exists
         if (typeof toggleFormStatus === 'function') toggleFormStatus(dropdown.value);
-        
+
         new bootstrap.Modal(modalEl).show();
     }
 }
@@ -828,22 +1114,22 @@ async function simpanStatusPegawai() {
     const nip = window.currentEditStatusNip;
     const dropdown = document.getElementById('statusPegawaiDropdown');
     const statusBaru = dropdown ? dropdown.value : 'Aktif';
-    
-    if(!nip) return;
-    
+
+    if (!nip) return;
+
     const allPegawai = await dbManager.getAllPegawai();
     const p = allPegawai.find(x => x.nip === nip);
-    if(p) {
+    if (p) {
         p.statusKepegawaian = statusBaru;
-        
+
         // Simpan ke DB
         await dbManager.savePegawai(p);
-        
+
         // Tutup modal
         const modalEl = document.getElementById('modalEditStatusAktif');
         const modal = bootstrap.Modal.getInstance(modalEl);
-        if(modal) modal.hide();
-        
+        if (modal) modal.hide();
+
         Swal.fire({
             title: 'Berhasil!',
             text: 'Status pegawai berhasil diperbarui.',
@@ -851,7 +1137,7 @@ async function simpanStatusPegawai() {
             timer: 1500,
             showConfirmButton: false
         });
-        
+
         // Refresh tabel
         if (typeof renderTabelRekap === 'function') renderTabelRekap();
         if (typeof renderTabelRiwayat === 'function') renderTabelRiwayat();
@@ -862,10 +1148,10 @@ async function editKGB(nip) {
     const allPegawai = await dbManager.getAllPegawai();
     const p = allPegawai.find(x => x.nip === nip);
     if (!p) return;
-    
+
     window.currentKgbNip = nip;
     const modalEl = document.getElementById('modalEditKGB');
-    if(modalEl) {
+    if (modalEl) {
         document.getElementById('kgb_gajiPokok').value = p.gajiPokok || '';
         document.getElementById('kgbNama').value = p.nama || '';
         document.getElementById('kgbTmtTerakhir').value = p.tmtKgb || '';
@@ -876,26 +1162,26 @@ async function editKGB(nip) {
 
 async function simpanKGB() {
     const nip = window.currentKgbNip;
-    if(!nip) return;
-    
+    if (!nip) return;
+
     const gajiPokok = document.getElementById('kgb_gajiPokok').value;
     const tmtBaru = document.getElementById('kgbTmtBerikutnya').value;
     const tmtLama = document.getElementById('kgbTmtTerakhir').value;
-    
+
     const allPegawai = await dbManager.getAllPegawai();
     const p = allPegawai.find(x => x.nip === nip);
-    if(p) {
+    if (p) {
         p.gajiPokok = gajiPokok;
         p.tmtKgbBaru = tmtBaru;
         p.tmtKgb = tmtLama;
         await dbManager.savePegawai(p);
-        
+
         const modalEl = document.getElementById('modalEditKGB');
         const modal = bootstrap.Modal.getInstance(modalEl);
-        if(modal) modal.hide();
-        
+        if (modal) modal.hide();
+
         Swal.fire({ title: 'Berhasil!', text: 'Data KGB diperbarui.', icon: 'success', timer: 1500, showConfirmButton: false });
-                if (typeof renderTabelKGB === 'function') renderTabelKGB();
+        if (typeof renderTabelKGB === 'function') renderTabelKGB();
     }
 }
 
@@ -905,7 +1191,7 @@ async function cetakCV(nip) {
     if (!p) return;
 
     let settings = JSON.parse(localStorage.getItem('pengaturanSiMPeEL')) || {};
-    
+
     // Construct HTML
     let html = `
     <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
@@ -985,7 +1271,7 @@ async function cetakCV(nip) {
     </body>
     </html>
     `;
-    
+
     // Download as .doc
     const blob = new Blob(['\ufeff', html], {
         type: 'application/msword'
@@ -998,7 +1284,7 @@ async function cetakCV(nip) {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    
+
     Swal.fire('Berhasil', 'Data Induk (Word) sedang diunduh.', 'success');
 }
 
@@ -1010,13 +1296,13 @@ async function renderTabelPensiun() {
     const formatted = dataAktif.map(p => {
         let bup = 58; // default
         let jnsJabatan = "-";
-        
+
         // Cek Jenis Jabatan terakhir
         if (p.riwayatJabatan && p.riwayatJabatan.length > 0) {
             const lastJab = p.riwayatJabatan[p.riwayatJabatan.length - 1];
             jnsJabatan = lastJab[0] || "-";
             if (jnsJabatan.toLowerCase() === "fungsional umum") jnsJabatan = "Pelaksana";
-            
+
             // Logika BUP
             if (jnsJabatan.toLowerCase().includes("fungsional tertentu")) {
                 bup = 60;
@@ -1052,11 +1338,11 @@ async function renderTabelPensiun() {
         data: formatted,
         pageLength: 10,
         dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'>>" +
-             "<'row'<'col-sm-12'tr>>" +
-             "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"
+            "<'row'<'col-sm-12'tr>>" +
+            "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"
     });
 
-    $('#filterNamaPensiun').off('keyup').on('keyup', function() {
+    $('#filterNamaPensiun').off('keyup').on('keyup', function () {
         dtPensiun.search(this.value).draw();
     });
 }
