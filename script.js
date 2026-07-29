@@ -5,9 +5,9 @@
 
 // 1. Daftar Instansi (ID) dan Link Exec masing-masing
 const TENANT_CONFIG = {
-     "demo": "https://script.google.com/macros/s/AKfycbyVmRT-AnOYKZ4PBjvU9fX0H5VpO3WbE_YMR4fRLS_18fQ8BDcWBizHBqouotSJnKPh/exec", // Ganti dengan link Exec
-    "sekolah2": "https://script.google.com/macros/s/AKfycb..._link_sekolah2/exec", 
-    "dinas": "https://script.google.com/macros/s/AKfycb..._link_dinas/exec"         
+    "demo": "https://script.google.com/macros/s/AKfycbxex0FHG_eUf8F0dxWbxhsk7ro6pOo5zXtL38EDbMBulp2hKRQRHEb1hdWUzRaAwA1n/exec", // Ganti dengan link Exec
+    "sekolah2": "https://script.google.com/macros/s/AKfycb..._link_sekolah2/exec",
+    "dinas": "https://script.google.com/macros/s/AKfycb..._link_dinas/exec"
 };
 
 // 2. Deteksi ID dari URL (Contoh: namaweb.com/?id=sekolah1)
@@ -26,7 +26,7 @@ localStorage.setItem('SIMPEEL_ACTIVE_ID', currentTenantId);
 
 // 3. Set API URL & Konstanta Keamanan
 const API_URL = TENANT_CONFIG[currentTenantId];
-const API_KEY = "SIMPEEL_SECURE_2026_XYZ_999"; 
+const API_KEY = "SIMPEEL_SECURE_2026_XYZ_999";
 
 // Isolasi Penyimpanan Memory
 const TOKEN_KEY = "SIMPEEL_TOKEN_" + currentTenantId.toUpperCase();
@@ -43,15 +43,15 @@ async function apiCall(action, data = null) {
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
-            body: JSON.stringify({ 
-                apiKey: API_KEY, 
-                action: action, 
-                data: data 
+            body: JSON.stringify({
+                apiKey: API_KEY,
+                action: action,
+                data: data
             }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
         const result = await response.json();
-        
+
         // Membedakan perintah GET (tarik data) dan perintah POST (simpan/hapus)
         if (action.startsWith('get')) {
             return (result && result.success) ? result.data : null;
@@ -72,13 +72,13 @@ const dbManager = {
     // Cache Lokal HANYA untuk kecepatan BACA data di layar
     localData: JSON.parse(localStorage.getItem(CACHE_KEY)) || [],
 
-    init: async function() { 
+    init: async function () {
         if (API_URL) this.forceFetchFromServer();
-        return true; 
+        return true;
     },
 
     // Tarik data terbaru dari Server secara Background
-    forceFetchFromServer: async function() {
+    forceFetchFromServer: async function () {
         if (!API_URL) return;
         const res = await apiCall('getAllPegawai');
         if (Array.isArray(res)) {
@@ -86,24 +86,24 @@ const dbManager = {
             localStorage.setItem(CACHE_KEY, JSON.stringify(res));
             // Otomatis refresh UI 
             if (document.getElementById('wrapper').classList.contains('d-none') === false) {
-                initApp(); 
+                initApp();
             }
         }
     },
 
-    getAllPegawai: async function() {
+    getAllPegawai: async function () {
         return this.localData; // Baca dari memori agar pindah menu tidak ada loading
     },
 
     // LANGSUNG SIMPAN KE SERVER GOOGLE SHEETS
-    savePegawai: async function(data) {
+    savePegawai: async function (data) {
         if (!API_URL) throw new Error("Aplikasi offline / tidak terhubung ke API");
-        
+
         // Menampilkan loading UI saat menembak ke server
         Swal.fire({ title: 'Menyimpan ke Server...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
-        
+
         const res = await apiCall('savePegawai', data);
-        
+
         if (res && res.success) {
             // Jika sukses di server, baru kita update memori lokal agar UI ikut terupdate
             let index = this.localData.findIndex(p => p.nip === data.nip);
@@ -117,13 +117,13 @@ const dbManager = {
     },
 
     // LANGSUNG HAPUS DARI SERVER GOOGLE SHEETS
-    deletePegawai: async function(nip) {
+    deletePegawai: async function (nip) {
         if (!API_URL) throw new Error("Aplikasi offline / tidak terhubung ke API");
-        
+
         Swal.fire({ title: 'Menghapus dari Server...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
-        
+
         const res = await apiCall('deletePegawai', nip);
-        
+
         if (res && res.success) {
             // Hapus dari memori lokal
             this.localData = this.localData.filter(p => p.nip !== nip);
@@ -135,11 +135,11 @@ const dbManager = {
     },
 
     // Pengaturan & Keamanan (Langsung ke Server)
-    savePengaturan: async function(data) {
+    savePengaturan: async function (data) {
         if (!API_URL) return { success: false };
         return await apiCall('savePengaturan', data);
     },
-    getPengaturan: async function() {
+    getPengaturan: async function () {
         if (!API_URL) return {};
         return await apiCall('getPengaturan') || {};
     }
@@ -163,7 +163,7 @@ async function simpanPengaturan() {
         logoInstansi: document.getElementById('previewLogoInstansi').src,
         logoSekolah: document.getElementById('previewLogoSekolah').src
     };
-    
+
     Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
     await dbManager.savePengaturan(data);
     loadPengaturan();
@@ -174,13 +174,13 @@ async function simpanTemaBackground() {
     const existingData = await dbManager.getPengaturan();
     const bgImg = document.getElementById('previewBgLanding').src;
     const bgToSave = bgImg.includes('logo-simpeel.png') ? '' : bgImg;
-    
+
     const data = {
         ...existingData,
         warnaTema: document.getElementById('set_warna_tema').value,
         bgLanding: bgToSave
     };
-    
+
     Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
     await dbManager.savePengaturan(data);
     applyTheme(data.warnaTema, data.bgLanding);
@@ -188,7 +188,7 @@ async function simpanTemaBackground() {
 }
 
 function adjustColor(color, amount) {
-    return '#' + color.replace(/^#/, '').replace(/../g, color => ('0'+Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
+    return '#' + color.replace(/^#/, '').replace(/../g, color => ('0' + Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
 }
 
 function applyTheme(warnaTema, bgLanding) {
@@ -197,7 +197,7 @@ function applyTheme(warnaTema, bgLanding) {
         document.documentElement.style.setProperty('--primary', warnaTema);
         document.documentElement.style.setProperty('--primary-dark', darker);
     }
-    
+
     const landingView = document.getElementById('spa-landing-view');
     if (landingView) {
         if (bgLanding && bgLanding.startsWith('data:')) {
@@ -264,7 +264,7 @@ async function loadPengaturan() {
 
     if (data.warnaTema) document.getElementById('set_warna_tema').value = data.warnaTema;
     if (data.bgLanding && data.bgLanding.startsWith('data:')) document.getElementById('previewBgLanding').src = data.bgLanding;
-    
+
     applyTheme(data.warnaTema, data.bgLanding);
 
     if (API_URL) {
@@ -282,6 +282,87 @@ async function loadPengaturan() {
 // ==========================================
 document.addEventListener('DOMContentLoaded', async () => {
     await dbManager.init();
+
+    // === AUTOCOMPLETE TEMPAT LAHIR ===
+    const inputLahir = document.getElementById('peg_tempat_lahir');
+    const listLahir = document.getElementById('tempat_lahir_list');
+    
+    if (inputLahir && listLahir && typeof dataWilayah !== 'undefined') {
+        let allKabKota = [];
+        for (let prov in dataWilayah) {
+            dataWilayah[prov].forEach(item => {
+                allKabKota.push({ label: `${item} - Prov ${prov}`, value: item });
+            });
+        }
+        if (typeof dataWilayahLama !== 'undefined') {
+            for (let prov in dataWilayahLama) {
+                dataWilayahLama[prov].forEach(item => {
+                    allKabKota.push({ label: `${item} - Prov ${prov}`, value: item });
+                });
+            }
+        }
+        
+        inputLahir.addEventListener('input', function() {
+            const val = this.value.toLowerCase();
+            listLahir.innerHTML = '';
+            if (!val) {
+                listLahir.style.display = 'none';
+                return;
+            }
+            
+            const matches = allKabKota.filter(k => k.label.toLowerCase().includes(val)).slice(0, 5);
+            
+            if (matches.length > 0) {
+                listLahir.style.display = 'block';
+                matches.forEach(m => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item list-group-item-action py-1 px-2';
+                    li.style.cursor = 'pointer';
+                    li.textContent = m.label;
+                    li.onclick = () => {
+                        inputLahir.value = m.value;
+                        listLahir.style.display = 'none';
+                    };
+                    listLahir.appendChild(li);
+                });
+            } else {
+                listLahir.style.display = 'none';
+            }
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (e.target !== inputLahir) {
+                listLahir.style.display = 'none';
+            }
+        });
+    }
+
+    // === DROPDOWN ALAMAT PROVINSI & KABKOTA ===
+    const selProv = document.getElementById('peg_alamat_provinsi');
+    const selKab = document.getElementById('peg_alamat_kabkota');
+    if (selProv && selKab && typeof dataWilayah !== 'undefined') {
+        Object.keys(dataWilayah).sort().forEach(prov => {
+            const opt = document.createElement('option');
+            opt.value = prov;
+            opt.textContent = prov;
+            selProv.appendChild(opt);
+        });
+        
+        selProv.addEventListener('change', function() {
+            const provName = this.value;
+            selKab.innerHTML = '<option value="">-- Pilih Kab/Kota --</option>';
+            if (provName && dataWilayah[provName]) {
+                dataWilayah[provName].forEach(kab => {
+                    if (!kab.endsWith('(PROV)')) {
+                        const opt = document.createElement('option');
+                        opt.value = kab;
+                        opt.textContent = kab;
+                        selKab.appendChild(opt);
+                    }
+                });
+            }
+        });
+    }
     loadPengaturan();
     checkSSOSession();
     initApp();
@@ -296,14 +377,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        modalPegawai.addEventListener('keydown', function(e) {
+        modalPegawai.addEventListener('keydown', function (e) {
             if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
                 e.preventDefault();
             }
         });
     }
+    // === FIX DATE INPUT YEAR 6 DIGIT ISSUE ===
+    document.addEventListener('focusin', function(e) {
+        if (e.target.tagName === 'INPUT' && e.target.type === 'date') {
+            if (!e.target.getAttribute('max')) {
+                e.target.setAttribute('max', '9999-12-31');
+            }
+        }
+    });
 
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', function (e) {
         if (e.ctrlKey) {
             if (e.key === '=' || e.key === '+') {
                 e.preventDefault();
@@ -341,12 +430,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             const user = document.getElementById('inputUsername').value;
             const pass = document.getElementById('inputPassword').value;
 
-            if(!user || !pass) return;
+            if (!user || !pass) return;
 
             if (API_URL) {
                 Swal.fire({ title: 'Authenticating...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
                 const result = await apiCall('login', { username: user, password: pass });
-                
+
                 if (result && result.success) {
                     localStorage.setItem(TOKEN_KEY, JSON.stringify({ displayName: user }));
                     document.getElementById('inputUsername').value = '';
@@ -372,7 +461,7 @@ function checkSSOSession() {
     const wrapper = document.getElementById('wrapper');
     const landingView = document.getElementById('spa-landing-view');
     const loginView = document.getElementById('spa-login-view');
-    
+
     if (!ssoToken) {
         if (wrapper) wrapper.classList.add('d-none');
         if (loginView) loginView.classList.add('d-none');
@@ -386,7 +475,7 @@ function checkSSOSession() {
         if (landingView) landingView.classList.add('d-none');
         if (loginView) loginView.classList.add('d-none');
         if (wrapper) wrapper.classList.remove('d-none');
-    } catch(e) {}
+    } catch (e) { }
 }
 
 function showLoginView() {
@@ -430,7 +519,7 @@ async function logoutSSO() {
         confirmButtonColor: '#d33',
         confirmButtonText: 'Ya, Keluar'
     });
-    if(result.isConfirmed) {
+    if (result.isConfirmed) {
         localStorage.removeItem(TOKEN_KEY);
         checkSSOSession();
     }
@@ -439,9 +528,9 @@ async function logoutSSO() {
 async function initApp() {
     const allPegawai = await dbManager.getAllPegawai();
     let pns = 0, pppk = 0, pppkpw = 0, honorer = 0;
-    
+
     allPegawai.forEach(p => {
-        if(p.statusKepegawaian !== 'Aktif') return;
+        if (p.statusKepegawaian !== 'Aktif') return;
         if (p.statusPegawai === 'PNS') pns++;
         else if (p.statusPegawai === 'PPPK') pppk++;
         else if (p.statusPegawai === 'PPPK Paruh Waktu') pppkpw++;
@@ -452,15 +541,15 @@ async function initApp() {
     const elPppk = document.getElementById('count-pppk');
     const elPppkpw = document.getElementById('count-pppkpw');
     const elHonorer = document.getElementById('count-honorer');
-    
-    if(elPns) elPns.innerText = pns;
-    if(elPppk) elPppk.innerText = pppk;
-    if(elPppkpw) elPppkpw.innerText = pppkpw;
-    if(elHonorer) elHonorer.innerText = honorer;
+
+    if (elPns) elPns.innerText = pns;
+    if (elPppk) elPppk.innerText = pppk;
+    if (elPppkpw) elPppkpw.innerText = pppkpw;
+    if (elHonorer) elHonorer.innerText = honorer;
 
     const ctx = document.getElementById('pegawaiChart');
     if (ctx) {
-        if(window.myPieChart) window.myPieChart.destroy();
+        if (window.myPieChart) window.myPieChart.destroy();
         window.myPieChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
@@ -481,24 +570,24 @@ async function initApp() {
     }
 
     const sidebarToggle = document.getElementById('sidebarToggleTop');
-    if(sidebarToggle && !sidebarToggle.dataset.bound) {
+    if (sidebarToggle && !sidebarToggle.dataset.bound) {
         sidebarToggle.dataset.bound = "true";
-        sidebarToggle.addEventListener('click', function() {
+        sidebarToggle.addEventListener('click', function () {
             document.querySelector('.sidebar').classList.toggle('toggled');
         });
     }
-    
+
     const kgbContainer = document.getElementById('kgb-notifications');
-    if(kgbContainer) {
+    if (kgbContainer) {
         kgbContainer.innerHTML = '';
         let countNotif = 0;
         const currDate = new Date();
         allPegawai.forEach(p => {
-            if(p.statusKepegawaian === 'Aktif' && p.tmtKgbBaru) {
+            if (p.statusKepegawaian === 'Aktif' && p.tmtKgbBaru) {
                 const kgbDate = new Date(p.tmtKgbBaru);
                 const diffTime = Math.abs(kgbDate - currDate);
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                
+
                 if (diffDays <= 90 && kgbDate > currDate) {
                     countNotif++;
                     const typeClass = diffDays <= 30 ? 'alert-danger' : 'alert-warning';
@@ -510,8 +599,8 @@ async function initApp() {
                 }
             }
         });
-        
-        if(countNotif === 0) {
+
+        if (countNotif === 0) {
             kgbContainer.innerHTML = `<div class="alert alert-success">Tidak ada pengingat KGB dalam waktu dekat.</div>`;
         }
         kgbContainer.innerHTML += `<button class="btn btn-outline-primary btn-sm w-100 mt-2" onclick="nav('gaji')">Lihat Semua Data</button>`;
@@ -532,10 +621,10 @@ function openCropper(input, previewId, ratio) {
             currentPreviewId = previewId;
             const image = document.getElementById('imageToCrop');
             image.src = e.target.result;
-            
+
             const modal = new bootstrap.Modal(document.getElementById('modalCropper'));
             modal.show();
-            
+
             document.getElementById('modalCropper').addEventListener('shown.bs.modal', function () {
                 if (cropper) cropper.destroy();
                 cropper = new Cropper(image, {
@@ -547,7 +636,7 @@ function openCropper(input, previewId, ratio) {
         }
         reader.readAsDataURL(input.files[0]);
     }
-    input.value = ''; 
+    input.value = '';
 }
 
 function doCrop() {
@@ -555,7 +644,7 @@ function doCrop() {
     const canvas = cropper.getCroppedCanvas();
     const base64Image = canvas.toDataURL('image/png');
     document.getElementById(currentPreviewId).src = base64Image;
-    
+
     bootstrap.Modal.getInstance(document.getElementById('modalCropper')).hide();
     if (cropper) {
         cropper.destroy();
@@ -569,13 +658,19 @@ function doCrop() {
 // ==========================================
 async function exportToExcel(tableId, fileName) {
     const table = $('#' + tableId).DataTable();
-    const data = table.rows({ search: 'applied' }).data().toArray(); 
+    const data = table.rows({ search: 'applied' }).data().toArray();
+    
+    if (data.length === 0) {
+        Swal.fire('Peringatan', 'Tidak ada data untuk di-export!', 'warning');
+        return;
+    }
+
     const headers = [];
-    $('#' + tableId + ' thead th').each(function() {
+    $('#' + tableId + ' thead th').each(function () {
         headers.push($(this).text().trim());
     });
-    
-    if (headers[headers.length-1].toLowerCase() === 'aksi') {
+
+    if (headers[headers.length - 1].toLowerCase() === 'aksi') {
         headers.pop();
         data.forEach(row => row.pop());
     }
@@ -593,7 +688,7 @@ async function exportToExcel(tableId, fileName) {
 
     worksheet.mergeCells(`A2:${lastColLetter}2`);
     const schoolCell = worksheet.getCell('A2');
-    schoolCell.value = document.getElementById('textSekolah')?.innerText || "INSTANSI / SEKOLAH"; 
+    schoolCell.value = document.getElementById('textSekolah')?.innerText || "INSTANSI / SEKOLAH";
     schoolCell.font = { name: 'Arial', size: 12, bold: true };
     schoolCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
@@ -609,22 +704,28 @@ async function exportToExcel(tableId, fileName) {
         cell.value = h;
         cell.font = { bold: true };
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD3D3D3' } };
-        cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
         cell.alignment = { vertical: 'middle', horizontal: 'center' };
     });
 
     let currentRow = 6;
     data.forEach(rowData => {
         const cleanRow = rowData.map(html => {
+            if (typeof html === 'string') {
+                html = html.replace(/<br\s*\/?>/gi, ' \n');
+            }
             const temp = document.createElement('div');
             temp.innerHTML = html;
-            return temp.textContent || temp.innerText || '';
+            return (temp.textContent || temp.innerText || '').trim();
         });
         const r = worksheet.getRow(currentRow);
         cleanRow.forEach((val, i) => {
             const cell = r.getCell(i + 1);
             cell.value = val;
-            cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+            cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+            if (typeof val === 'string' && val.includes('\n')) {
+                cell.alignment = { wrapText: true, vertical: 'middle' };
+            }
         });
         currentRow++;
     });
@@ -633,14 +734,21 @@ async function exportToExcel(tableId, fileName) {
         const column = worksheet.getColumn(i);
         let maxLength = 0;
         column.eachCell({ includeEmpty: true }, cell => {
-            let columnLength = cell.value ? cell.value.toString().length : 10;
-            if (columnLength > maxLength) maxLength = columnLength;
+            let valStr = cell.value ? cell.value.toString() : '';
+            let lines = valStr.split('\n');
+            let maxLineLength = Math.max(...lines.map(l => l.length));
+            if (maxLineLength > maxLength) maxLength = maxLineLength;
         });
-        column.width = maxLength < 10 ? 10 : maxLength + 2;
+        
+        if (i === 1) {
+            column.width = 6;
+        } else {
+            column.width = maxLength < 10 ? 10 : (maxLength > 35 ? 35 : maxLength + 2);
+        }
     }
 
     const sigStartRow = currentRow + 2;
-    const sigColStart = Math.max(1, totalCols - 1); 
+    const sigColStart = Math.max(1, totalCols - 1);
     const sigColEnd = totalCols;
     const sigColLetterStart = String.fromCharCode(64 + sigColStart);
     const sigColLetterEnd = String.fromCharCode(64 + sigColEnd);
