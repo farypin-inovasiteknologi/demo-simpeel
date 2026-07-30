@@ -135,13 +135,29 @@ const dbManager = {
     },
 
     // Pengaturan & Keamanan (Langsung ke Server)
+    getPengaturan: async function () {
+        if (!API_URL) return { success: false };
+        return await apiCall('getPengaturan');
+    },
+
+    getAllAkun: async function () {
+        if (!API_URL) return { success: false };
+        return await apiCall('getAllAkun');
+    },
+    saveAkun: async function (data) {
+        if (!API_URL) return { success: false };
+        Swal.fire({ title: 'Menyimpan Akun...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+        return await apiCall('saveAkun', data);
+    },
+    deleteAkun: async function (nip) {
+        if (!API_URL) return { success: false };
+        Swal.fire({ title: 'Menghapus Akun...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+        return await apiCall('deleteAkun', nip);
+    },
+
     savePengaturan: async function (data) {
         if (!API_URL) return { success: false };
         return await apiCall('savePengaturan', data);
-    },
-    getPengaturan: async function () {
-        if (!API_URL) return {};
-        return await apiCall('getPengaturan') || {};
     }
 };
 
@@ -437,7 +453,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const result = await apiCall('login', { username: user, password: pass });
 
                 if (result && result.success) {
-                    localStorage.setItem(TOKEN_KEY, JSON.stringify({ displayName: user }));
+                    // Simpan sesi termasuk role dan nip jika login sebagai pegawai
+                    const sessionData = {
+                        displayName: result.nama || user,
+                        role: result.role || 'admin',
+                        nip: result.nip || null
+                    };
+                    localStorage.setItem(TOKEN_KEY, JSON.stringify(sessionData));
                     document.getElementById('inputUsername').value = '';
                     document.getElementById('inputPassword').value = '';
                     Swal.close();
@@ -475,6 +497,26 @@ function checkSSOSession() {
         if (landingView) landingView.classList.add('d-none');
         if (loginView) loginView.classList.add('d-none');
         if (wrapper) wrapper.classList.remove('d-none');
+
+        // Jika login sebagai pegawai, sembunyikan menu admin
+        if (data.role === 'pegawai') {
+            document.querySelectorAll('[data-admin-only]').forEach(el => el.classList.add('d-none'));
+            // Tampilkan view profil pegawai (jika ada)
+            setTimeout(() => {
+                const profilView = document.getElementById('view-profil-pegawai');
+                if (profilView && data.nip) {
+                    nav('profil-pegawai');
+                    // Load data profil pegawai
+                    if (typeof loadProfilPegawai === 'function') loadProfilPegawai(data.nip);
+                }
+            }, 200);
+        } else {
+            // Admin: tampilkan semua menu
+            document.querySelectorAll('[data-admin-only]').forEach(el => el.classList.remove('d-none'));
+        }
+
+        // Update badge koneksi setelah login
+        setTimeout(updateConnectionStatus, 100);
     } catch (e) { }
 }
 
@@ -493,21 +535,67 @@ function showLandingView() {
 }
 
 function nav(page) {
-    document.querySelectorAll('.page-view').forEach(el => el.classList.add('d-none'));
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.page-view').forEach(el => {
+        el.classList.add('d-none');
+    });
+    document.querySelectorAll('.nav-item').forEach(el => {
+        el.classList.remove('active');
+    });
 
     const targetPage = document.getElementById('view-' + page);
-    if (targetPage) targetPage.classList.remove('d-none');
+    if (targetPage) {
+        targetPage.classList.remove('d-none');
+    }
 
     const targetNav = document.querySelector(`.nav-item[data-page="${page}"]`);
-    if (targetNav) targetNav.classList.add('active');
+    if (targetNav) {
+        targetNav.classList.add('active');
+    }
 
+    // NEW MERGED PAGES
+    if (page === 'data-induk') {
+        renderTabelAkun();
+        renderTabelPNS();
+        const tabPegawai = document.getElementById('tab-di-pegawai');
+        if (tabPegawai && !tabPegawai._navBound) {
+            tabPegawai.addEventListener('shown.bs.tab', () => renderTabelPNS());
+            tabPegawai._navBound = true;
+        }
+    }
+    if (page === 'status-pegawai') {
+        renderTabelRekap();
+        renderTabelRiwayat();
+        renderTabelPensiun();
+    }
+    if (page === 'monitor') {
+        renderTabelDUK();
+        const tabGaji = document.getElementById('tab-mon-gaji');
+        if (tabGaji && !tabGaji._navBound) {
+            tabGaji.addEventListener('shown.bs.tab', () => renderTabelKGB());
+            tabGaji._navBound = true;
+        }
+        const tabPensiun = document.getElementById('tab-mon-pensiun');
+        if (tabPensiun && !tabPensiun._navBound) {
+            tabPensiun.addEventListener('shown.bs.tab', () => renderTabelPensiun());
+            tabPensiun._navBound = true;
+        }
+        const tabSertif = document.getElementById('tab-mon-sertif');
+        if (tabSertif && !tabSertif._navBound) {
+            tabSertif.addEventListener('shown.bs.tab', () => renderTabelGuruSertif());
+            tabSertif._navBound = true;
+        }
+    }
+
+    // OLD (backward compat)
     if (page === 'pegawai') renderTabelPNS();
     if (page === 'duk') renderTabelDUK();
     if (page === 'gaji') renderTabelKGB();
     if (page === 'rekap') renderTabelRekap();
     if (page === 'riwayat') renderTabelRiwayat();
     if (page === 'pensiun') renderTabelPensiun();
+    if (page === 'guru-sertif') renderTabelGuruSertif();
+    if (page === 'akun') renderTabelAkun();
+    if (page === 'profil-pegawai') { if(typeof renderProfilPegawai === 'function') renderProfilPegawai(); }
 }
 
 async function logoutSSO() {
@@ -842,11 +930,71 @@ async function exportToExcel(tableId, fileName) {
 // BACKUP & RESTORE JSON STUBS
 // ==========================================
 async function backupDataJSON() {
-    Swal.fire('Informasi', 'Pada versi Online, seluruh data otomatis tercadangkan dan tersimpan dengan aman di Google Spreadsheet (Google Drive) Anda. Anda bisa mengunduhnya langsung dari sana.', 'info');
+    Swal.fire({ title: 'Memproses Backup...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+    try {
+        const semuaPegawai = await dbManager.getAllPegawai();
+        const pengaturan = await dbManager.getPengaturan();
+        const semuaAkun = await dbManager.getAllAkun();
+        
+        const backupData = {
+            pegawai: semuaPegawai || [],
+            pengaturan: pengaturan || {},
+            akun: semuaAkun || [],
+            tanggalBackup: new Date().toISOString()
+        };
+        
+        const dataStr = JSON.stringify(backupData, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        const tgl = new Date().toISOString().split('T')[0];
+        a.download = `Backup_SiMPeEL_${tgl}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        Swal.fire('Berhasil', 'Backup data berhasil diunduh!', 'success');
+    } catch(e) {
+        console.error(e);
+        Swal.fire('Gagal', 'Terjadi kesalahan saat membackup data.', 'error');
+    }
 }
 
 async function restoreDataJSON() {
-    Swal.fire('Informasi', 'Pada versi Online, proses restore dilakukan dengan cara mengatur langsung file Google Spreadsheet yang ada di Google Drive Anda.', 'info');
+    if (window.require) {
+        const { ipcRenderer } = require('electron');
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                const text = ev.target.result;
+                try {
+                    Swal.fire({ title: 'Memproses...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+                    const res = await ipcRenderer.invoke('simpeel-restore', text);
+                    if (res && res.success) {
+                        Swal.fire('Berhasil', 'Data berhasil direstore. Halaman akan dimuat ulang.', 'success').then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire('Gagal', res.message || 'Gagal restore data.', 'error');
+                    }
+                } catch(err) {
+                    Swal.fire('Gagal', 'File JSON tidak valid.', 'error');
+                }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+    } else {
+        Swal.fire('Informasi', 'Fitur restore hanya tersedia di aplikasi desktop.', 'info');
+    }
 }
 
 function showPrivacyPolicy(e) {
@@ -859,3 +1007,61 @@ function showPrivacyPolicy(e) {
 
 window.currentEditStatusNip = null;
 window.currentKgbNip = null;
+
+// ==========================================
+// MODAL SYNC
+// ==========================================
+window.bukaModalSync = function() {
+    try {
+        const m = document.getElementById('modalSync');
+        if (m) {
+            const modal = bootstrap.Modal.getInstance(m) || new bootstrap.Modal(m);
+            modal.show();
+        }
+    } catch(e) {
+        console.error('Error bukaModalSync:', e);
+    }
+}
+
+// Suppress DataTable warning popups
+if ($.fn && $.fn.dataTable) {
+    $.fn.dataTable.ext.errMode = 'none';
+}
+
+window.mulaiSinkronisasi = async function() {
+    const execUrl = document.getElementById('syncExecUrl').value;
+    if (!execUrl) return Swal.fire('Error', 'Link Exec tidak boleh kosong', 'error');
+    
+    Swal.fire({
+        title: 'Menyinkronkan...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading() }
+    });
+
+    try {
+        const { ipcRenderer } = window.require('electron');
+        await ipcRenderer.invoke('simpeel-save-config', { syncUrl: execUrl });
+        Swal.fire('Berhasil', 'Konfigurasi sinkronisasi disimpan. (Fitur sinkronisasi cloud dalam tahap pengembangan)', 'success');
+        const modal = bootstrap.Modal.getInstance(document.getElementById('modalSync'));
+        if (modal) modal.hide();
+    } catch(e) {
+        Swal.fire('Error', e.message, 'error');
+    }
+}
+
+// Badge Online/Offline
+function updateConnectionStatus() {
+    const badge = document.getElementById('connectionStatus');
+    if (badge) {
+        if (navigator.onLine) {
+            badge.className = 'badge bg-success me-2';
+            badge.innerHTML = '<i class="fas fa-wifi"></i> Online';
+        } else {
+            badge.className = 'badge bg-danger me-2';
+            badge.innerHTML = '<i class="fas fa-wifi-slash"></i> Offline';
+        }
+    }
+}
+window.addEventListener('online', updateConnectionStatus);
+window.addEventListener('offline', updateConnectionStatus);
+document.addEventListener('DOMContentLoaded', updateConnectionStatus);
