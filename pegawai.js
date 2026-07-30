@@ -108,21 +108,21 @@ async function simpanPegawai() {
     }
 
     // Extract array data
-    const extractTableData = (tableId, columnCount) => {
+    const extractTableData = (tableId) => {
         const rows = document.querySelectorAll(`#${tableId} tbody tr`);
         return Array.from(rows).map(row => {
-            const inputs = row.querySelectorAll('input, select');
-            return Array.from(inputs).slice(0, columnCount).map(i => i.value);
+            const inputs = row.querySelectorAll('input:not([type="file"]), select');
+            return Array.from(inputs).map(i => i.value);
         });
     };
 
-    let riwayatPangkat = extractTableData('tabelPangkat', 7);
-    let riwayatKontrak = extractTableData('tabelKontrak', 9);
-    let riwayatJabatan = extractTableData('tabelJabatan', 7);
-    let riwayatKGB = extractTableData('tabelKGB', 6);
-    let riwayatPendidikan = extractTableData('tabelPendidikan', 6);
-    let riwayatAnak = extractTableData('tabelAnak', 4);
-    let riwayatDiklat = extractTableData('tabelDiklat', 5);
+    let riwayatPangkat = extractTableData('tabelPangkat');
+    let riwayatKontrak = extractTableData('tabelKontrak');
+    let riwayatJabatan = extractTableData('tabelJabatan');
+    let riwayatKGB = extractTableData('tabelKGB');
+    let riwayatPendidikan = extractTableData('tabelPendidikan');
+    let riwayatAnak = extractTableData('tabelAnak');
+    let riwayatDiklat = extractTableData('tabelDiklat');
 
     riwayatPangkat = sortRiwayatArray(riwayatPangkat, 1);
     riwayatKontrak = sortRiwayatArray(riwayatKontrak, 2);
@@ -278,18 +278,23 @@ async function renderTabelPNS() {
     const allPegawai = await dbManager.getAllPegawai();
 
     const renderTabelInduk = (id, statusPegawaiFilter) => {
-        if ($.fn.DataTable.isDataTable(id)) $(id).DataTable().destroy();
+        if ($.fn.DataTable.isDataTable(id)) { try { $(id).DataTable().clear().destroy(); $(id + " tbody").empty(); } catch(e){} }
         const data = allPegawai.filter(p => p.statusPegawai === statusPegawaiFilter && p.statusKepegawaian === 'Aktif');
 
-        const formatted = data.map(p => [
-            p.nip, p.nama, p.golongan, p.jabatan, p.unitKerja,
-            `<button class='btn btn-sm btn-info text-white me-1' title='Lihat Profil' onclick='lihatPegawai("${p.nip}")'><i class='fas fa-eye'></i></button>
-             <button class='btn btn-sm btn-warning text-dark me-1' title='Edit Data' onclick='editPegawai("${p.nip}")'><i class='fas fa-edit'></i></button>
-             <button class='btn btn-sm btn-success text-white me-1' title='Cetak CV (Word)' onclick='cetakCV("${p.nip}")'><i class='fas fa-print'></i></button>
-             <button class='btn btn-sm btn-danger text-white' title='Hapus' onclick='hapusPegawaiData("${p.nip}")'><i class='fas fa-trash'></i></button>`
-        ]);
+        const formatted = data.map(p => {
+            const isLocked = p.isLocked === true;
+            const lockBtnClass = isLocked ? 'btn-secondary text-white' : 'btn-success text-white';
+            const lockIcon = isLocked ? 'fa-lock' : 'fa-lock-open';
+            const lockTitle = isLocked ? 'Buka Kunci Data' : 'Kunci Data';
+            return [
+                p.nip, p.nama, p.golongan, p.jabatan, p.unitKerja,
+                `<button class='btn btn-sm btn-warning text-dark me-1' title='Edit Data' onclick='editPegawai("${p.nip}")'><i class='fas fa-edit'></i></button>
+                 <button class='btn btn-sm ${lockBtnClass} me-1' title='${lockTitle}' onclick='toggleKunciData("${p.nip}")'><i class='fas ${lockIcon}'></i></button>
+                 <button class='btn btn-sm btn-info text-white' title='Cetak CV (Word)' onclick='cetakCV("${p.nip}")'><i class='fas fa-print'></i></button>`
+            ];
+        });
 
-        const dt = $(id).DataTable({ data: formatted, pageLength: 5, dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" });
+        const dt = $(id).DataTable({ destroy: true, data: formatted, pageLength: 5, dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" });
         return dt;
     };
 
@@ -308,8 +313,8 @@ async function renderTabelPNS() {
 }
 
 async function renderTabelDUK() {
-    if ($.fn.DataTable.isDataTable('#tblDUKPNS')) $('#tblDUKPNS').DataTable().destroy();
-    if ($.fn.DataTable.isDataTable('#tblDUKPPPK')) $('#tblDUKPPPK').DataTable().destroy();
+    if ($.fn.DataTable.isDataTable('#tblDUKPNS')) { try { $('#tblDUKPNS').DataTable().clear().destroy(); } catch(e){} }
+    if ($.fn.DataTable.isDataTable('#tblDUKPPPK')) { try { $('#tblDUKPPPK').DataTable().clear().destroy(); } catch(e){} }
     const allPegawai = await dbManager.getAllPegawai();
 
     const hitungMK = (tmtStr, thnSK = 0, blnSK = 0) => {
@@ -366,17 +371,17 @@ async function renderTabelDUK() {
         });
     };
 
-    const dtPNS = $('#tblDUKPNS').DataTable({ data: processData('PNS'), pageLength: 5, dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" });
+    const dtPNS = $('#tblDUKPNS').DataTable({ destroy: true, data: processData('PNS'), pageLength: 5, dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" });
     $('#filterNamaDUKPNS').off('keyup').on('keyup', function () { dtPNS.search(this.value).draw(); });
     $('#filterGolDUKPNS').off('keyup').on('keyup', function () { dtPNS.column(3).search(this.value).draw(); });
 
-    const dtPPPK = $('#tblDUKPPPK').DataTable({ data: processData('PPPK'), pageLength: 5, dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" });
+    const dtPPPK = $('#tblDUKPPPK').DataTable({ destroy: true, data: processData('PPPK'), pageLength: 5, dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" });
     $('#filterNamaDUKPPPK').off('keyup').on('keyup', function () { dtPPPK.search(this.value).draw(); });
     $('#filterGolDUKPPPK').off('keyup').on('keyup', function () { dtPPPK.column(3).search(this.value).draw(); });
 }
 
 async function renderTabelKGB() {
-    if ($.fn.DataTable.isDataTable('#tblKGB')) $('#tblKGB').DataTable().destroy();
+    if ($.fn.DataTable.isDataTable('#tblKGB')) { try { $('#tblKGB').DataTable().clear().destroy(); } catch(e){} }
     const allPegawai = await dbManager.getAllPegawai();
     const dataAktif = allPegawai.filter(p => p.statusKepegawaian === 'Aktif');
 
@@ -407,7 +412,7 @@ async function renderTabelKGB() {
         ];
     });
 
-    const dt = $('#tblKGB').DataTable({ data: formatted, pageLength: 5, dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" });
+    const dt = $('#tblKGB').DataTable({ destroy: true, data: formatted, pageLength: 5, dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" });
     $('#filterNamaKGB').off('keyup').on('keyup', function () { dt.search(this.value).draw(); });
     $('#filterStatusKGB').off('change').on('change', function () { dt.column(1).search(this.value).draw(); });
 }
@@ -416,7 +421,7 @@ async function renderTabelRekap() {
     const allPegawai = await dbManager.getAllPegawai();
 
     const renderTabelAktif = (id, statusFilter) => {
-        if ($.fn.DataTable.isDataTable(id)) $(id).DataTable().destroy();
+        if ($.fn.DataTable.isDataTable(id)) { try { $(id).DataTable().clear().destroy(); $(id + " tbody").empty(); } catch(e){} }
         const data = allPegawai.filter(p => p.statusPegawai === statusFilter && p.statusKepegawaian === 'Aktif');
 
         const formatted = data.map(p => [
@@ -425,7 +430,7 @@ async function renderTabelRekap() {
              <button class='btn btn-sm btn-secondary text-white me-1' title='Edit Status' onclick='editStatusPegawai("${p.nip}")'><i class='fas fa-user-edit'></i></button>`
         ]);
 
-        const dt = $(id).DataTable({ data: formatted, pageLength: 5, dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" });
+        const dt = $(id).DataTable({ destroy: true, data: formatted, pageLength: 5, dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>" });
         return dt;
     };
 
@@ -447,10 +452,10 @@ async function renderTabelRiwayat() {
     const allPegawai = await dbManager.getAllPegawai();
 
     const renderTabel = (id, statusFilter, mapFn) => {
-        if ($.fn.DataTable.isDataTable(id)) $(id).DataTable().destroy();
+        if ($.fn.DataTable.isDataTable(id)) { try { $(id).DataTable().clear().destroy(); $(id + " tbody").empty(); } catch(e){} }
         const data = allPegawai.filter(p => p.statusKepegawaian === statusFilter);
         const formatted = data.map(mapFn);
-        $(id).DataTable({ data: formatted, pageLength: 5 });
+        $(id).DataTable({ destroy: true, data: formatted, pageLength: 5 });
     };
 
     const badgeMap = { PNS: 'bg-primary', PPPK: 'bg-success', Honorer: 'bg-warning' };
@@ -495,7 +500,7 @@ function tambahBaris(tabelId) {
             <td><input type='text' class='form-control form-control-sm' placeholder='Contoh: Gubernur'></td>
             <td><input type='number' class='form-control form-control-sm' placeholder='Thn'></td>
             <td><input type='number' class='form-control form-control-sm' placeholder='Bln'></td>
-            <td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
+            <td><div class='d-flex'><input type='file' class='form-control form-control-sm' accept='application/pdf' onchange='handleFileUpload(this)'><input type='hidden' class='row-file-data'><button type='button' class='btn btn-sm btn-info ms-1 d-none btn-view-file' onclick='viewFileApp(this.previousElementSibling.value)'><i class='fas fa-eye'></i></button></div></td><td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
         `;
     } else if (tabelId === 'tabelJabatan') {
         tr.innerHTML = `
@@ -521,7 +526,7 @@ function tambahBaris(tabelId) {
             <td><input type='date' class='form-control form-control-sm'></td>
             <td><input type='text' class='form-control form-control-sm'></td>
             <td><input type='date' class='form-control form-control-sm'></td>
-            <td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
+            <td><div class='d-flex'><input type='file' class='form-control form-control-sm' accept='application/pdf' onchange='handleFileUpload(this)'><input type='hidden' class='row-file-data'><button type='button' class='btn btn-sm btn-info ms-1 d-none btn-view-file' onclick='viewFileApp(this.previousElementSibling.value)'><i class='fas fa-eye'></i></button></div></td><td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
         `;
     } else if (tabelId === 'tabelPendidikan') {
         tr.innerHTML = `
@@ -531,7 +536,7 @@ function tambahBaris(tabelId) {
             <td><input type='number' class='form-control form-control-sm' placeholder='2006'></td>
             <td><input type='number' class='form-control form-control-sm' placeholder='2010'></td>
             <td><input type='text' class='form-control form-control-sm'></td>
-            <td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
+            <td><div class='d-flex'><input type='file' class='form-control form-control-sm' accept='application/pdf' onchange='handleFileUpload(this)'><input type='hidden' class='row-file-data'><button type='button' class='btn btn-sm btn-info ms-1 d-none btn-view-file' onclick='viewFileApp(this.previousElementSibling.value)'><i class='fas fa-eye'></i></button></div></td><td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
         `;
     } else if (tabelId === 'tabelDiklat') {
         tr.innerHTML = `
@@ -540,7 +545,7 @@ function tambahBaris(tabelId) {
             <td><input type='number' class='form-control form-control-sm' placeholder='2020'></td>
             <td><input type='text' class='form-control form-control-sm' placeholder='Contoh: 40 Jam'></td>
             <td><input type='text' class='form-control form-control-sm'></td>
-            <td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
+            <td><div class='d-flex'><input type='file' class='form-control form-control-sm' accept='application/pdf' onchange='handleFileUpload(this)'><input type='hidden' class='row-file-data'><button type='button' class='btn btn-sm btn-info ms-1 d-none btn-view-file' onclick='viewFileApp(this.previousElementSibling.value)'><i class='fas fa-eye'></i></button></div></td><td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
         `;
     } else if (tabelId === 'tabelAnak') {
         tr.innerHTML = `
@@ -548,7 +553,7 @@ function tambahBaris(tabelId) {
             <td><input type='text' class='form-control form-control-sm'></td>
             <td><input type='date' class='form-control form-control-sm'></td>
             <td><select class='form-select form-select-sm'><option>Kandung</option><option>Tiri</option><option>Angkat</option></select></td>
-            <td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
+            <td><div class='d-flex'><input type='file' class='form-control form-control-sm' accept='application/pdf' onchange='handleFileUpload(this)'><input type='hidden' class='row-file-data'><button type='button' class='btn btn-sm btn-info ms-1 d-none btn-view-file' onclick='viewFileApp(this.previousElementSibling.value)'><i class='fas fa-eye'></i></button></div></td><td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
         `;
     } else if (tabelId === 'tabelKontrak') {
         tr.innerHTML = `
@@ -570,7 +575,7 @@ function tambahBaris(tabelId) {
             <td><input type='text' class='form-control form-control-sm'></td>
             <td><input type='number' class='form-control form-control-sm' placeholder='Thn'></td>
             <td><input type='number' class='form-control form-control-sm' placeholder='Bln'></td>
-            <td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
+            <td><div class='d-flex'><input type='file' class='form-control form-control-sm' accept='application/pdf' onchange='handleFileUpload(this)'><input type='hidden' class='row-file-data'><button type='button' class='btn btn-sm btn-info ms-1 d-none btn-view-file' onclick='viewFileApp(this.previousElementSibling.value)'><i class='fas fa-eye'></i></button></div></td><td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
         `;
     } else if (tabelId === 'tabelKGB') {
         tr.innerHTML = `
@@ -580,7 +585,7 @@ function tambahBaris(tabelId) {
             <td><input type='text' class='form-control form-control-sm'></td>
             <td><input type='number' class='form-control form-control-sm' placeholder='Thn'></td>
             <td><input type='number' class='form-control form-control-sm' placeholder='Bln'></td>
-            <td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
+            <td><div class='d-flex'><input type='file' class='form-control form-control-sm' accept='application/pdf' onchange='handleFileUpload(this)'><input type='hidden' class='row-file-data'><button type='button' class='btn btn-sm btn-info ms-1 d-none btn-view-file' onclick='viewFileApp(this.previousElementSibling.value)'><i class='fas fa-eye'></i></button></div></td><td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
         `;
     }
 
@@ -832,10 +837,17 @@ async function editPegawai(nip) {
             dataArray.forEach(rowData => {
                 tambahBaris(tableId);
                 const tr = tbody.lastElementChild;
-                const inputs = tr.querySelectorAll('input, select');
+                const inputs = tr.querySelectorAll('input:not([type="file"]), select');
                 rowData.forEach((val, index) => {
                     if (inputs[index]) {
                         inputs[index].value = val;
+                        // Show view button if it's the hidden file input and has value
+                        if (inputs[index].type === 'hidden' && val) {
+                            const btn = inputs[index].nextElementSibling;
+                            if (btn && btn.classList.contains('btn-view-file')) {
+                                btn.classList.remove('d-none');
+                            }
+                        }
                         // trigger onchange event for toggleEselon etc
                         if (inputs[index].tagName === 'SELECT') {
                             inputs[index].dispatchEvent(new Event('change'));
@@ -867,11 +879,134 @@ async function editPegawai(nip) {
     // Show Modal
     const modalEl = document.getElementById('modalPegawai');
     if (modalEl) {
-        const modal = new bootstrap.Modal(modalEl);
+        // Lock logic
+        const isLocked = p.isLocked === true;
+        const allInputs = modalEl.querySelectorAll('input, select, textarea, button');
+        allInputs.forEach(el => {
+            if(el.dataset.bsDismiss === 'modal') return; // Jangan disable tombol close
+            
+            if(el.tagName === 'BUTTON') {
+                if(el.onclick && (el.onclick.toString().includes('tambahBaris') || el.onclick.toString().includes('hapusBaris'))) {
+                    el.disabled = isLocked;
+                }
+                if(el.onclick && el.onclick.toString().includes('simpanPegawai')) {
+                    el.disabled = isLocked;
+                    el.style.display = isLocked ? 'none' : 'inline-block';
+                }
+                if(el.id === 'btnUploadFoto' || el.id === 'btnCaptureFoto') el.disabled = isLocked;
+            } else {
+                if(el.id === 'peg_nip_lama' || el.id === 'peg_nip') el.readOnly = true;
+                else el.disabled = isLocked;
+            }
+        });
+
+        const titleEl = modalEl.querySelector('.modal-title');
+        if(titleEl) {
+            titleEl.innerHTML = isLocked 
+                ? '<i class="fas fa-lock text-danger"></i> Edit Data Pegawai <span class="badge bg-danger ms-2">TERKUNCI</span>' 
+                : '<i class="fas fa-user-edit"></i> Edit Data Pegawai';
+        }
+
+        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
         modal.show();
     } else {
         Swal.fire('Error', 'Modal edit tidak ditemukan di HTML.', 'error');
     }
+}
+
+// ==========================================
+// IMPORT AKUN EXCEL (6 KOLOM)
+// ==========================================
+async function downloadTemplateImportAkun() {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Akun Pegawai');
+
+    const headers = ['NIP', 'Nama', 'NIK', 'Tgl Lahir (YYYY-MM-DD)', 'Status Pegawai (PNS/PPPK/Honorer)', 'Password (opsional, default=NIP)'];
+    const headerRow = sheet.getRow(1);
+    headers.forEach((h, i) => {
+        const cell = headerRow.getCell(i + 1);
+        cell.value = h;
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4e73df' } };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+    });
+    sheet.columns = headers.map(() => ({ width: 30 }));
+
+    // Contoh data
+    sheet.addRow(['197001011990011001', 'Nama Pegawai', '1234567890123456', '1970-01-01', 'PNS', '']);
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, 'Template_Import_Akun.xlsx');
+}
+
+async function prosesImportAkunExcel() {
+    const fileInput = document.getElementById('fileImportAkunExcel');
+    if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+        Swal.fire('Peringatan', 'Pilih file Excel terlebih dahulu!', 'warning');
+        return;
+    }
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            Swal.fire({ title: 'Memproses...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            const workbook = new ExcelJS.Workbook();
+            await workbook.xlsx.load(e.target.result);
+            const sheet = workbook.worksheets[0];
+            const rows = [];
+            sheet.eachRow((row, rowIndex) => {
+                if (rowIndex === 1) return; // skip header
+                const nip = String(row.getCell(1).value || '').trim();
+                const nama = String(row.getCell(2).value || '').trim();
+                const nik = String(row.getCell(3).value || '').trim();
+                const tglLahir = String(row.getCell(4).value || '').trim();
+                const statusPegawai = String(row.getCell(5).value || '').trim();
+                const password = String(row.getCell(6).value || '').trim() || nip; // default password = NIP
+                if (!nip || !nama) return;
+                rows.push({ nip, nama, nik, tglLahir, statusPegawai, password });
+            });
+
+            if (rows.length === 0) {
+                Swal.fire('Peringatan', 'Tidak ada data yang valid ditemukan di file Excel!', 'warning');
+                return;
+            }
+
+            let berhasil = 0, gagal = 0;
+            for (const row of rows) {
+                try {
+                    const payload = {
+                        nip: row.nip, nama: row.nama, nik: row.nik,
+                        tglLahir: row.tglLahir, statusPegawai: row.statusPegawai,
+                        password: row.password, aktif: 1
+                    };
+                    await dbManager.saveAkun(payload);
+                    // Buat juga data pegawai minimal jika belum ada
+                    const allPeg = await dbManager.getAllPegawai();
+                    const existing = allPeg ? allPeg.find(p => p.nip === row.nip) : null;
+                    if (!existing) {
+                        await dbManager.savePegawai({
+                            nip: row.nip, nama: row.nama, nik: row.nik,
+                            tglLahir: row.tglLahir, statusPegawai: row.statusPegawai,
+                            statusKepegawaian: 'Aktif'
+                        });
+                    }
+                    berhasil++;
+                } catch (err) {
+                    gagal++;
+                }
+            }
+
+            Swal.fire('Selesai', `Import akun selesai.\nBerhasil: ${berhasil}, Gagal: ${gagal}`, 'success');
+            const m = bootstrap.Modal.getInstance(document.getElementById('modalImportAkun'));
+            if (m) m.hide();
+            fileInput.value = '';
+            renderTabelAkun();
+        } catch (err) {
+            Swal.fire('Error', 'Gagal membaca file Excel: ' + err.message, 'error');
+        }
+    };
+    reader.readAsArrayBuffer(file);
 }
 
 async function downloadTemplateImport() {
@@ -1207,6 +1342,75 @@ async function simpanKGB() {
     }
 }
 
+
+function generateNamaBergelar(nama, riwayatPendidikan) {
+    if (!riwayatPendidikan || !Array.isArray(riwayatPendidikan) || riwayatPendidikan.length === 0) return nama;
+    
+    const levelMap = {'SD':1, 'SMP':2, 'SMA':3, 'D1':4, 'D2':5, 'D3':6, 'S1':7, 'S2':8, 'S3':9};
+    let parsedRiwayat = riwayatPendidikan.map(r => {
+        return {
+            tingkat: r[0],
+            level: levelMap[r[0]] || 0,
+            gelarDepan: r.length > 6 ? (r[5] || '').trim() : '',
+            gelarBelakang: r.length > 6 ? (r[6] || '').trim() : (r.length === 6 ? (r[5]||'').trim() : '')
+        };
+    }).filter(r => r.level > 0);
+    
+    if (parsedRiwayat.length === 0) return nama;
+    
+    let maxLevel = Math.max(...parsedRiwayat.map(r => r.level));
+    
+    let gelarDepanArr = [];
+    let gelarBelakangArr = [];
+    
+    if (maxLevel >= 7) {
+        // Collect S1, S2, S3
+        let sarjana = parsedRiwayat.filter(r => r.level >= 7).sort((a, b) => a.level - b.level);
+        sarjana.forEach(r => {
+            if (r.gelarDepan) {
+                // split by comma to avoid duplicate titles like "Dr." if typed multiple times
+                r.gelarDepan.split(',').forEach(g => {
+                    let tg = g.trim();
+                    if (tg && !gelarDepanArr.includes(tg)) gelarDepanArr.push(tg);
+                });
+            }
+            if (r.gelarBelakang) {
+                r.gelarBelakang.split(',').forEach(g => {
+                    let tg = g.trim();
+                    if (tg && !gelarBelakangArr.includes(tg)) gelarBelakangArr.push(tg);
+                });
+            }
+        });
+    } else {
+        // Highest is below S1
+        let highest = parsedRiwayat.filter(r => r.level === maxLevel);
+        highest.forEach(r => {
+            if (r.gelarDepan) {
+                r.gelarDepan.split(',').forEach(g => {
+                    let tg = g.trim();
+                    if (tg && !gelarDepanArr.includes(tg)) gelarDepanArr.push(tg);
+                });
+            }
+            if (r.gelarBelakang) {
+                r.gelarBelakang.split(',').forEach(g => {
+                    let tg = g.trim();
+                    if (tg && !gelarBelakangArr.includes(tg)) gelarBelakangArr.push(tg);
+                });
+            }
+        });
+    }
+    
+    let combinedName = nama;
+    if (gelarDepanArr.length > 0) {
+        combinedName = gelarDepanArr.join(', ') + ' ' + combinedName;
+    }
+    if (gelarBelakangArr.length > 0) {
+        combinedName = combinedName + ', ' + gelarBelakangArr.join(', ');
+    }
+    
+    return combinedName;
+}
+
 async function cetakCV(nip) {
     const allPegawai = await dbManager.getAllPegawai();
     const p = allPegawai.find(x => x.nip === nip);
@@ -1219,6 +1423,10 @@ async function cetakCV(nip) {
     <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
     <head>
         <meta charset="utf-8">
+        <meta name="ProgId" content="Word.Document">
+        <meta name="Generator" content="Microsoft Word 15">
+        <meta name="Originator" content="Microsoft Word 15">
+        <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
         <style>
             @page { size: 8.5in 13.0in; margin: 1in; }
             body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; }
@@ -1234,7 +1442,7 @@ async function cetakCV(nip) {
             .section-title { font-weight: bold; margin-top: 15px; background: #eee; padding: 5px; border: 1px solid black; }
             .signature-box { width: 300px; float: right; text-align: center; margin-top: 40px; }
             .signature-box p { margin: 5px 0; }
-            .signature-name { font-weight: bold; text-decoration: underline; margin-top: 70px; }
+            .signature-name { font-weight: bold; text-decoration: underline; margin-top: 100px; }
         </style>
     </head>
     <body>
@@ -1325,7 +1533,7 @@ async function cetakCV(nip) {
 
         <div class="signature-box">
             <p>Pegawai Yang Bersangkutan,</p>
-            <p class="signature-name">${p.nama.toUpperCase()}</p>
+            <p class="signature-name">${generateNamaBergelar(p.nama.toUpperCase(), p.riwayatPendidikan)}</p>
             <p>NIP. ${p.nip}</p>
         </div>
         
@@ -1350,7 +1558,7 @@ async function cetakCV(nip) {
 }
 
 async function renderTabelPensiun() {
-    if ($.fn.DataTable.isDataTable('#tblEstPensiun')) $('#tblEstPensiun').DataTable().destroy();
+    if ($.fn.DataTable.isDataTable('#tblEstPensiun')) { try { $('#tblEstPensiun').DataTable().clear().destroy(); } catch(e){} }
     const allPegawai = await dbManager.getAllPegawai();
     const dataAktif = allPegawai.filter(p => p.statusKepegawaian === 'Aktif');
 
@@ -1395,7 +1603,7 @@ async function renderTabelPensiun() {
         ];
     });
 
-    const dtPensiun = $('#tblEstPensiun').DataTable({
+    const dtPensiun = $('#tblEstPensiun').DataTable({ destroy: true,
         data: formatted,
         pageLength: 10,
         dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'>>" +
@@ -1408,3 +1616,647 @@ async function renderTabelPensiun() {
     });
 }
 
+
+async function handleFileUpload(inputElement) {
+    const file = inputElement.files[0];
+    if (!file) return;
+
+    if (file.size > 250 * 1024) {
+        Swal.fire('Error', 'Ukuran file maksimal 250 KB!', 'error');
+        inputElement.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const base64Data = e.target.result;
+        const targetId = inputElement.getAttribute('data-target');
+        
+        let fileIdOrUrl = base64Data; // Default local base64 before upload
+        
+        // Upload logic
+        Swal.showLoading();
+        try {
+            if (typeof apiCall === 'function') { // Online version
+                const res = await apiCall('uploadFile', {
+                    filename: file.name,
+                    mimeType: file.type,
+                    base64Data: base64Data.split(',')[1]
+                });
+                if (res && res.success) {
+                    fileIdOrUrl = res.data.url;
+                    Swal.fire('Sukses', 'File berhasil diunggah ke Drive', 'success');
+                } else {
+                    Swal.fire('Error', 'Gagal upload ke Drive: ' + (res ? res.message : 'Unknown error'), 'error');
+                }
+            } else if (typeof window.require !== 'undefined') { // Local Electron version
+                const { ipcRenderer } = window.require('electron');
+                const res = await ipcRenderer.invoke('simpeel-save-file', file.name, base64Data);
+                if (res && res.success) {
+                    fileIdOrUrl = res.filePath;
+                    Swal.fire('Sukses', 'File berhasil disimpan lokal', 'success');
+                } else {
+                    Swal.fire('Error', 'Gagal simpan lokal', 'error');
+                }
+            }
+            
+            // Set target value
+            let targetElement;
+            if (targetId) {
+                targetElement = document.getElementById(targetId);
+            } else {
+                // Find sibling hidden input if data-target not specified
+                targetElement = inputElement.nextElementSibling;
+            }
+            
+            if (targetElement) {
+                targetElement.value = fileIdOrUrl;
+            }
+            
+            // Show view button
+            const viewBtn = inputElement.parentElement.querySelector('.btn-view-file');
+            if (viewBtn) viewBtn.classList.remove('d-none');
+        } catch (err) {
+            Swal.fire('Error', 'Terjadi kesalahan saat upload', 'error');
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function viewFileApp(fileUrlOrPath) {
+    if (!fileUrlOrPath) return;
+    if (fileUrlOrPath.startsWith('http')) {
+        window.open(fileUrlOrPath, '_blank');
+    } else if (typeof window.require !== 'undefined') {
+        const { ipcRenderer } = window.require('electron');
+        ipcRenderer.invoke('simpeel-open-file', fileUrlOrPath);
+    }
+}
+
+function toggleSertifikasiTab(riwayatJabatan = null) {
+    let showTab = false;
+    
+    if (!riwayatJabatan) {
+        try {
+            riwayatJabatan = extractTableData('tabelJabatan');
+            if (typeof sortRiwayatArray === 'function') {
+                riwayatJabatan = sortRiwayatArray(riwayatJabatan, 4);
+            }
+        } catch (e) {}
+    }
+    
+    if (riwayatJabatan && Array.isArray(riwayatJabatan) && riwayatJabatan.length > 0) {
+        for (let i = 0; i < riwayatJabatan.length; i++) {
+            const row = riwayatJabatan[i];
+            if (row && row[0] === 'Fungsional Tertentu' && row[2]) {
+                const namaJabatan = row[2].toLowerCase();
+                if (namaJabatan.includes('guru')) {
+                    showTab = true;
+                    break;
+                }
+            }
+        }
+    }
+    
+    const tabNav = document.getElementById('nav-sertifikasi');
+    if (tabNav) {
+        if (showTab) {
+            tabNav.classList.remove('d-none');
+            // Auto fill NUPTK
+            const pegNuptk = document.getElementById('peg_nuptk');
+            const certNuptk = document.getElementById('cert_nuptk');
+            if (pegNuptk && certNuptk && !certNuptk.value) {
+                certNuptk.value = pegNuptk.value;
+            }
+        } else {
+            // tabNav.classList.add('d-none'); // Always show for now
+            const link = tabNav.querySelector('.nav-link');
+            if (link && link.classList.contains('active')) {
+                const btnPribadi = document.querySelector('[data-bs-target="#f-pribadi"]');
+                if (btnPribadi) btnPribadi.click();
+            }
+        }
+    }
+}
+
+// Event Listeners for Dynamic UI
+document.addEventListener('DOMContentLoaded', () => {
+    // Sync NUPTK
+    const pegNuptk = document.getElementById('peg_nuptk');
+    if (pegNuptk) {
+        pegNuptk.addEventListener('input', function() {
+            const certNuptk = document.getElementById('cert_nuptk');
+            if (certNuptk) certNuptk.value = this.value;
+        });
+    }
+
+    // Monitor tabelJabatan changes
+    const tabelJabatan = document.getElementById('tabelJabatan');
+    if (tabelJabatan) {
+        tabelJabatan.addEventListener('change', () => toggleSertifikasiTab());
+        tabelJabatan.addEventListener('keyup', () => toggleSertifikasiTab());
+    }
+    
+    // Observer to detect row deletions
+    if (tabelJabatan) {
+        const observer = new MutationObserver(() => toggleSertifikasiTab());
+        observer.observe(tabelJabatan.querySelector('tbody'), { childList: true });
+    }
+});
+
+async function renderTabelGuruSertif() {
+    if ($.fn.DataTable.isDataTable('#tblGuruSertif')) { try { $('#tblGuruSertif').DataTable().clear().destroy(); } catch(e){} }
+
+    let allPegawai = [];
+    try {
+        const res = await apiCall('getAllPegawai');
+        if (res && res.success) allPegawai = res.data;
+    } catch (e) {
+        console.error('Gagal mengambil data pegawai untuk Guru Sertif:', e);
+    }
+
+    const formatted = [];
+    let no = 1;
+
+    // Filter: hanya pegawai aktif yg punya data sertifikasi
+    const guruSertif = allPegawai.filter(p => {
+        if (p.statusKepegawaian !== 'Aktif') return false;
+        return p.sertifikasi && (p.sertifikasi.noSertifikat || p.sertifikasi.tahunLulus);
+    });
+
+    // Urutkan: tahun sertifikasi paling lama (terkecil) di atas
+    guruSertif.sort((a, b) => {
+        const tA = parseInt(a.sertifikasi.tahunLulus) || 9999;
+        const tB = parseInt(b.sertifikasi.tahunLulus) || 9999;
+        return tA - tB;
+    });
+
+    guruSertif.forEach(p => {
+        let jabatanTerakhir = '-';
+        if (p.riwayatJabatan && Array.isArray(p.riwayatJabatan) && p.riwayatJabatan.length > 0) {
+            const sorted = typeof sortRiwayatArray === 'function'
+                ? sortRiwayatArray([...p.riwayatJabatan], 4)
+                : p.riwayatJabatan;
+            if (sorted[0] && sorted[0][2]) jabatanTerakhir = sorted[0][2];
+        }
+
+        formatted.push([
+            no++,
+            p.nama || '-',
+            p.nip || '-',
+            p.statusPegawai || '-',
+            jabatanTerakhir,
+            p.sertifikasi.noSertifikat || '-',
+            p.sertifikasi.mapel || '-',
+            p.sertifikasi.tahunLulus || '-'
+        ]);
+    });
+
+    const dt = $('#tblGuruSertif').DataTable({ destroy: true,
+        data: formatted,
+        pageLength: 10,
+        dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'>>" +
+            "<'row'<'col-sm-12'tr>>" +
+            "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"
+    });
+
+    $('#filterNamaGuruSertif').off('keyup').on('keyup', function () {
+        dt.search(this.value).draw();
+    });
+}
+
+
+// ==========================================
+// MANAJEMEN AKUN PEGAWAI
+// ==========================================
+function bukaModalTambahAkun() {
+    try {
+        const m = document.getElementById('modalTambahAkun');
+        if (m) {
+            const form = document.getElementById('formTambahAkun');
+            if (form) form.reset();
+            
+            // Clear edit mode metadata
+            delete m.dataset.mode;
+            delete m.dataset.originalNip;
+            const nipFeedback = document.getElementById('akun_nip_feedback');
+            if (nipFeedback) {
+                nipFeedback.textContent = '';
+                nipFeedback.className = '';
+            }
+            const nikFeedback = document.getElementById('akun_nik_feedback');
+            if (nikFeedback) {
+                nikFeedback.textContent = '';
+                nikFeedback.className = '';
+            }
+            
+            const title = m.querySelector('.modal-title');
+            if(title) title.innerHTML = '<i class="fas fa-user-plus"></i> Tambah Akun Baru';
+            const header = m.querySelector('.modal-header');
+            if(header) {
+                header.classList.remove('bg-warning', 'text-dark');
+                header.classList.add('bg-primary', 'text-white');
+            }
+            const btn = m.querySelector('button[onclick="simpanAkunPegawai()"]');
+            if(btn) {
+                btn.classList.remove('btn-warning');
+                btn.classList.add('btn-primary');
+                btn.innerHTML = '<i class="fas fa-save"></i> Simpan Akun';
+            }
+            
+            const pwField = document.getElementById('akun_password');
+            if(pwField) {
+                pwField.readOnly = false;
+                pwField.placeholder = 'Masukkan Password';
+            }
+            
+            const modal = bootstrap.Modal.getInstance(m) || new bootstrap.Modal(m);
+            modal.show();
+        } else {
+            console.error('modalTambahAkun not found');
+            alert('Error: Modal Tambah Akun tidak ditemukan di halaman.');
+        }
+    } catch(e) {
+        console.error('Error bukaModalTambahAkun:', e);
+        alert('Gagal membuka modal: ' + e.message);
+    }
+}
+
+window.editAkun = async function(nip) {
+    try {
+        const res = await dbManager.getAllAkun();
+        if (!res || res.success === false) return Swal.fire('Error', 'Gagal memuat data akun', 'error');
+
+        let akun = Array.isArray(res) ? res.find(a => a.nip === nip) : null;
+        if (!akun) {
+            const allPeg = await dbManager.getAllPegawai();
+            if (allPeg) akun = allPeg.find(a => a.nip === nip);
+            if (!akun) return Swal.fire('Error', 'Akun tidak ditemukan', 'error');
+        }
+
+        document.getElementById('akun_nip').value = akun.nip || '';
+        document.getElementById('akun_nama').value = akun.nama || '';
+        document.getElementById('akun_nik').value = akun.nik || '';
+        document.getElementById('akun_tglLahir').value = akun.tglLahir || '';
+        if(akun.statusPegawai) document.getElementById('akun_statusPegawai').value = akun.statusPegawai;
+
+        const pwField = document.getElementById('akun_password');
+        if(pwField) {
+            pwField.value = '';
+            pwField.placeholder = '(Gunakan tombol Reset Password)';
+            pwField.readOnly = true;
+        }
+
+        const m = document.getElementById('modalTambahAkun');
+        // Simpan NIP asli untuk deteksi mode edit dan cascade update
+        m.dataset.originalNip = nip;
+        m.dataset.mode = 'edit';
+
+        const title = m.querySelector('.modal-title');
+        if(title) title.innerHTML = '<i class="fas fa-user-edit"></i> Edit Akun';
+        const header = m.querySelector('.modal-header');
+        if(header) {
+            header.classList.remove('bg-primary', 'text-white');
+            header.classList.add('bg-warning', 'text-dark');
+        }
+        const btn = m.querySelector('button[onclick="simpanAkunPegawai()"]');
+        if(btn) {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-warning');
+            btn.innerHTML = '<i class="fas fa-save"></i> Simpan Perubahan';
+        }
+
+        const modal = bootstrap.Modal.getInstance(m) || new bootstrap.Modal(m);
+        modal.show();
+    } catch(e) {
+        console.error('Error editAkun:', e);
+    }
+}
+
+async function simpanAkunPegawai() {
+    const m = document.getElementById('modalTambahAkun');
+    const isEditMode = m && m.dataset.mode === 'edit';
+    const originalNip = m ? m.dataset.originalNip : null;
+
+    const statusPegawai = document.getElementById('akun_statusPegawai').value;
+    const nip = document.getElementById('akun_nip').value.trim();
+    const password = document.getElementById('akun_password').value;
+    const nama = document.getElementById('akun_nama').value.trim();
+    const nik = document.getElementById('akun_nik').value.trim();
+    const tglLahir = document.getElementById('akun_tglLahir').value;
+
+    if (!statusPegawai || !nip || !nama || !nik || !tglLahir) {
+        Swal.fire('Peringatan', 'Harap isi semua kolom wajib (*) kecuali password jika tidak ingin mengubah', 'warning');
+        return;
+    }
+    if (!isEditMode && !password) {
+        Swal.fire('Peringatan', 'Password wajib diisi untuk akun baru', 'warning');
+        return;
+    }
+
+    const payload = {
+        nip: nip,
+        nama: nama,
+        nik: nik,
+        tglLahir: tglLahir,
+        statusPegawai: statusPegawai,
+        aktif: 1
+    };
+    if (password) payload.password = password;
+
+    Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+    
+    try {
+        // Jika edit mode dan NIP berubah, perlu cascade update
+        if (isEditMode && originalNip && originalNip !== nip) {
+            // 1. Hapus akun lama dengan NIP lama
+            await dbManager.deleteAkun(originalNip);
+            // 2. Ambil data pegawai lama dan update NIP-nya
+            const allPeg = await dbManager.getAllPegawai();
+            if (allPeg) {
+                const pegLama = allPeg.find(p => p.nip === originalNip);
+                if (pegLama) {
+                    pegLama.nip = nip;
+                    pegLama.nama = nama;
+                    pegLama.nik = nik;
+                    pegLama.tglLahir = tglLahir;
+                    pegLama.statusPegawai = statusPegawai;
+                    // Hapus data pegawai lama, simpan dengan NIP baru
+                    await dbManager.deletePegawai(originalNip);
+                    await dbManager.savePegawai(pegLama);
+                }
+            }
+        }
+
+        // Simpan akun (REPLACE akan update jika NIP sudah ada)
+        const result = await dbManager.saveAkun(payload);
+        const success = result && (result === true || result.success === true);
+
+        if (success || result) {
+            if (!isEditMode) {
+                // Mode tambah: buat juga entri data pegawai minimal
+                const pegPayload = {
+                    nip: nip, nama: nama, nik: nik,
+                    statusPegawai: statusPegawai, tglLahir: tglLahir,
+                    statusKepegawaian: 'Aktif'
+                };
+                await dbManager.savePegawai(pegPayload);
+            } else {
+                // Mode edit: update data pegawai juga jika NIP tidak berubah
+                if (originalNip === nip) {
+                    const allPeg = await dbManager.getAllPegawai();
+                    if (allPeg) {
+                        const peg = allPeg.find(p => p.nip === nip);
+                        if (peg) {
+                            peg.nama = nama; peg.nik = nik;
+                            peg.tglLahir = tglLahir; peg.statusPegawai = statusPegawai;
+                            await dbManager.savePegawai(peg);
+                        }
+                    }
+                }
+            }
+
+            Swal.fire('Berhasil', isEditMode ? 'Akun berhasil diperbarui' : 'Akun berhasil ditambahkan', 'success');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalTambahAkun'));
+            if (modal) modal.hide();
+            if (m) { delete m.dataset.originalNip; delete m.dataset.mode; }
+            renderTabelAkun();
+        } else {
+            Swal.fire('Gagal', (result && result.message) || 'Gagal menyimpan akun', 'error');
+        }
+    } catch (e) {
+        Swal.fire('Gagal', e.message || 'Terjadi kesalahan', 'error');
+    }
+}
+
+async function renderTabelAkun() {
+    if (!document.getElementById('tblAkun')) return;
+
+    if ($.fn.DataTable.isDataTable('#tblAkun')) {
+        try { $('#tblAkun').DataTable().clear().destroy(); } catch(e){}
+    }
+
+    let dataAkun = [];
+    try {
+        dataAkun = await dbManager.getAllAkun();
+    } catch(e) {
+        console.error("Gagal mengambil data akun:", e);
+    }
+
+    const formatted = [];
+    dataAkun.forEach(a => {
+        const aksi = `
+            <button class="btn btn-sm btn-info me-1" title="Reset Password" onclick="resetPasswordAkun('${a.nip}')"><i class="fas fa-key text-white"></i></button>
+            <button class="btn btn-sm btn-warning me-1" title="Edit Akun" onclick="editAkun('${a.nip}')"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-danger" title="Hapus Akun" onclick="hapusAkun('${a.nip}')"><i class="fas fa-trash"></i></button>
+        `;
+        const roleBadge = a.role === 'admin'
+            ? '<span class="badge bg-danger">Admin</span>'
+            : '<span class="badge bg-secondary">Pegawai</span>';
+
+        formatted.push([
+            a.nip || '-',
+            a.nama || '-',
+            a.statusPegawai || '-',
+            a.createdAt ? new Date(a.createdAt).toLocaleDateString('id-ID') : '-',
+            roleBadge,
+            aksi
+        ]);
+    });
+
+    $('#tblAkun').DataTable({ destroy: true,
+        data: formatted,
+        pageLength: 10,
+        columns: [
+            { title: 'NIP / Username' },
+            { title: 'Nama' },
+            { title: 'Status Pegawai' },
+            { title: 'Tanggal Daftar' },
+            { title: 'Role' },
+            { title: 'Aksi', orderable: false }
+        ]
+    });
+}
+
+async function hapusAkun(nip) {
+    const { value: text } = await Swal.fire({
+        title: 'Hapus Akun & Data Pegawai?',
+        html: 'Aksi ini akan menghapus akun dan <b>SELURUH DATA</b> pegawai terkait.<br><br>Ketik <b>HAPUS</b> untuk melanjutkan:',
+        input: 'text',
+        inputPlaceholder: 'Ketik HAPUS disini',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal'
+    });
+
+    if (text === 'HAPUS') {
+        Swal.fire({ title: 'Menghapus...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+        try {
+            // Hapus akun dan data pegawai - abaikan error individual
+            await dbManager.deleteAkun(nip).catch(() => {});
+            await dbManager.deletePegawai(nip).catch(() => {});
+            Swal.fire('Terhapus!', 'Akun dan seluruh data pegawai terkait telah dihapus.', 'success');
+            renderTabelAkun();
+            renderTabelPNS();
+            renderTabelPPPK();
+            renderTabelPPPKPW();
+            renderTabelHonorer();
+        } catch (e) {
+            console.error(e);
+            // Refresh tabel dulu, karena data mungkin sudah terhapus
+            renderTabelAkun();
+            renderTabelPNS();
+            renderTabelPPPK();
+            renderTabelPPPKPW();
+            renderTabelHonorer();
+            Swal.fire('Peringatan', 'Data mungkin sudah terhapus. Silakan periksa tabel.', 'warning');
+        }
+    } else if (text !== undefined) {
+        Swal.fire('Dibatalkan', 'Konfirmasi tidak sesuai. Data aman.', 'info');
+    }
+}
+
+async function resetPasswordAkun(nip) {
+    const { value: text } = await Swal.fire({
+        title: 'Reset Password?',
+        html: 'Password akun ini akan dikembalikan ke standar yaitu <b>sama dengan NIP/Username</b>.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#17a2b8',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ya, Reset',
+        cancelButtonText: 'Batal'
+    });
+
+    if (text) {
+        Swal.fire({ title: 'Meriset...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+        try {
+            const allAkun = await dbManager.getAllAkun();
+            const akun = allAkun.find(a => a.nip === nip);
+            if (!akun) throw new Error('Akun tidak ditemukan');
+            
+            akun.password = nip;
+            await dbManager.saveAkun(akun);
+            
+            Swal.fire('Berhasil!', 'Password telah direset menjadi NIP/Username.', 'success');
+        } catch (e) {
+            Swal.fire('Gagal', e.message || 'Terjadi kesalahan', 'error');
+        }
+    }
+}
+
+
+async function toggleKunciData(nip) {
+    Swal.fire({ title: 'Memproses...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+    try {
+        const allPeg = await dbManager.getAllPegawai();
+        const peg = allPeg.find(p => p.nip === nip);
+        if (!peg) {
+            Swal.fire('Error', 'Data pegawai tidak ditemukan', 'error');
+            return;
+        }
+        
+        peg.isLocked = !peg.isLocked;
+        await dbManager.savePegawai(peg);
+        
+        Swal.fire({
+            icon: 'success',
+            title: peg.isLocked ? 'Data Terkunci' : 'Kunci Terbuka',
+            text: peg.isLocked ? 'Data pegawai telah dikunci dan tidak dapat diedit.' : 'Data pegawai kini dapat diedit kembali.',
+            timer: 1500,
+            showConfirmButton: false
+        });
+        renderTabelPNS(); // Memuat ulang semua tabel PNS, PPPK, dll.
+    } catch(e) {
+        Swal.fire('Error', 'Gagal mengubah status kunci', 'error');
+    }
+}
+// ==========================================
+// VALIDASI NIP DAN NIK PADA FORM TAMBAH AKUN
+// ==========================================
+async function validasiNipAkun(nip, inputEl) {
+    if (!inputEl) inputEl = document.getElementById('akun_nip');
+    const feedbackEl = document.getElementById('akun_nip_feedback');
+    const m = document.getElementById('modalTambahAkun');
+    const isEditMode = m && m.dataset.mode === 'edit';
+    const originalNip = m ? m.dataset.originalNip : null;
+    
+    // Reset
+    inputEl.classList.remove('is-invalid', 'is-valid');
+    if (feedbackEl) feedbackEl.textContent = '';
+
+    if (!nip || nip.trim() === '') return;
+    
+    const nipBersih = nip.trim();
+    
+    // Cek panjang
+    if (nipBersih.length !== 18) {
+        inputEl.classList.add('is-invalid');
+        if (feedbackEl) feedbackEl.textContent = 'NIP harus 18 digit. Saat ini: ' + nipBersih.length + ' digit.';
+        return false;
+    }
+    
+    // Cek duplikat HANYA jika mode tambah baru, atau jika NIP berubah dari NIP asli saat edit
+    const nipBerubah = !isEditMode || (originalNip && originalNip !== nipBersih);
+    if (nipBerubah) {
+        try {
+            const allAkun = await dbManager.getAllAkun();
+            if (Array.isArray(allAkun)) {
+                const existing = allAkun.find(a => a.nip === nipBersih);
+                if (existing) {
+                    inputEl.classList.add('is-invalid');
+                    if (feedbackEl) feedbackEl.textContent = 'NIP ini sudah terdaftar atas nama: ' + (existing.nama || existing.nip) + '. Harap cek kembali.';
+                    return false;
+                }
+            }
+        } catch(e) {
+            // Jika gagal cek DB, cukup lolos validasi panjang
+        }
+    }
+    
+    inputEl.classList.add('is-valid');
+    if (isEditMode && originalNip !== nipBersih) {
+        if (feedbackEl) feedbackEl.textContent = 'NIP akan diubah dari ' + originalNip + ' → ' + nipBersih + ' (semua data terkait akan ikut berubah)';
+        feedbackEl.className = 'valid-feedback d-block text-info small';
+    }
+    return true;
+}
+
+async function validasiNikAkun(nik, inputEl) {
+    if (!inputEl) inputEl = document.getElementById('akun_nik');
+    const feedbackEl = document.getElementById('akun_nik_feedback');
+    
+    // Reset
+    inputEl.classList.remove('is-invalid', 'is-valid');
+    if (feedbackEl) feedbackEl.textContent = '';
+    
+    if (!nik || nik.trim() === '') return;
+    
+    const nikBersih = nik.trim();
+    
+    // Cek panjang
+    if (nikBersih.length !== 16) {
+        inputEl.classList.add('is-invalid');
+        if (feedbackEl) feedbackEl.textContent = 'NIK harus 16 digit. Saat ini: ' + nikBersih.length + ' digit.';
+        return false;
+    }
+    
+    // Cek duplikat
+    try {
+        const allPegawai = await dbManager.getAllPegawai();
+        const existing = allPegawai.find(p => p.nik === nikBersih);
+        if (existing) {
+            inputEl.classList.add('is-invalid');
+            if (feedbackEl) feedbackEl.textContent = 'NIK ini sudah terdaftar atas nama: ' + (existing.nama || existing.nip) + '. Harap cek kembali.';
+            return false;
+        }
+    } catch(e) {
+        // Jika gagal cek DB, cukup lolos validasi panjang
+    }
+    
+    inputEl.classList.add('is-valid');
+    return true;
+}
