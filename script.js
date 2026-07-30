@@ -443,8 +443,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const user = document.getElementById('inputUsername').value;
-            const pass = document.getElementById('inputPassword').value;
+            const user = document.getElementById('inputUsername').value.trim();
+            const pass = document.getElementById('inputPassword').value.trim();
 
             if (!user || !pass) return;
 
