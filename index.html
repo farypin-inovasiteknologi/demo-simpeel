@@ -5,15 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>SiMPeEL - Sistem Informasi Pegawai Elektronik</title>
-    <link rel="icon" type="image/png" href="./logo-simpeel.png">
-    <!-- Google Fonts -->
+    <link rel="icon" type="image/png" href="../logo-simpeel.png">
+    <!-- Google Fonts (lokal fallback ke system font jika offline) -->
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- DataTables -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css">
+    <!-- Bootstrap CSS (lokal) -->
+    <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome (lokal) -->
+    <link rel="stylesheet" href="../assets/css/fontawesome.all.min.css">
+    <!-- DataTables (lokal) -->
+    <link rel="stylesheet" href="../assets/css/dataTables.bootstrap5.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
@@ -24,13 +24,20 @@
     <div id="spa-landing-view">
         <div class="landing-card">
             <div class="logos">
-                <img src="logo-simpeel.png" alt="Logo Instansi" id="imgInstansi" class="floating-animation">
-                <img src="logo-simpeel.png" alt="Logo Sekolah" id="imgSekolah" class="floating-animation"
+                <img src="../logo-simpeel.png" alt="Logo Instansi" id="imgInstansi" class="floating-animation">
+                <img src="../logo-simpeel.png" alt="Logo Sekolah" id="imgSekolah" class="floating-animation"
                     style="animation-delay: 0.5s;">
             </div>
 
-            <h1 id="textInstansi">Nama Instansi</h1>
-            <h2 id="textSekolah">Nama Sekolah</h2>
+            <h3 id="textInstansi" class="text-uppercase mb-1"
+                style="font-size: 0.9rem; font-weight: 500; letter-spacing: 1px;">Nama Instansi</h3>
+            <h1 id="textSekolah" class="text-uppercase mb-3"
+                style="font-size: 2.8rem; font-weight: 900; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Nama Sekolah</h1>
+
+            <div class="my-3 text-center">
+                <img src="../logo-simpeel.png" alt="Logo SiMPeEL"
+                    style="height: 100px; width: auto; object-fit: contain;">
+            </div>
 
             <p class="mb-4 text-light opacity-75">Sistem Informasi Pegawai Elektronik terintegrasi untuk memudahkan
                 manajemen kepegawaian Anda secara cerdas dan efisien.</p>
@@ -62,7 +69,7 @@
             <i class="fas fa-laptop icon-6"></i>
         </div>
         <div class="login-card">
-            <img src="logo-simpeel.png" alt="Logo SiMPeEL" class="login-logo floating-animation">
+            <img src="../logo-simpeel.png" alt="Logo SiMPeEL" class="login-logo floating-animation">
             <h4 class="fw-bold mb-1 text-gray-900">Selamat Datang!</h4>
             <p class="text-muted mb-4 small">Silakan login untuk mengelola data kepegawaian.</p>
 
@@ -106,92 +113,75 @@
             <!-- Sidebar - Brand -->
             <a class="sidebar-brand d-flex align-items-center justify-content-center" href="#"
                 onclick="nav('dashboard')">
-                <div class="sidebar-brand-icon">
-                    <i class="fa-solid fa-users-gear"></i>
-                </div>
+                <div class="sidebar-brand-icon"><i class="fa-solid fa-users-gear"></i></div>
                 <div class="sidebar-brand-text mx-3">SiMPeEL</div>
             </a>
 
-            <!-- Divider -->
             <hr class="sidebar-divider my-0">
 
-            <!-- Nav Item - Dashboard -->
+            <!-- 1. Dashboard -->
             <li class="nav-item active" data-page="dashboard">
                 <a class="nav-link" href="#" onclick="nav('dashboard')">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>Dashboard</span></a>
             </li>
 
-            <!-- Divider -->
             <hr class="sidebar-divider">
+            <div class="sidebar-heading">Data Pegawai</div>
 
-            <!-- Heading -->
-            <div class="sidebar-heading">
-                Manajemen Data
+            <!-- SIDEBAR ADMIN -->
+            <div id="sidebar-admin">
+                <!-- 2. Data Induk Pegawai -->
+                <li class="nav-item" data-page="data-induk">
+                    <a class="nav-link" href="#" onclick="nav('data-induk')">
+                        <i class="fas fa-fw fa-users"></i>
+                        <span>Data Induk Pegawai</span></a>
+                </li>
+
+                <!-- 3. Pegawai Aktif/Non Aktif -->
+                <li class="nav-item" data-page="status-pegawai">
+                    <a class="nav-link" href="#" onclick="nav('status-pegawai')">
+                        <i class="fas fa-fw fa-users-cog"></i>
+                        <span>Pegawai Aktif/Non Aktif</span></a>
+                </li>
+
+                <!-- 4. Monitor Pegawai -->
+                <li class="nav-item" data-page="monitor">
+                    <a class="nav-link" href="#" onclick="nav('monitor')">
+                        <i class="fas fa-fw fa-chart-bar"></i>
+                        <span>Monitor Pegawai</span></a>
+                </li>
+
+                <hr class="sidebar-divider">
+                <div class="sidebar-heading">Sistem</div>
+
+                <!-- 5. Pengaturan -->
+                <li class="nav-item" data-page="pengaturan">
+                    <a class="nav-link" href="#" onclick="nav('pengaturan')">
+                        <i class="fas fa-fw fa-cogs"></i>
+                        <span>Pengaturan</span></a>
+                </li>
             </div>
 
-            <!-- Nav Item - Data Pegawai -->
-            <li class="nav-item" data-page="pegawai">
-                <a class="nav-link" href="#" onclick="nav('pegawai')">
-                    <i class="fas fa-fw fa-users"></i>
-                    <span>Data Induk Pegawai</span></a>
-            </li>
-
-            <!-- Nav Item - Pegawai Aktif -->
-            <li class="nav-item" data-page="rekap">
-                <a class="nav-link" href="#" onclick="nav('rekap')">
-                    <i class="fas fa-fw fa-users-cog"></i>
-                    <span>Pegawai Aktif</span></a>
-            </li>
-
-            <!-- Nav Item - DUK -->
-            <li class="nav-item" data-page="duk">
-                <a class="nav-link" href="#" onclick="nav('duk')">
-                    <i class="fas fa-fw fa-list-ol"></i>
-                    <span>DUK (Kepangkatan)</span></a>
-            </li>
-
-            <!-- Nav Item - Gaji Berkala -->
-            <li class="nav-item" data-page="gaji">
-                <a class="nav-link" href="#" onclick="nav('gaji')">
-                    <i class="fas fa-fw fa-money-check-dollar"></i>
-                    <span>Gaji Berkala</span></a>
-            </li>
-
-            <!-- Nav Item - Est. Pensiun -->
-            <li class="nav-item" data-page="pensiun">
-                <a class="nav-link" href="#" onclick="nav('pensiun')">
-                    <i class="fas fa-fw fa-user-clock"></i>
-                    <span>Est. Pensiun</span></a>
-            </li>
-
-            <!-- Nav Item - Pegawai Non Aktif -->
-            <li class="nav-item" data-page="riwayat">
-                <a class="nav-link" href="#" onclick="nav('riwayat')">
-                    <i class="fas fa-fw fa-history"></i>
-                    <span>Pegawai Non Aktif</span></a>
-            </li>
-
-            <!-- Divider -->
-            <hr class="sidebar-divider">
-
-            <!-- Heading -->
-            <div class="sidebar-heading">
-                Sistem
+            <!-- SIDEBAR PEGAWAI -->
+            <div id="sidebar-pegawai" class="d-none">
+                <li class="nav-item" data-page="profil-pegawai">
+                    <a class="nav-link" href="#" onclick="nav('profil-pegawai')">
+                        <i class="fas fa-fw fa-id-card"></i>
+                        <span>Profil Saya</span></a>
+                </li>
+                <li class="nav-item" data-page="update-data">
+                    <a class="nav-link" href="#" onclick="bukaFormUpdateData()">
+                        <i class="fas fa-fw fa-edit"></i>
+                        <span>Update Data</span></a>
+                </li>
             </div>
 
-            <!-- Nav Item - Pengaturan -->
-            <li class="nav-item" data-page="pengaturan">
-                <a class="nav-link" href="#" onclick="nav('pengaturan')">
-                    <i class="fas fa-fw fa-cogs"></i>
-                    <span>Pengaturan</span></a>
-            </li>
-
-            <!-- Nav Item - Kembali ke Portal -->
+            <!-- 6. Keluar -->
             <li class="nav-item">
                 <a class="nav-link" href="#" onclick="logoutSSO()">
                     <i class="fas fa-fw fa-sign-out-alt"></i>
-                    <span>Logout</span></a>
+                    <span>Keluar</span></a>
             </li>
 
         </ul>
@@ -211,7 +201,17 @@
                     </button>
 
                     <!-- Topbar Navbar -->
-                    <ul class="navbar-nav ms-auto">
+                    <ul class="navbar-nav ms-auto align-items-center">
+
+                        <!-- Status & Sync Button -->
+                        <li class="nav-item d-flex align-items-center me-3">
+                            <span id="connectionStatus" class="badge bg-danger me-2" style="font-size: 0.85rem;"><i
+                                    class="fas fa-wifi-slash"></i> Offline</span>
+                            <button class="btn btn-sm btn-outline-primary shadow-sm fw-bold" onclick="bukaModalSync()">
+                                <i class="fas fa-sync-alt"></i> Singkron
+                            </button>
+                        </li>
+
                         <div class="topbar-divider d-none d-sm-block"></div>
                         <!-- Nav Item - User Information -->
                         <li class="nav-item dropdown no-arrow">
@@ -358,16 +358,658 @@
                     </div>
 
                     <!-- ========================== DATA PEGAWAI VIEW ========================== -->
-                    <div id="view-pegawai" class="page-view d-none animate-fade-in">
+
+                    <!-- ========================== DATA INDUK VIEW (Merged: Akun + Pegawai) ========================== -->
+                    <div id="view-data-induk" class="page-view d-none animate-fade-in">
+                        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                            <h1 class="h3 mb-0 text-gray-800 fw-bold">Data Induk Pegawai</h1>
+                        </div>
+
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header py-3">
+                                <ul class="nav nav-tabs card-header-tabs" id="dataIndukTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active fw-bold text-primary" id="tab-di-akun"
+                                            data-bs-toggle="tab" data-bs-target="#di-akun" type="button" role="tab">
+                                            <i class="fas fa-user-shield me-1"></i> Akun Pegawai
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link fw-bold text-dark" id="tab-di-pegawai"
+                                            data-bs-toggle="tab" data-bs-target="#di-pegawai" type="button" role="tab">
+                                            <i class="fas fa-users me-1"></i> Data Pegawai Lengkap
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="card-body">
+                                <div class="tab-content" id="dataIndukTabsContent">
+                                    <!-- TAB AKUN PEGAWAI -->
+                                    <div class="tab-pane fade show active" id="di-akun" role="tabpanel">
+                                        <!-- Toolbar Akun -->
+                                        <div class="d-flex gap-2 mt-3 mb-2 flex-wrap">
+                                            <button class="btn btn-primary shadow-sm fw-bold"
+                                                onclick="bukaModalTambahAkun()">
+                                                <i class="fas fa-user-plus fa-sm text-white-50"></i> Tambah Akun
+                                            </button>
+                                            <button class="btn btn-success shadow-sm" data-bs-toggle="modal"
+                                                data-bs-target="#modalImportAkun">
+                                                <i class="fas fa-file-excel fa-sm text-white-50"></i> Import Akun
+                                            </button>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-hover" id="tblAkun" width="100%"
+                                                cellspacing="0">
+                                                <thead>
+                                                    <tr>
+                                                        <th>NIP / Username</th>
+                                                        <th>Nama</th>
+                                                        <th>Status Pegawai</th>
+                                                        <th>Tanggal Daftar</th>
+                                                        <th>Role</th>
+                                                        <th>Aksi</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <!-- TAB DATA PEGAWAI LENGKAP -->
+                                    <div class="tab-pane fade" id="di-pegawai" role="tabpanel">
+                                        <ul class="nav nav-pills mt-3 mb-2 gap-1" id="pegawaiSubTabs" role="tablist">
+                                            <li class="nav-item"><button class="nav-link active fw-bold btn-sm"
+                                                    id="sub-pns" data-bs-toggle="tab" data-bs-target="#content-pns"
+                                                    type="button">PNS</button></li>
+                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm" id="sub-pppk"
+                                                    data-bs-toggle="tab" data-bs-target="#content-pppk"
+                                                    type="button">PPPK</button></li>
+                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm" id="sub-pppkpw"
+                                                    data-bs-toggle="tab" data-bs-target="#content-pppkpw"
+                                                    type="button">PPPK Paruh Waktu</button></li>
+                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm"
+                                                    id="sub-honorer" data-bs-toggle="tab"
+                                                    data-bs-target="#content-honorer" type="button">Honorer</button>
+                                            </li>
+                                            <li class="nav-item ms-auto">
+                                                <button class="btn btn-success btn-sm shadow-sm" data-bs-toggle="modal"
+                                                    data-bs-target="#modalImport">
+                                                    <i class="fas fa-file-excel fa-sm"></i> Import Data Lengkap
+                                                </button>
+                                            </li>
+                                        </ul>
+                                        <div class="tab-content" id="pegawaiSubTabsContent">
+                                            <div class="tab-pane fade show active" id="content-pns" role="tabpanel">
+                                                <div class="row mt-2 mb-2">
+                                                    <div class="col-md-3"><input type="text" id="filterNamaPNS"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Cari Nama/NIP..."></div>
+                                                    <div class="col-md-3"><select id="filterGolPNS"
+                                                            class="form-select form-select-sm">
+                                                            <option value="">Semua Golongan</option>
+                                                            <option value="I/">Gol I</option>
+                                                            <option value="II/">Gol II</option>
+                                                            <option value="III/">Gol III</option>
+                                                            <option value="IV/">Gol IV</option>
+                                                        </select></div>
+                                                    <div class="col-md-6 text-end"><button
+                                                            class="btn btn-sm btn-success"
+                                                            onclick="exportToExcel('tblPNS','Data_PNS')"><i
+                                                                class="fas fa-file-excel"></i> Excel</button></div>
+                                                </div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered table-hover" id="tblPNS"
+                                                        width="100%" cellspacing="0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>NIP</th>
+                                                                <th>Nama</th>
+                                                                <th>Golongan</th>
+                                                                <th>Jabatan</th>
+                                                                <th>Unit Kerja</th>
+                                                                <th>Aksi</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade" id="content-pppk" role="tabpanel">
+                                                <div class="row mt-2 mb-2">
+                                                    <div class="col-md-4"><input type="text" id="filterNamaPPPK"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Cari Nama/NIP..."></div>
+                                                    <div class="col-md-8 text-end"><button
+                                                            class="btn btn-sm btn-success"
+                                                            onclick="exportToExcel('tblPPPK','Data_PPPK')"><i
+                                                                class="fas fa-file-excel"></i> Excel</button></div>
+                                                </div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered table-hover" id="tblPPPK"
+                                                        width="100%" cellspacing="0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>NIP</th>
+                                                                <th>Nama</th>
+                                                                <th>Golongan</th>
+                                                                <th>Jabatan</th>
+                                                                <th>Unit Kerja</th>
+                                                                <th>Aksi</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade" id="content-pppkpw" role="tabpanel">
+                                                <div class="row mt-2 mb-2">
+                                                    <div class="col-md-4"><input type="text" id="filterNamaPPPKPW"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Cari Nama/NIP..."></div>
+                                                    <div class="col-md-8 text-end"><button
+                                                            class="btn btn-sm btn-success"
+                                                            onclick="exportToExcel('tblPPPKPW','Data_PPPKPW')"><i
+                                                                class="fas fa-file-excel"></i> Excel</button></div>
+                                                </div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered table-hover" id="tblPPPKPW"
+                                                        width="100%" cellspacing="0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>NIP</th>
+                                                                <th>Nama</th>
+                                                                <th>Golongan</th>
+                                                                <th>Jabatan</th>
+                                                                <th>Unit Kerja</th>
+                                                                <th>Aksi</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade" id="content-honorer" role="tabpanel">
+                                                <div class="row mt-2 mb-2">
+                                                    <div class="col-md-4"><input type="text" id="filterNamaHonorer"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Cari Nama/NIP..."></div>
+                                                    <div class="col-md-8 text-end"><button
+                                                            class="btn btn-sm btn-success"
+                                                            onclick="exportToExcel('tblHonorer','Data_Honorer')"><i
+                                                                class="fas fa-file-excel"></i> Excel</button></div>
+                                                </div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered table-hover" id="tblHonorer"
+                                                        width="100%" cellspacing="0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>NIP</th>
+                                                                <th>Nama</th>
+                                                                <th>Golongan</th>
+                                                                <th>Jabatan</th>
+                                                                <th>Unit Kerja</th>
+                                                                <th>Aksi</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================== STATUS PEGAWAI VIEW (Aktif + Non Aktif) ========================== -->
+                    <div id="view-status-pegawai" class="page-view d-none animate-fade-in">
+                        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                            <h1 class="h3 mb-0 text-gray-800 fw-bold">Pegawai Aktif / Non Aktif</h1>
+                        </div>
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header py-3">
+                                <ul class="nav nav-tabs card-header-tabs" id="statusPegawaiTabs" role="tablist">
+                                    <li class="nav-item"><button class="nav-link active fw-bold text-success"
+                                            id="tab-sp-aktif" data-bs-toggle="tab" data-bs-target="#sp-aktif"
+                                            type="button"><i class="fas fa-user-check me-1"></i> Pegawai Aktif</button>
+                                    </li>
+                                    <li class="nav-item"><button class="nav-link fw-bold text-danger"
+                                            id="tab-sp-nonaktif" data-bs-toggle="tab" data-bs-target="#sp-nonaktif"
+                                            type="button"><i class="fas fa-user-times me-1"></i> Pegawai Non
+                                            Aktif</button></li>
+                                </ul>
+                            </div>
+                            <div class="card-body">
+                                <div class="tab-content" id="statusPegawaiTabsContent">
+                                    <!-- TAB AKTIF -->
+                                    <div class="tab-pane fade show active" id="sp-aktif" role="tabpanel">
+                                        <ul class="nav nav-pills mt-3 mb-2 gap-1">
+                                            <li class="nav-item"><button class="nav-link active fw-bold btn-sm"
+                                                    data-bs-toggle="tab" data-bs-target="#rek-pns"
+                                                    type="button">PNS</button></li>
+                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm"
+                                                    data-bs-toggle="tab" data-bs-target="#rek-pppk"
+                                                    type="button">PPPK</button></li>
+                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm"
+                                                    data-bs-toggle="tab" data-bs-target="#rek-pppkpw" type="button">PPPK
+                                                    Paruh Waktu</button></li>
+                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm"
+                                                    data-bs-toggle="tab" data-bs-target="#rek-honorer"
+                                                    type="button">Honorer</button></li>
+                                        </ul>
+                                        <div class="tab-content">
+                                            <div class="tab-pane fade show active" id="rek-pns" role="tabpanel">
+                                                <div class="row mt-2 mb-2">
+                                                    <div class="col-md-4"><input type="text" id="filterRekapPNS"
+                                                            class="form-control form-control-sm" placeholder="Cari...">
+                                                    </div>
+                                                </div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered table-hover" id="tblRekapPNS"
+                                                        width="100%" cellspacing="0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Nama</th>
+                                                                <th>NIP</th>
+                                                                <th>Golongan</th>
+                                                                <th>Jabatan</th>
+                                                                <th>Pendidikan</th>
+                                                                <th>Status</th>
+                                                                <th>Aksi</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade" id="rek-pppk" role="tabpanel">
+                                                <div class="row mt-2 mb-2">
+                                                    <div class="col-md-4"><input type="text" id="filterRekapPPPK"
+                                                            class="form-control form-control-sm" placeholder="Cari...">
+                                                    </div>
+                                                </div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered table-hover" id="tblRekapPPPK"
+                                                        width="100%" cellspacing="0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Nama</th>
+                                                                <th>NIP</th>
+                                                                <th>Golongan</th>
+                                                                <th>Jabatan</th>
+                                                                <th>Pendidikan</th>
+                                                                <th>Status</th>
+                                                                <th>Aksi</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade" id="rek-pppkpw" role="tabpanel">
+                                                <div class="row mt-2 mb-2">
+                                                    <div class="col-md-4"><input type="text" id="filterRekapPPPKPW"
+                                                            class="form-control form-control-sm" placeholder="Cari...">
+                                                    </div>
+                                                </div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered table-hover" id="tblRekapPPPKPW"
+                                                        width="100%" cellspacing="0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Nama</th>
+                                                                <th>NIP</th>
+                                                                <th>Golongan</th>
+                                                                <th>Jabatan</th>
+                                                                <th>Pendidikan</th>
+                                                                <th>Status</th>
+                                                                <th>Aksi</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade" id="rek-honorer" role="tabpanel">
+                                                <div class="row mt-2 mb-2">
+                                                    <div class="col-md-4"><input type="text" id="filterRekapHonorer"
+                                                            class="form-control form-control-sm" placeholder="Cari...">
+                                                    </div>
+                                                </div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered table-hover" id="tblRekapHonorer"
+                                                        width="100%" cellspacing="0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Nama</th>
+                                                                <th>NIP</th>
+                                                                <th>Golongan</th>
+                                                                <th>Jabatan</th>
+                                                                <th>Pendidikan</th>
+                                                                <th>Status</th>
+                                                                <th>Aksi</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- TAB NON AKTIF -->
+                                    <div class="tab-pane fade" id="sp-nonaktif" role="tabpanel">
+                                        <ul class="nav nav-pills mt-3 mb-2 gap-1">
+                                            <li class="nav-item"><button class="nav-link active fw-bold btn-sm"
+                                                    data-bs-toggle="tab" data-bs-target="#content-pensiun"
+                                                    type="button"><i class="fas fa-user-clock me-1"></i>Pensiun</button>
+                                            </li>
+                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm"
+                                                    data-bs-toggle="tab" data-bs-target="#content-meninggal"
+                                                    type="button"><i
+                                                        class="fas fa-user-minus me-1"></i>Meninggal</button></li>
+                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm"
+                                                    data-bs-toggle="tab" data-bs-target="#content-mutasi"
+                                                    type="button"><i
+                                                        class="fas fa-exchange-alt me-1"></i>Mutasi</button></li>
+                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm"
+                                                    data-bs-toggle="tab" data-bs-target="#content-berhenti"
+                                                    type="button"><i
+                                                        class="fas fa-user-slash me-1"></i>Berhenti/Resign</button></li>
+                                        </ul>
+                                        <div class="tab-content">
+                                            <div class="tab-pane fade show active" id="content-pensiun" role="tabpanel">
+                                                <div class="row mt-2 mb-2">
+                                                    <div class="col-md-4"><input type="text" id="filterNamaPensiun"
+                                                            class="form-control form-control-sm" placeholder="Cari...">
+                                                    </div>
+                                                </div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered table-hover" id="tblPensiun"
+                                                        width="100%" cellspacing="0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>NIP</th>
+                                                                <th>Nama</th>
+                                                                <th>Status</th>
+                                                                <th>TMT Pensiun</th>
+                                                                <th>Jabatan Terakhir</th>
+                                                                <th>Aksi</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade" id="content-meninggal" role="tabpanel">
+                                                <div class="row mt-2 mb-2">
+                                                    <div class="col-md-4"><input type="text" id="filterNamaMeninggal"
+                                                            class="form-control form-control-sm" placeholder="Cari...">
+                                                    </div>
+                                                </div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered table-hover" id="tblMeninggal"
+                                                        width="100%" cellspacing="0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>NIP</th>
+                                                                <th>Nama</th>
+                                                                <th>Status</th>
+                                                                <th>Keterangan</th>
+                                                                <th>Jabatan</th>
+                                                                <th>Aksi</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade" id="content-mutasi" role="tabpanel">
+                                                <div class="row mt-2 mb-2">
+                                                    <div class="col-md-4"><input type="text" id="filterNamaMutasi"
+                                                            class="form-control form-control-sm" placeholder="Cari...">
+                                                    </div>
+                                                </div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered table-hover" id="tblMutasi"
+                                                        width="100%" cellspacing="0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>NIP</th>
+                                                                <th>Nama</th>
+                                                                <th>Status</th>
+                                                                <th>Keterangan Mutasi</th>
+                                                                <th>Jabatan</th>
+                                                                <th>Aksi</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade" id="content-berhenti" role="tabpanel">
+                                                <div class="row mt-2 mb-2">
+                                                    <div class="col-md-4"><input type="text" id="filterNamaBerhenti"
+                                                            class="form-control form-control-sm" placeholder="Cari...">
+                                                    </div>
+                                                </div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered table-hover" id="tblBerhenti"
+                                                        width="100%" cellspacing="0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>NIP</th>
+                                                                <th>Nama</th>
+                                                                <th>Status</th>
+                                                                <th>Keterangan</th>
+                                                                <th>Jabatan</th>
+                                                                <th>Aksi</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================== MONITOR PEGAWAI VIEW (DUK + Gaji + Pensiun + GuruSertif) ========================== -->
+                    <div id="view-monitor" class="page-view d-none animate-fade-in">
+                        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                            <h1 class="h3 mb-0 text-gray-800 fw-bold">Monitor Pegawai</h1>
+                        </div>
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header py-3">
+                                <ul class="nav nav-tabs card-header-tabs" id="monitorTabs" role="tablist">
+                                    <li class="nav-item"><button class="nav-link active fw-bold" id="tab-mon-duk"
+                                            data-bs-toggle="tab" data-bs-target="#mon-duk" type="button"><i
+                                                class="fas fa-list-ol me-1"></i> DUK</button></li>
+                                    <li class="nav-item"><button class="nav-link fw-bold" id="tab-mon-gaji"
+                                            data-bs-toggle="tab" data-bs-target="#mon-gaji" type="button"><i
+                                                class="fas fa-money-check-dollar me-1"></i> Gaji Berkala</button></li>
+                                    <li class="nav-item"><button class="nav-link fw-bold" id="tab-mon-pensiun"
+                                            data-bs-toggle="tab" data-bs-target="#mon-pensiun" type="button"><i
+                                                class="fas fa-user-clock me-1"></i> Est. Pensiun</button></li>
+                                    <li class="nav-item"><button class="nav-link fw-bold" id="tab-mon-sertif"
+                                            data-bs-toggle="tab" data-bs-target="#mon-sertif" type="button"><i
+                                                class="fas fa-chalkboard-teacher me-1"></i> Guru Sertif</button></li>
+                                </ul>
+                            </div>
+                            <div class="card-body">
+                                <div class="tab-content" id="monitorTabsContent">
+                                    <!-- DUK TAB -->
+                                    <div class="tab-pane fade show active" id="mon-duk" role="tabpanel">
+                                        <ul class="nav nav-pills mt-2 mb-2 gap-1">
+                                            <li class="nav-item"><button class="nav-link active fw-bold btn-sm"
+                                                    data-bs-toggle="tab" data-bs-target="#duk-pns-tab"
+                                                    type="button">PNS</button></li>
+                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm"
+                                                    data-bs-toggle="tab" data-bs-target="#duk-pppk-tab"
+                                                    type="button">PPPK</button></li>
+                                        </ul>
+                                        <div class="tab-content">
+                                            <div class="tab-pane fade show active" id="duk-pns-tab">
+                                                <div class="row mt-2 mb-2">
+                                                    <div class="col-md-4"><input type="text" id="filterNamaDUKPNS"
+                                                            class="form-control form-control-sm" placeholder="Cari...">
+                                                    </div>
+                                                    <div class="col-md-8 text-end"><button
+                                                            class="btn btn-sm btn-success"
+                                                            onclick="exportToExcel('tblDUKPNS','DUK_PNS')"><i
+                                                                class="fas fa-file-excel"></i> Excel</button></div>
+                                                </div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered table-hover" id="tblDUKPNS"
+                                                        width="100%" cellspacing="0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>No</th>
+                                                                <th>Nama & NIP</th>
+                                                                <th>Jabatan</th>
+                                                                <th>Gol / TMT</th>
+                                                                <th>MK Keseluruhan</th>
+                                                                <th>MK Gol Ruang</th>
+                                                                <th>Usia</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade" id="duk-pppk-tab">
+                                                <div class="row mt-2 mb-2">
+                                                    <div class="col-md-4"><input type="text" id="filterNamaDUKPPPK"
+                                                            class="form-control form-control-sm" placeholder="Cari...">
+                                                    </div>
+                                                    <div class="col-md-8 text-end"><button
+                                                            class="btn btn-sm btn-success"
+                                                            onclick="exportToExcel('tblDUKPPPK','DUK_PPPK')"><i
+                                                                class="fas fa-file-excel"></i> Excel</button></div>
+                                                </div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered table-hover" id="tblDUKPPPK"
+                                                        width="100%" cellspacing="0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>No</th>
+                                                                <th>Nama & NIP</th>
+                                                                <th>Jabatan</th>
+                                                                <th>Gol / TMT</th>
+                                                                <th>MK Keseluruhan</th>
+                                                                <th>MK Gol Ruang</th>
+                                                                <th>Usia</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- GAJI BERKALA TAB -->
+                                    <div class="tab-pane fade" id="mon-gaji" role="tabpanel">
+                                        <div class="row mt-2 mb-2">
+                                            <div class="col-md-4"><input type="text" id="filterNamaKGB"
+                                                    class="form-control form-control-sm" placeholder="Cari..."></div>
+                                            <div class="col-md-8 text-end"><button class="btn btn-sm btn-success"
+                                                    onclick="exportToExcel('tblKGB','Gaji_Berkala')"><i
+                                                        class="fas fa-file-excel"></i> Excel</button></div>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-hover" id="tblKGB" width="100%"
+                                                cellspacing="0">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Nama</th>
+                                                        <th>Status Pegawai</th>
+                                                        <th>Gaji Pokok</th>
+                                                        <th>TMT KGB Lalu</th>
+                                                        <th>TMT KGB Baru</th>
+                                                        <th>Status</th>
+                                                        <th>Aksi</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <!-- ESTIMASI PENSIUN TAB -->
+                                    <div class="tab-pane fade" id="mon-pensiun" role="tabpanel">
+                                        <div class="row mt-2 mb-2">
+                                            <div class="col-md-4"><input type="text" id="filterNamaEstPensiun"
+                                                    class="form-control form-control-sm" placeholder="Cari..."></div>
+                                            <div class="col-md-8 text-end"><button class="btn btn-sm btn-success"
+                                                    onclick="exportToExcel('tblEstPensiun','Est_Pensiun')"><i
+                                                        class="fas fa-file-excel"></i> Excel</button></div>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-hover" id="tblEstPensiun"
+                                                width="100%" cellspacing="0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>No</th>
+                                                        <th>NIP</th>
+                                                        <th>Nama</th>
+                                                        <th>Gol/Jabatan</th>
+                                                        <th>Unit Kerja</th>
+                                                        <th>Tgl Lahir</th>
+                                                        <th>Est. Pensiun</th>
+                                                        <th>Sisa (Tahun)</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <!-- GURU SERTIF TAB -->
+                                    <div class="tab-pane fade" id="mon-sertif" role="tabpanel">
+                                        <div class="row mt-2 mb-2">
+                                            <div class="col-md-4"><input type="text" id="filterNamaGuruSertif"
+                                                    class="form-control form-control-sm" placeholder="Cari..."></div>
+                                            <div class="col-md-8 text-end"><button class="btn btn-sm btn-success"
+                                                    onclick="exportToExcel('tblGuruSertif','Guru_Sertif')"><i
+                                                        class="fas fa-file-excel"></i> Excel</button></div>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-hover" id="tblGuruSertif"
+                                                width="100%" cellspacing="0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>No</th>
+                                                        <th>Nama</th>
+                                                        <th>NIP</th>
+                                                        <th>Status</th>
+                                                        <th>Jabatan Terakhir</th>
+                                                        <th>No Sertifikat</th>
+                                                        <th>Mapel</th>
+                                                        <th>Tahun Sertifikasi</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="view-pegawai" class="page-view d-none animate-fade-in" data-old-view="true">
                         <div class="d-sm-flex align-items-center justify-content-between mb-4">
                             <h1 class="h3 mb-0 text-gray-800 fw-bold">Data Induk Pegawai</h1>
                             <div>
                                 <button class="btn btn-success shadow-sm me-2" data-bs-toggle="modal"
                                     data-bs-target="#modalImport"><i class="fas fa-file-excel fa-sm text-white-50"></i>
                                     Import Data</button>
-                                <button class="btn btn-primary shadow-sm" onclick="bukaModalTambah()"><i
-                                        class="fas fa-plus fa-sm text-white-50"></i>
-                                    Tambah Pegawai</button>
+
                             </div>
                         </div>
 
@@ -412,11 +1054,11 @@
                                             <div class="col-md-5 text-end">
                                                 <button class="btn btn-success"
                                                     onclick="exportToExcel('tblPNS', 'Data_Induk_Pegawai')"><i
-                                                        class="fas fa-file-excel"></i> Export Excel</button>
+                                                        class="fas fa-file-excel"></i> Unduh Excel</button>
                                             </div>
                                         </div>
                                         <div class="table-responsive">
-                                            <table class="table table-bordered table-hover" id="tblPNS" width="100%"
+                                            <table class="table table-bordered table-hover" id="old_tblPNS" width="100%"
                                                 cellspacing="0">
                                                 <thead class="table-light">
                                                     <tr>
@@ -442,12 +1084,12 @@
                                             <div class="col-md-8 text-end">
                                                 <button class="btn btn-success"
                                                     onclick="exportToExcel('tblPPPK', 'Data_PPPK')"><i
-                                                        class="fas fa-file-excel"></i> Export Excel</button>
+                                                        class="fas fa-file-excel"></i> Unduh Excel</button>
                                             </div>
                                         </div>
                                         <div class="table-responsive">
-                                            <table class="table table-bordered table-hover" id="tblPPPK" width="100%"
-                                                cellspacing="0">
+                                            <table class="table table-bordered table-hover" id="old_tblPPPK"
+                                                width="100%" cellspacing="0">
                                                 <thead class="table-light">
                                                     <tr>
                                                         <th>NIP/NI PPPK</th>
@@ -470,12 +1112,12 @@
                                             <div class="col-md-8 text-end">
                                                 <button class="btn btn-success"
                                                     onclick="exportToExcel('tblPPPKPW', 'Data_PPPKPW')"><i
-                                                        class="fas fa-file-excel"></i> Export Excel</button>
+                                                        class="fas fa-file-excel"></i> Unduh Excel</button>
                                             </div>
                                         </div>
                                         <div class="table-responsive">
-                                            <table class="table table-bordered table-hover" id="tblPPPKPW" width="100%"
-                                                cellspacing="0">
+                                            <table class="table table-bordered table-hover" id="old_tblPPPKPW"
+                                                width="100%" cellspacing="0">
                                                 <thead class="table-light">
                                                     <tr>
                                                         <th>NIP/NI PPPK</th>
@@ -498,12 +1140,12 @@
                                             <div class="col-md-8 text-end">
                                                 <button class="btn btn-success"
                                                     onclick="exportToExcel('tblHonorer', 'Data_Honorer')"><i
-                                                        class="fas fa-file-excel"></i> Export Excel</button>
+                                                        class="fas fa-file-excel"></i> Unduh Excel</button>
                                             </div>
                                         </div>
                                         <div class="table-responsive">
-                                            <table class="table table-bordered table-hover" id="tblHonorer" width="100%"
-                                                cellspacing="0">
+                                            <table class="table table-bordered table-hover" id="old_tblHonorer"
+                                                width="100%" cellspacing="0">
                                                 <thead class="table-light">
                                                     <tr>
                                                         <th>NIP/NI PPPK</th>
@@ -524,7 +1166,7 @@
                     </div>
 
                     <!-- ========================== PEGAWAI AKTIF VIEW ========================== -->
-                    <div id="view-rekap" class="page-view d-none animate-fade-in">
+                    <div id="view-rekap" class="page-view d-none animate-fade-in" data-old-view="true">
                         <div class="d-sm-flex align-items-center justify-content-between mb-4">
                             <h1 class="h3 mb-0 text-gray-800 fw-bold">Daftar Pegawai Aktif</h1>
                         </div>
@@ -573,11 +1215,11 @@
                                             <div class="col-md-5 text-end">
                                                 <button class="btn btn-success"
                                                     onclick="exportToExcel('tblRekapPNS', 'Data_Pegawai_Aktif_PNS')"><i
-                                                        class="fas fa-file-excel"></i> Export Excel</button>
+                                                        class="fas fa-file-excel"></i> Unduh Excel</button>
                                             </div>
                                         </div>
                                         <div class="table-responsive">
-                                            <table class="table table-bordered table-hover" id="tblRekapPNS"
+                                            <table class="table table-bordered table-hover" id="old_tblRekapPNS"
                                                 width="100%">
                                                 <thead class="bg-primary text-white">
                                                     <tr>
@@ -603,16 +1245,16 @@
                                             <div class="col-md-8 text-end">
                                                 <button class="btn btn-success"
                                                     onclick="exportToExcel('tblRekapPPPK', 'Data_Pegawai_Aktif_PPPK')"><i
-                                                        class="fas fa-file-excel"></i> Export Excel</button>
+                                                        class="fas fa-file-excel"></i> Unduh Excel</button>
                                             </div>
                                         </div>
                                         <div class="table-responsive">
-                                            <table class="table table-bordered table-hover" id="tblRekapPPPK"
+                                            <table class="table table-bordered table-hover" id="old_tblRekapPPPK"
                                                 width="100%" cellspacing="0">
                                                 <thead class="bg-primary text-white">
                                                     <tr>
                                                         <th>Nama Lengkap</th>
-                                                        <th>NIP/NIPPPK</th>
+                                                        <th>NIP/NI PPPK</th>
                                                         <th>Pangkat/Gol Terbaru</th>
                                                         <th>Jabatan Terbaru</th>
                                                         <th>Pendidikan Terakhir</th>
@@ -631,11 +1273,11 @@
                                             <div class="col-md-8 text-end">
                                                 <button class="btn btn-success"
                                                     onclick="exportToExcel('tblRekapPPPKPW', 'Data_Pegawai_Aktif_PPPKPW')"><i
-                                                        class="fas fa-file-excel"></i> Export Excel</button>
+                                                        class="fas fa-file-excel"></i> Unduh Excel</button>
                                             </div>
                                         </div>
                                         <div class="table-responsive">
-                                            <table class="table table-bordered table-hover" id="tblRekapPPPKPW"
+                                            <table class="table table-bordered table-hover" id="old_tblRekapPPPKPW"
                                                 width="100%" cellspacing="0">
                                                 <thead class="bg-primary text-white">
                                                     <tr>
@@ -659,11 +1301,11 @@
                                             <div class="col-md-8 text-end">
                                                 <button class="btn btn-success"
                                                     onclick="exportToExcel('tblRekapHonorer', 'Data_Pegawai_Aktif_Honorer')"><i
-                                                        class="fas fa-file-excel"></i> Export Excel</button>
+                                                        class="fas fa-file-excel"></i> Unduh Excel</button>
                                             </div>
                                         </div>
                                         <div class="table-responsive">
-                                            <table class="table table-bordered table-hover" id="tblRekapHonorer"
+                                            <table class="table table-bordered table-hover" id="old_tblRekapHonorer"
                                                 width="100%" cellspacing="0">
                                                 <thead class="bg-primary text-white">
                                                     <tr>
@@ -686,7 +1328,7 @@
                     </div>
 
                     <!-- ========================== DUK VIEW ========================== -->
-                    <div id="view-duk" class="page-view d-none animate-fade-in">
+                    <div id="view-duk" class="page-view d-none animate-fade-in" data-old-view="true">
                         <div class="d-sm-flex align-items-center justify-content-between mb-4">
                             <h1 class="h3 mb-0 text-gray-800 fw-bold">Daftar Urut Kepangkatan (DUK)</h1>
                         </div>
@@ -712,11 +1354,11 @@
                                             <div class="col-md-5 text-end">
                                                 <button class="btn btn-success"
                                                     onclick="exportToExcel('tblDUKPNS', 'Data_DUK_PNS')"><i
-                                                        class="fas fa-file-excel"></i> Export Excel</button>
+                                                        class="fas fa-file-excel"></i> Unduh Excel</button>
                                             </div>
                                         </div>
                                         <div class="table-responsive">
-                                            <table class="table table-bordered table-striped" id="tblDUKPNS"
+                                            <table class="table table-bordered table-striped" id="old_tblDUKPNS"
                                                 width="100%">
                                                 <thead class="table-dark">
                                                     <tr>
@@ -742,11 +1384,11 @@
                                             <div class="col-md-5 text-end">
                                                 <button class="btn btn-success"
                                                     onclick="exportToExcel('tblDUKPPPK', 'Data_DUK_PPPK')"><i
-                                                        class="fas fa-file-excel"></i> Export Excel</button>
+                                                        class="fas fa-file-excel"></i> Unduh Excel</button>
                                             </div>
                                         </div>
                                         <div class="table-responsive">
-                                            <table class="table table-bordered table-striped" id="tblDUKPPPK"
+                                            <table class="table table-bordered table-striped" id="old_tblDUKPPPK"
                                                 width="100%">
                                                 <thead class="table-dark">
                                                     <tr>
@@ -769,7 +1411,7 @@
                     </div>
 
                     <!-- ========================== GAJI BERKALA VIEW ========================== -->
-                    <div id="view-gaji" class="page-view d-none animate-fade-in">
+                    <div id="view-gaji" class="page-view d-none animate-fade-in" data-old-view="true">
                         <div class="d-sm-flex align-items-center justify-content-between mb-4">
                             <h1 class="h3 mb-0 text-gray-800 fw-bold">Pengingat Kenaikan Gaji Berkala (KGB)</h1>
                         </div>
@@ -791,11 +1433,11 @@
                                     <div class="col-md-5 text-end">
                                         <button class="btn btn-success"
                                             onclick="exportToExcel('tblKGB', 'Data_Gaji_Berkala')"><i
-                                                class="fas fa-file-excel"></i> Export Excel</button>
+                                                class="fas fa-file-excel"></i> Unduh Excel</button>
                                     </div>
                                 </div>
                                 <div class="table-responsive">
-                                    <table class="table table-bordered table-hover" id="tblKGB" width="100%">
+                                    <table class="table table-bordered table-hover" id="old_tblKGB" width="100%">
                                         <thead class="bg-primary text-white">
                                             <tr>
                                                 <th>Nama Pegawai</th>
@@ -817,7 +1459,7 @@
                     </div>
 
                     <!-- ========================== EST PENSIUN VIEW ========================== -->
-                    <div id="view-pensiun" class="page-view d-none animate-fade-in">
+                    <div id="view-pensiun" class="page-view d-none animate-fade-in" data-old-view="true">
                         <div class="d-sm-flex align-items-center justify-content-between mb-4">
                             <h1 class="h3 mb-0 text-gray-800 fw-bold">Estimasi Pensiun Pegawai</h1>
                         </div>
@@ -832,11 +1474,12 @@
                                     <div class="col-md-8 text-end">
                                         <button class="btn btn-success"
                                             onclick="exportToExcel('tblEstPensiun', 'Estimasi_Pensiun')"><i
-                                                class="fas fa-file-excel"></i> Export Excel</button>
+                                                class="fas fa-file-excel"></i> Unduh Excel</button>
                                     </div>
                                 </div>
                                 <div class="table-responsive">
-                                    <table class="table table-bordered table-striped" id="tblEstPensiun" width="100%">
+                                    <table class="table table-bordered table-striped" id="old_tblEstPensiun"
+                                        width="100%">
                                         <thead class="table-dark">
                                             <tr>
                                                 <th>Nama / NIP</th>
@@ -849,6 +1492,48 @@
                                         </thead>
                                         <tbody>
                                             <!-- Data dummy via JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================== GURU SERTIF VIEW ========================== -->
+                    <div id="view-guru-sertif" class="page-view d-none animate-fade-in" data-old-view="true">
+                        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                            <h1 class="h3 mb-0 text-gray-800 fw-bold"><i
+                                    class="fas fa-chalkboard-teacher me-2 text-primary"></i>Daftar Guru Sertifikasi</h1>
+                        </div>
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 fw-bold text-primary">Guru Tersertifikasi (Pegawai Aktif)</h6>
+                                <button class="btn btn-sm btn-success"
+                                    onclick="exportToExcel('tblGuruSertif', 'Daftar_Guru_Sertif')"><i
+                                        class="fas fa-file-excel me-1"></i>Unduh Excel</button>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-4"><input type="text" id="filterNamaGuruSertif"
+                                            class="form-control" placeholder="Cari Nama/NIP..."></div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-striped" id="old_tblGuruSertif"
+                                        width="100%" cellspacing="0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Nama Lengkap</th>
+                                                <th>NIP</th>
+                                                <th>Status Pegawai</th>
+                                                <th>Jabatan Terakhir</th>
+                                                <th>No Sertifikat Pendidik</th>
+                                                <th>Mapel</th>
+                                                <th>Tahun Sertifikasi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Data via JS -->
                                         </tbody>
                                     </table>
                                 </div>
@@ -983,7 +1668,10 @@
                                                     <div class="mb-3">
                                                         <label class="form-label fw-bold">Username</label>
                                                         <input type="text" class="form-control" id="set_username"
-                                                            placeholder="Masukkan Username">
+                                                            placeholder="Masukkan Username" readonly
+                                                            title="Username tidak dapat diubah">
+                                                        <small class="text-danger">* Username dikunci secara permanen
+                                                            dan tidak dapat diubah.</small>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label fw-bold">Password Baru</label>
@@ -1024,7 +1712,7 @@
                                                             (16:9).</p>
 
                                                         <div class="mb-3">
-                                                            <img id="previewBgLanding" src="logo-simpeel.png"
+                                                            <img id="previewBgLanding" src="../logo-simpeel.png"
                                                                 alt="Preview Background" class="img-thumbnail"
                                                                 style="width: 100%; max-height: 250px; object-fit: cover;">
                                                         </div>
@@ -1064,8 +1752,51 @@
                         </div>
                     </div>
 
+                    <!-- ========================== AKUN PEGAWAI VIEW ========================== -->
+                    <div id="view-akun" class="page-view d-none animate-fade-in" data-old-view="true">
+                        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                            <h1 class="h3 mb-0 text-gray-800 fw-bold">Manajemen Akun Pegawai</h1>
+                            <button class="btn btn-primary shadow-sm fw-bold" onclick="bukaModalTambahAkun()"><i
+                                    class="fas fa-user-plus fa-sm text-white-50"></i> Tambah Akun</button>
+                        </div>
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 fw-bold text-primary">Daftar Akun</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover" id="old_tblAkun" width="100%"
+                                        cellspacing="0">
+                                        <thead class="bg-primary text-white">
+                                            <tr>
+                                                <th>NIP / Username</th>
+                                                <th>Nama Lengkap</th>
+                                                <th>Status Pegawai</th>
+                                                <th>Aktif</th>
+                                                <th>Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================== PROFIL PEGAWAI VIEW ========================== -->
+                    <div id="view-profil-pegawai" class="page-view d-none animate-fade-in">
+                        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                            <h1 class="h3 mb-0 text-gray-800 fw-bold">Profil Pegawai</h1>
+                        </div>
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body" id="profil-pegawai-container">
+                                <!-- Data Profil akan dirender di sini via JS -->
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- ========================== PEGAWAI NON AKTIF VIEW ========================== -->
-                    <div id="view-riwayat" class="page-view d-none animate-fade-in">
+                    <div id="view-riwayat" class="page-view d-none animate-fade-in" data-old-view="true">
                         <div class="d-sm-flex align-items-center justify-content-between mb-4">
                             <h1 class="h3 mb-0 text-gray-800 fw-bold">Daftar Pegawai Non Aktif</h1>
                         </div>
@@ -1100,7 +1831,7 @@
                                     <!-- Pensiun Tab -->
                                     <div class="tab-pane fade show active" id="content-pensiun" role="tabpanel">
                                         <div class="table-responsive mt-3">
-                                            <table class="table table-bordered table-striped" id="tblPensiun"
+                                            <table class="table table-bordered table-striped" id="old_tblPensiun"
                                                 width="100%">
                                                 <thead class="bg-success text-white">
                                                     <tr>
@@ -1119,7 +1850,7 @@
                                     <!-- Mutasi Tab -->
                                     <div class="tab-pane fade" id="content-mutasi" role="tabpanel">
                                         <div class="table-responsive mt-3">
-                                            <table class="table table-bordered table-striped" id="tblMutasi"
+                                            <table class="table table-bordered table-striped" id="old_tblMutasi"
                                                 width="100%">
                                                 <thead class="bg-primary text-white">
                                                     <tr>
@@ -1138,7 +1869,7 @@
                                     <!-- Meninggal Tab -->
                                     <div class="tab-pane fade" id="content-meninggal" role="tabpanel">
                                         <div class="table-responsive mt-3">
-                                            <table class="table table-bordered table-striped" id="tblMeninggal"
+                                            <table class="table table-bordered table-striped" id="old_tblMeninggal"
                                                 width="100%">
                                                 <thead class="bg-dark text-white">
                                                     <tr>
@@ -1157,7 +1888,7 @@
                                     <!-- Berhenti Tab -->
                                     <div class="tab-pane fade" id="content-berhenti" role="tabpanel">
                                         <div class="table-responsive mt-3">
-                                            <table class="table table-bordered table-striped" id="tblBerhenti"
+                                            <table class="table table-bordered table-striped" id="old_tblBerhenti"
                                                 width="100%">
                                                 <thead class="bg-danger text-white">
                                                     <tr>
@@ -1211,6 +1942,63 @@
 
     <!-- ========================== MODALS ========================== -->
 
+    <!-- Modal Sync -->
+    <div class="modal fade" id="modalSync" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-sync-alt"></i> Sinkronisasi Data</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted mb-3">Masukkan Link Exec Google Apps Script (API) versi Online untuk
+                        menautkan dan menyinkronkan data secara dua arah.</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Link Exec API Google</label>
+                        <input type="text" class="form-control" id="syncExecUrl"
+                            placeholder="https://script.google.com/macros/s/.../exec">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary shadow-sm" onclick="mulaiSinkronisasi()"><i
+                            class="fas fa-cloud-upload-alt"></i> Mulai Sinkronisasi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Import Akun Excel (6 Kolom) -->
+    <div class="modal fade" id="modalImportAkun" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-file-excel"></i> Import Akun Pegawai (6 Kolom)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p>Template berisi 6 kolom: <strong>NIP, Nama, NIK, Tgl Lahir, Status Pegawai, Password</strong>.
+                    </p>
+                    <p class="text-muted small">Jika kolom Password dikosongkan, password default akan sama dengan NIP.
+                    </p>
+                    <button class="btn btn-outline-primary mb-4" onclick="downloadTemplateImportAkun()"><i
+                            class="fas fa-download"></i> Unduh Template Akun</button>
+                    <div class="mb-3 text-start">
+                        <label class="form-label fw-bold">Upload File Excel (.xls / .xlsx)</label>
+                        <input class="form-control" type="file" id="fileImportAkunExcel" accept=".xls, .xlsx">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" onclick="prosesImportAkunExcel()"><i
+                            class="fas fa-upload"></i> Proses Import</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Import Excel -->
     <div class="modal fade" id="modalImport" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
@@ -1223,7 +2011,7 @@
                 <div class="modal-body text-center">
                     <p>Silakan unduh template Excel terlebih dahulu, isi data sesuai format, lalu unggah kembali ke
                         sini.</p>
-                    <button class="btn btn-outline-success mb-4" onclick="alert('Template sedang diunduh...')"><i
+                    <button class="btn btn-outline-success mb-4" onclick="downloadTemplateImport()"><i
                             class="fas fa-download"></i> Unduh Template Excel</button>
 
                     <div class="mb-3 text-start">
@@ -1278,6 +2066,10 @@
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#f-jabatan" type="button"
                                 role="tab"><i class="fas fa-briefcase me-1"></i>Riwayat Jabatan</button>
+                        </li>
+                        <li class="nav-item" id="nav-sertifikasi-guru" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#f-sertifikasi" type="button"
+                                role="tab"><i class="fas fa-certificate me-1"></i>Sertifikasi (Guru)</button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#f-pendidikan" type="button"
@@ -1513,6 +2305,12 @@
                                 <div class="col-md-3"><label class="form-label">No Rekening Gaji</label><input
                                         type="text" class="form-control" id="peg_rekening"></div>
                             </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6"><label class="form-label">NUPTK</label><input type="text"
+                                        class="form-control" id="peg_nuptk"></div>
+                                <div class="col-md-6"><label class="form-label">No Taspen</label><input type="text"
+                                        class="form-control" id="peg_taspen"></div>
+                            </div>
                         </div>
 
                         <!-- TAB 3: RIWAYAT PANGKAT -->
@@ -1534,6 +2332,7 @@
                                             <th>Pejabat Penandatangan</th>
                                             <th>MK (Thn)</th>
                                             <th>MK (Bln)</th>
+                                            <th>Upload (PDF)</th>
                                             <th>Aksi</th>
                                         </tr>
                                     </thead>
@@ -1565,6 +2364,7 @@
                                             <th>Pejabat Penandatangan</th>
                                             <th>MK (Thn)</th>
                                             <th>MK (Bln)</th>
+                                            <th>Upload (PDF)</th>
                                             <th>Aksi</th>
                                         </tr>
                                     </thead>
@@ -1594,6 +2394,7 @@
                                             <th>TMT Jabatan</th>
                                             <th>Nomor SK</th>
                                             <th>Tgl SK</th>
+                                            <th>Upload (PDF)</th>
                                             <th>Aksi</th>
 
                                         </tr>
@@ -1602,6 +2403,44 @@
                                         <!-- Baris dinamis -->
                                     </tbody>
                                 </table>
+                            </div>
+                        </div>
+
+                        <!-- TAB SERTIFIKASI GURU -->
+                        <div class="tab-pane fade" id="f-sertifikasi" role="tabpanel">
+                            <h5 class="fw-bold text-primary mb-3">Sertifikasi (Guru)</h5>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><label class="form-label">Nomor Sertifikat</label><input
+                                        type="text" class="form-control" id="cert_no"></div>
+                                <div class="col-md-4"><label class="form-label">Tanggal Sertifikat</label><input
+                                        type="date" class="form-control" id="cert_tgl"></div>
+                                <div class="col-md-4"><label class="form-label">NRG</label><input type="text"
+                                        class="form-control" id="cert_nrg"></div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><label class="form-label">NUPTK</label><input type="text"
+                                        class="form-control" id="cert_nuptk" readonly></div>
+                                <div class="col-md-4"><label class="form-label">Tahun Lulus</label><input type="number"
+                                        class="form-control" id="cert_tahun"></div>
+                                <div class="col-md-4"><label class="form-label">Mata Pelajaran (Mapel)</label><input
+                                        type="text" class="form-control" id="cert_mapel"></div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><label class="form-label">LPTK Penyelenggara</label><input
+                                        type="text" class="form-control" id="cert_lptk"></div>
+                                <div class="col-md-4"><label class="form-label">Pejabat Penandatangan</label><input
+                                        type="text" class="form-control" id="cert_pejabat"></div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Upload Sertifikat (PDF, max 250kb)</label>
+                                    <div class="d-flex align-items-center">
+                                        <input type="file" class="form-control file-upload-input"
+                                            accept="application/pdf" data-max-size="250" data-target="cert_file_data">
+                                        <input type="hidden" id="cert_file_data">
+                                        <button type="button" class="btn btn-sm btn-info ms-2 d-none btn-view-file"
+                                            onclick="viewFileApp(document.getElementById('cert_file_data').value)"><i
+                                                class="fas fa-eye"></i></button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -1623,6 +2462,7 @@
                                             <th>Jumlah Gaji Pokok</th>
                                             <th>Masa Kerja (Thn)</th>
                                             <th>Masa Kerja (Bln)</th>
+                                            <th>Upload (PDF)</th>
                                             <th>Aksi</th>
                                         </tr>
                                     </thead>
@@ -1650,7 +2490,9 @@
                                             <th>Jurusan / Prodi</th>
                                             <th>Tahun Masuk</th>
                                             <th>Tahun Lulus</th>
-                                            <th>Gelar</th>
+                                            <th>Gelar Depan</th>
+                                            <th>Gelar Belakang</th>
+                                            <th>Upload (PDF)</th>
                                             <th>Aksi</th>
                                         </tr>
                                     </thead>
@@ -1678,6 +2520,7 @@
                                             <th>Tahun</th>
                                             <th>Durasi (Jam/Hari)</th>
                                             <th>No. Sertifikat</th>
+                                            <th>Upload (PDF)</th>
                                             <th>Aksi</th>
                                         </tr>
                                     </thead>
@@ -1699,6 +2542,33 @@
                                 <div class="col-md-4"><label class="form-label">Tgl Lahir</label><input type="date"
                                         class="form-control"></div>
                             </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Buku Nikah / Akta Cerai (PDF, max 250kb)</label>
+                                    <div class="d-flex align-items-center">
+                                        <input type="file" class="form-control file-upload-input"
+                                            accept="application/pdf" data-max-size="250" data-target="file_buku_nikah">
+                                        <input type="hidden" id="file_buku_nikah">
+                                        <button type="button" class="btn btn-sm btn-info ms-2 d-none btn-view-file"
+                                            onclick="viewFileApp(document.getElementById('file_buku_nikah').value)"><i
+                                                class="fas fa-eye"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Kartu Keluarga (KK) (PDF, max 250kb)</label>
+                                    <div class="d-flex align-items-center">
+                                        <input type="file" class="form-control file-upload-input"
+                                            accept="application/pdf" data-max-size="250" data-target="file_kk">
+                                        <input type="hidden" id="file_kk">
+                                        <button type="button" class="btn btn-sm btn-info ms-2 d-none btn-view-file"
+                                            onclick="viewFileApp(document.getElementById('file_kk').value)"><i
+                                                class="fas fa-eye"></i></button>
+                                    </div>
+                                </div>
+                            </div>
 
                             <div class="d-flex justify-content-between align-items-center mb-2 mt-4">
                                 <h5 class="fw-bold text-primary mb-0">Data Anak</h5>
@@ -1713,6 +2583,7 @@
                                             <th>Kota Tempat Lahir</th>
                                             <th>Tanggal Lahir</th>
                                             <th>Status Keluarga</th>
+                                            <th>Upload (PDF)</th>
                                             <th>Aksi</th>
                                         </tr>
                                     </thead>
@@ -1749,6 +2620,63 @@
                                             <li>Ukuran file maksimal 2MB.</li>
                                             <li>Foto akan otomatis di-crop 3:4 saat Anda memilih gambar.</li>
                                         </ul>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="col-md-12 mb-4">
+                                    <h6 class="fw-bold text-secondary">Dokumen Pendukung Lainnya</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Kartu NUPTK (PDF, max 250kb)</label>
+                                            <div class="d-flex align-items-center">
+                                                <input type="file" class="form-control file-upload-input"
+                                                    accept="application/pdf" data-max-size="250"
+                                                    data-target="file_kartu_nuptk">
+                                                <input type="hidden" id="file_kartu_nuptk">
+                                                <button type="button"
+                                                    class="btn btn-sm btn-info ms-2 d-none btn-view-file"
+                                                    onclick="viewFileApp(document.getElementById('file_kartu_nuptk').value)"><i
+                                                        class="fas fa-eye"></i></button>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Taspen (PDF, max 250kb)</label>
+                                            <div class="d-flex align-items-center">
+                                                <input type="file" class="form-control file-upload-input"
+                                                    accept="application/pdf" data-max-size="250"
+                                                    data-target="file_taspen">
+                                                <input type="hidden" id="file_taspen">
+                                                <button type="button"
+                                                    class="btn btn-sm btn-info ms-2 d-none btn-view-file"
+                                                    onclick="viewFileApp(document.getElementById('file_taspen').value)"><i
+                                                        class="fas fa-eye"></i></button>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">BPJS (PDF, max 250kb)</label>
+                                            <div class="d-flex align-items-center">
+                                                <input type="file" class="form-control file-upload-input"
+                                                    accept="application/pdf" data-max-size="250"
+                                                    data-target="file_bpjs">
+                                                <input type="hidden" id="file_bpjs">
+                                                <button type="button"
+                                                    class="btn btn-sm btn-info ms-2 d-none btn-view-file"
+                                                    onclick="viewFileApp(document.getElementById('file_bpjs').value)"><i
+                                                        class="fas fa-eye"></i></button>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">KTP (PDF, max 250kb)</label>
+                                            <div class="d-flex align-items-center">
+                                                <input type="file" class="form-control file-upload-input"
+                                                    accept="application/pdf" data-max-size="250" data-target="file_ktp">
+                                                <input type="hidden" id="file_ktp">
+                                                <button type="button"
+                                                    class="btn btn-sm btn-info ms-2 d-none btn-view-file"
+                                                    onclick="viewFileApp(document.getElementById('file_ktp').value)"><i
+                                                        class="fas fa-eye"></i></button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1988,22 +2916,109 @@
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Scripts (semua lokal, offline-ready) -->
+    <!-- Hack untuk Electron agar jQuery & library lain tetap terekspos sbg global meski ada nodeIntegration -->
+
+    <script src="../assets/js/jquery-3.6.0.min.js"></script>
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/jquery.dataTables.min.js"></script>
+    <script src="../assets/js/dataTables.bootstrap5.min.js"></script>
+    <script src="../assets/js/chart.min.js"></script>
     <!-- Cropper.js -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    <link href="../assets/css/cropper.min.css" rel="stylesheet">
+    <script src="../assets/js/cropper.min.js"></script>
     <!-- ExcelJS & FileSaver -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="../assets/js/exceljs.min.js"></script>
+    <script src="../assets/js/FileSaver.min.js"></script>
     <!-- SheetJS (xlsx) untuk baca Import -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="../assets/js/xlsx.full.min.js"></script>
+
+    <!-- Kembalikan module untuk Electron IPC dll -->
+
+    <!-- Modal Tambah Akun Pegawai -->
+    <div class="modal fade" id="modalTambahAkun" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-user-plus"></i> Tambah Akun Pegawai</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info py-2 mb-3 small"><i class="fas fa-info-circle me-1"></i>
+                        Untuk Honorer, NIP/Username diisi dengan <strong>NIK + "00"</strong> (18 digit total).
+                    </div>
+                    <form id="formTambahAkun">
+                        <!-- Baris 1: NIP | Password -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">NIP / Username <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" id="akun_nip" class="form-control" required maxlength="18"
+                                    placeholder="18 digit NIP" onblur="validasiNipAkun(this.value, this)">
+                                <div class="invalid-feedback" id="akun_nip_feedback"></div>
+                                <div class="form-text text-muted">Wajib 18 digit.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Password <span
+                                        class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="password" id="akun_password" class="form-control" required
+                                        placeholder="Masukkan password">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="
+                                        const i=document.getElementById('akun_password');
+                                        i.type = i.type==='password'?'text':'password';
+                                    "><i class="fas fa-eye"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Baris 2: Status Pegawai | Nama -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Status Pegawai <span
+                                        class="text-danger">*</span></label>
+                                <select id="akun_statusPegawai" class="form-select" required>
+                                    <option value="">-- Pilih Status --</option>
+                                    <option value="PNS">PNS</option>
+                                    <option value="PPPK">PPPK</option>
+                                    <option value="PPPK Paruh Waktu">PPPK Paruh Waktu</option>
+                                    <option value="Honorer">Honorer</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Nama Lengkap <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" id="akun_nama" class="form-control" required
+                                    placeholder="Nama sesuai identitas">
+                            </div>
+                        </div>
+                        <!-- Baris 3: NIK | Tanggal Lahir -->
+                        <div class="row g-3 mb-2">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">NIK KTP <span class="text-danger">*</span></label>
+                                <input type="text" id="akun_nik" class="form-control" required maxlength="16"
+                                    placeholder="16 digit NIK KTP" onblur="validasiNikAkun(this.value, this)">
+                                <div class="invalid-feedback" id="akun_nik_feedback"></div>
+                                <div class="form-text text-muted">Wajib 16 digit.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Tanggal Lahir <span
+                                        class="text-danger">*</span></label>
+                                <input type="date" id="akun_tglLahir" class="form-control" required max="9999-12-31">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" onclick="simpanAkunPegawai()"><i
+                            class="fas fa-save"></i> Simpan Akun</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Kebijakan Privasi -->
-    <div class="modal fade" id="modalPrivacy" tabindex="-1">
+    <div class="modal fade" id="modalPrivacy">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
@@ -2032,9 +3047,10 @@
         </div>
     </div>
 
-    <!-- SweetAlert2 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- SweetAlert2 (lokal) -->
+    <link rel="stylesheet" href="../assets/css/sweetalert2.min.css">
+    <script src="../assets/js/sweetalert2.all.min.js"></script>
     <script src="wilayah.js"></script>
     <script src="script.js"></script>
     <script src="pegawai.js"></script>
