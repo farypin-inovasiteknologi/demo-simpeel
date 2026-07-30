@@ -60,6 +60,7 @@ body {
 /* Sidebar Styles */
 .sidebar {
     width: 250px;
+    flex: 0 0 250px;
     min-height: 100vh;
     background: var(--gradient-primary);
     transition: all 0.3s;
@@ -126,8 +127,15 @@ body {
 
 /* Content Area */
 #content-wrapper {
-    width: calc(100% - 250px);
-    flex-grow: 1;
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+#content {
+    flex: 1 0 auto;
+    width: 100%;
 }
 
 .topbar {
@@ -193,14 +201,15 @@ body {
         overflow: hidden;
         position: absolute;
         z-index: 999;
+        transition: all 0.3s;
     }
 
     .sidebar.toggled {
         width: 250px;
     }
 
-    #content-wrapper {
-        width: 100%;
+    #wrapper {
+        flex-direction: row;
     }
 }
 
