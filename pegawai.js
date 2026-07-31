@@ -122,8 +122,8 @@ async function simpanPegawai() {
     let riwayatKGB = extractTableData('tabelKGB');
     let riwayatPendidikan = extractTableData('tabelPendidikan');
     let riwayatAnak = extractTableData('tabelAnak');
-        let riwayatDiklat = extractTableData('tabelDiklat');
-    
+    let riwayatDiklat = extractTableData('tabelDiklat');
+
     riwayatPangkat = sortRiwayatArray(riwayatPangkat, 1);
     riwayatKontrak = sortRiwayatArray(riwayatKontrak, 2);
     riwayatJabatan = sortRiwayatArray(riwayatJabatan, 4);
@@ -134,7 +134,6 @@ async function simpanPegawai() {
         return r;
     });
     riwayatDiklat = sortRiwayatArray(riwayatDiklat, 2, true);
-    riwayatSertifikasi = sortRiwayatArray(riwayatSertifikasi, 2, true);
 
     // Get latest data for main table
     let golongan = '';
@@ -172,12 +171,51 @@ async function simpanPegawai() {
         tmtKgbLalu = latestKGB[2]; // TMT KGB
         gajiPokok = latestKGB[3]; // Jumlah Gaji Pokok
     }
-
     let kgbDate = tmtKgbLalu
         ? (parseInt(tmtKgbLalu.substring(0, 4)) + 2) + tmtKgbLalu.substring(4)
         : '';
 
+    // --- FOTO PROCESSING ---
+    const imgEl = document.getElementById('previewFotoPegawai');
+    let fotoData = '';
+    if (imgEl && !imgEl.src.includes('placeholder.com')) {
+        if (imgEl.src.startsWith('data:image/')) {
+            Swal.fire({ title: 'Memproses Foto...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                // Compress photo to ensure it stays < 50,000 chars for Google Sheets
+                fotoData = await new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        let width = img.width;
+                        let height = img.height;
+                        const MAX_SIZE = 150;
+                        if (width > height) {
+                            if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+                        } else {
+                            if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        // Convert to highly compressed JPEG
+                        let compressed = canvas.toDataURL('image/jpeg', 0.5);
+                        resolve(compressed);
+                    };
+                    img.onerror = () => resolve(imgEl.src);
+                    img.src = imgEl.src;
+                });
+            } catch (e) {
+                fotoData = imgEl.src;
+            }
+        } else {
+            fotoData = imgEl.src; // if it's already a link/path
+        }
+    }
+
     const data = {
+        foto: fotoData,
         nip: nipVal,
         nik: document.getElementById('peg_nik')?.value || '',
         nama: namaVal,
@@ -215,14 +253,24 @@ async function simpanPegawai() {
         pasanganTglLahir: document.getElementById('peg_pasangan_tgl_lahir')?.value || '',
         pasanganPekerjaan: document.getElementById('peg_pasangan_pekerjaan')?.value || '',
         pasanganNip: document.getElementById('peg_pasangan_nip')?.value || '',
+        pasanganBukuNikah: document.getElementById('file_buku_nikah')?.value || '',
         riwayatPangkat: riwayatPangkat,
         riwayatKontrak: riwayatKontrak,
         riwayatJabatan: riwayatJabatan,
         riwayatKGB: riwayatKGB,
         riwayatPendidikan: riwayatPendidikan,
-                riwayatAnak: riwayatAnak,
+        riwayatAnak: riwayatAnak,
         riwayatDiklat: riwayatDiklat,
-        riwayatSertifikasi: riwayatSertifikasi
+
+        certNo: (document.getElementById('cert_no')?.value || ''),
+        certTgl: (document.getElementById('cert_tgl')?.value || ''),
+        certNrg: (document.getElementById('cert_nrg')?.value || ''),
+        certNuptk: (document.getElementById('cert_nuptk')?.value || ''),
+        certTahun: (document.getElementById('cert_tahun')?.value || ''),
+        certMapel: (document.getElementById('cert_mapel')?.value || ''),
+        certLptk: (document.getElementById('cert_lptk')?.value || ''),
+        certPejabat: (document.getElementById('cert_pejabat')?.value || ''),
+        certFileData: (document.getElementById('cert_file_data')?.value || '')
     };
 
     try {
@@ -286,7 +334,7 @@ async function renderTabelPNS() {
     const allPegawai = await dbManager.getAllPegawai();
 
     const renderTabelInduk = (id, statusPegawaiFilter) => {
-        if ($.fn.DataTable.isDataTable(id)) { try { $(id).DataTable().clear().destroy(); $(id + " tbody").empty(); } catch(e){} }
+        if ($.fn.DataTable.isDataTable(id)) { try { $(id).DataTable().clear().destroy(); $(id + " tbody").empty(); } catch (e) { } }
         const data = allPegawai.filter(p => p.statusPegawai === statusPegawaiFilter && p.statusKepegawaian === 'Aktif');
 
         const formatted = data.map(p => {
@@ -321,8 +369,8 @@ async function renderTabelPNS() {
 }
 
 async function renderTabelDUK() {
-    if ($.fn.DataTable.isDataTable('#tblDUKPNS')) { try { $('#tblDUKPNS').DataTable().clear().destroy(); } catch(e){} }
-    if ($.fn.DataTable.isDataTable('#tblDUKPPPK')) { try { $('#tblDUKPPPK').DataTable().clear().destroy(); } catch(e){} }
+    if ($.fn.DataTable.isDataTable('#tblDUKPNS')) { try { $('#tblDUKPNS').DataTable().clear().destroy(); } catch (e) { } }
+    if ($.fn.DataTable.isDataTable('#tblDUKPPPK')) { try { $('#tblDUKPPPK').DataTable().clear().destroy(); } catch (e) { } }
     const allPegawai = await dbManager.getAllPegawai();
 
     const hitungMK = (tmtStr, thnSK = 0, blnSK = 0) => {
@@ -389,7 +437,7 @@ async function renderTabelDUK() {
 }
 
 async function renderTabelKGB() {
-    if ($.fn.DataTable.isDataTable('#tblKGB')) { try { $('#tblKGB').DataTable().clear().destroy(); } catch(e){} }
+    if ($.fn.DataTable.isDataTable('#tblKGB')) { try { $('#tblKGB').DataTable().clear().destroy(); } catch (e) { } }
     const allPegawai = await dbManager.getAllPegawai();
     const dataAktif = allPegawai.filter(p => p.statusKepegawaian === 'Aktif');
 
@@ -429,7 +477,7 @@ async function renderTabelRekap() {
     const allPegawai = await dbManager.getAllPegawai();
 
     const renderTabelAktif = (id, statusFilter) => {
-        if ($.fn.DataTable.isDataTable(id)) { try { $(id).DataTable().clear().destroy(); $(id + " tbody").empty(); } catch(e){} }
+        if ($.fn.DataTable.isDataTable(id)) { try { $(id).DataTable().clear().destroy(); $(id + " tbody").empty(); } catch (e) { } }
         const data = allPegawai.filter(p => p.statusPegawai === statusFilter && p.statusKepegawaian === 'Aktif');
 
         const formatted = data.map(p => [
@@ -460,7 +508,7 @@ async function renderTabelRiwayat() {
     const allPegawai = await dbManager.getAllPegawai();
 
     const renderTabel = (id, statusFilter, mapFn) => {
-        if ($.fn.DataTable.isDataTable(id)) { try { $(id).DataTable().clear().destroy(); $(id + " tbody").empty(); } catch(e){} }
+        if ($.fn.DataTable.isDataTable(id)) { try { $(id).DataTable().clear().destroy(); $(id + " tbody").empty(); } catch (e) { } }
         const data = allPegawai.filter(p => p.statusKepegawaian === statusFilter);
         const formatted = data.map(mapFn);
         $(id).DataTable({ destroy: true, data: formatted, pageLength: 5 });
@@ -816,7 +864,7 @@ async function editPegawai(nip) {
     setVal('peg_kelamin', p.kelamin || 'Laki-Laki');
     setVal('peg_agama', p.agama || 'Islam');
     setVal('peg_status_kawin', p.statusKawin || 'Kawin');
-    
+
     setVal('peg_pasangan_nama', p.pasanganNama || '');
     setVal('peg_pasangan_nik', p.pasanganNik || '');
     setVal('peg_pasangan_tmpt_lahir', p.pasanganTmptLahir || '');
@@ -905,8 +953,8 @@ async function editPegawai(nip) {
     populateTable('tabelKGB', p.riwayatKGB);
     populateTable('tabelPendidikan', p.riwayatPendidikan);
     populateTable('tabelAnak', p.riwayatAnak);
-        populateTable('tabelDiklat', p.riwayatDiklat);
-    
+    populateTable('tabelDiklat', p.riwayatDiklat);
+
     setVal('cert_no', p.certNo || '');
     setVal('cert_tgl', p.certTgl || '');
     setVal('cert_nrg', p.certNrg || '');
@@ -916,7 +964,7 @@ async function editPegawai(nip) {
     setVal('cert_lptk', p.certLptk || '');
     setVal('cert_pejabat', p.certPejabat || '');
     setVal('cert_file_data', p.certFileData || '');
-    
+
     if (p.certFileData) {
         const btnFile = document.querySelector('#cert_file_data').nextElementSibling;
         if (btnFile && btnFile.classList.contains('btn-view-file')) btnFile.classList.remove('d-none');
@@ -939,34 +987,34 @@ async function editPegawai(nip) {
         const isLocked = p.isLocked === true;
         const allInputs = modalEl.querySelectorAll('input, select, textarea, button');
         allInputs.forEach(el => {
-            if(el.dataset.bsDismiss === 'modal') return; // Jangan disable tombol close
-            
-            if(el.tagName === 'BUTTON') {
-                if(el.onclick && (el.onclick.toString().includes('tambahBaris') || el.onclick.toString().includes('hapusBaris'))) {
+            if (el.dataset.bsDismiss === 'modal') return; // Jangan disable tombol close
+
+            if (el.tagName === 'BUTTON') {
+                if (el.onclick && (el.onclick.toString().includes('tambahBaris') || el.onclick.toString().includes('hapusBaris'))) {
                     el.disabled = isLocked;
                 }
-                if(el.onclick && el.onclick.toString().includes('simpanPegawai')) {
+                if (el.onclick && el.onclick.toString().includes('simpanPegawai')) {
                     el.disabled = isLocked;
                     el.style.display = isLocked ? 'none' : 'inline-block';
                 }
-                if(el.id === 'btnUploadFoto' || el.id === 'btnCaptureFoto') el.disabled = isLocked;
+                if (el.id === 'btnUploadFoto' || el.id === 'btnCaptureFoto') el.disabled = isLocked;
             } else {
-                if(el.id === 'peg_nip') el.readOnly = true;
+                if (el.id === 'peg_nip') el.readOnly = true;
                 else el.disabled = isLocked;
             }
         });
 
         const ssoToken = localStorage.getItem('SIMPEEL_TOKEN_ONLINE') || localStorage.getItem('SIMPEEL_TOKEN_OFFLINE');
         let session = null;
-        if(ssoToken) {
-            try { session = JSON.parse(ssoToken); } catch(e){}
+        if (ssoToken) {
+            try { session = JSON.parse(ssoToken); } catch (e) { }
         }
         const isPegawai = session && session.role === 'pegawai';
 
         const titleEl = modalEl.querySelector('.modal-title');
-        if(titleEl) {
-            titleEl.innerHTML = isLocked 
-                ? '<i class="fas fa-lock text-danger"></i> Edit Data Pegawai <span class="badge bg-danger ms-2">TERKUNCI</span>' 
+        if (titleEl) {
+            titleEl.innerHTML = isLocked
+                ? '<i class="fas fa-lock text-danger"></i> Edit Data Pegawai <span class="badge bg-danger ms-2">TERKUNCI</span>'
                 : '<i class="fas fa-user-edit"></i> Edit Data Pegawai';
         }
 
@@ -1410,24 +1458,24 @@ async function simpanKGB() {
 
 function generateNamaBergelar(nama, riwayatPendidikan) {
     if (!riwayatPendidikan || !Array.isArray(riwayatPendidikan) || riwayatPendidikan.length === 0) return nama;
-    
-    const levelMap = {'SD':1, 'SMP':2, 'SMA':3, 'D1':4, 'D2':5, 'D3':6, 'S1':7, 'S2':8, 'S3':9};
+
+    const levelMap = { 'SD': 1, 'SMP': 2, 'SMA': 3, 'D1': 4, 'D2': 5, 'D3': 6, 'S1': 7, 'S2': 8, 'S3': 9 };
     let parsedRiwayat = riwayatPendidikan.map(r => {
         return {
             tingkat: r[0],
             level: levelMap[r[0]] || 0,
             gelarDepan: r.length > 6 ? (r[5] || '').trim() : '',
-            gelarBelakang: r.length > 6 ? (r[6] || '').trim() : (r.length === 6 ? (r[5]||'').trim() : '')
+            gelarBelakang: r.length > 6 ? (r[6] || '').trim() : (r.length === 6 ? (r[5] || '').trim() : '')
         };
     }).filter(r => r.level > 0);
-    
+
     if (parsedRiwayat.length === 0) return nama;
-    
+
     let maxLevel = Math.max(...parsedRiwayat.map(r => r.level));
-    
+
     let gelarDepanArr = [];
     let gelarBelakangArr = [];
-    
+
     if (maxLevel >= 7) {
         // Collect S1, S2, S3
         let sarjana = parsedRiwayat.filter(r => r.level >= 7).sort((a, b) => a.level - b.level);
@@ -1464,7 +1512,7 @@ function generateNamaBergelar(nama, riwayatPendidikan) {
             }
         });
     }
-    
+
     let combinedName = nama;
     if (gelarDepanArr.length > 0) {
         combinedName = gelarDepanArr.join(', ') + ' ' + combinedName;
@@ -1472,7 +1520,7 @@ function generateNamaBergelar(nama, riwayatPendidikan) {
     if (gelarBelakangArr.length > 0) {
         combinedName = combinedName + ', ' + gelarBelakangArr.join(', ');
     }
-    
+
     return combinedName;
 }
 
@@ -1623,7 +1671,7 @@ async function cetakCV(nip) {
 }
 
 async function renderTabelPensiun() {
-    if ($.fn.DataTable.isDataTable('#tblEstPensiun')) { try { $('#tblEstPensiun').DataTable().clear().destroy(); } catch(e){} }
+    if ($.fn.DataTable.isDataTable('#tblEstPensiun')) { try { $('#tblEstPensiun').DataTable().clear().destroy(); } catch (e) { } }
     const allPegawai = await dbManager.getAllPegawai();
     const dataAktif = allPegawai.filter(p => p.statusKepegawaian === 'Aktif');
 
@@ -1670,7 +1718,8 @@ async function renderTabelPensiun() {
         ];
     });
 
-    const dtPensiun = $('#tblEstPensiun').DataTable({ destroy: true,
+    const dtPensiun = $('#tblEstPensiun').DataTable({
+        destroy: true,
         data: formatted,
         pageLength: 10,
         dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'>>" +
@@ -1695,12 +1744,12 @@ async function handleFileUpload(inputElement) {
     }
 
     const reader = new FileReader();
-    reader.onload = async function(e) {
+    reader.onload = async function (e) {
         const base64Data = e.target.result;
         const targetId = inputElement.getAttribute('data-target');
-        
+
         let fileIdOrUrl = base64Data; // Default local base64 before upload
-        
+
         // Upload logic
         Swal.showLoading();
         try {
@@ -1726,7 +1775,7 @@ async function handleFileUpload(inputElement) {
                     Swal.fire('Error', 'Gagal upload ke Drive: ' + (res ? res.message : 'Unknown error'), 'error');
                 }
             }
-            
+
             // Set target value
             let targetElement;
             if (targetId) {
@@ -1735,11 +1784,11 @@ async function handleFileUpload(inputElement) {
                 // Find sibling hidden input if data-target not specified
                 targetElement = inputElement.nextElementSibling;
             }
-            
+
             if (targetElement) {
                 targetElement.value = fileIdOrUrl;
             }
-            
+
             // Show view button
             const viewBtn = inputElement.parentElement.querySelector('.btn-view-file');
             if (viewBtn) viewBtn.classList.remove('d-none');
@@ -1762,16 +1811,16 @@ function viewFileApp(fileUrlOrPath) {
 
 function toggleSertifikasiTab(riwayatJabatan = null) {
     let showTab = false;
-    
+
     if (!riwayatJabatan) {
         try {
             riwayatJabatan = extractTableData('tabelJabatan');
             if (typeof sortRiwayatArray === 'function') {
                 riwayatJabatan = sortRiwayatArray(riwayatJabatan, 4);
             }
-        } catch (e) {}
+        } catch (e) { }
     }
-    
+
     if (riwayatJabatan && Array.isArray(riwayatJabatan) && riwayatJabatan.length > 0) {
         for (let i = 0; i < riwayatJabatan.length; i++) {
             const row = riwayatJabatan[i];
@@ -1784,7 +1833,7 @@ function toggleSertifikasiTab(riwayatJabatan = null) {
             }
         }
     }
-    
+
     const tabNav = document.getElementById('nav-sertifikasi');
     if (tabNav) {
         if (showTab) {
@@ -1811,7 +1860,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sync NUPTK
     const pegNuptk = document.getElementById('peg_nuptk');
     if (pegNuptk) {
-        pegNuptk.addEventListener('input', function() {
+        pegNuptk.addEventListener('input', function () {
             const certNuptk = document.getElementById('cert_nuptk');
             if (certNuptk) certNuptk.value = this.value;
         });
@@ -1823,7 +1872,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tabelJabatan.addEventListener('change', () => toggleSertifikasiTab());
         tabelJabatan.addEventListener('keyup', () => toggleSertifikasiTab());
     }
-    
+
     // Observer to detect row deletions
     if (tabelJabatan) {
         const observer = new MutationObserver(() => toggleSertifikasiTab());
@@ -1832,7 +1881,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function renderTabelGuruSertif() {
-    if ($.fn.DataTable.isDataTable('#tblGuruSertif')) { try { $('#tblGuruSertif').DataTable().clear().destroy(); } catch(e){} }
+    if ($.fn.DataTable.isDataTable('#tblGuruSertif')) { try { $('#tblGuruSertif').DataTable().clear().destroy(); } catch (e) { } }
 
     let allPegawai = [];
     try {
@@ -1879,7 +1928,8 @@ async function renderTabelGuruSertif() {
         ]);
     });
 
-    const dt = $('#tblGuruSertif').DataTable({ destroy: true,
+    const dt = $('#tblGuruSertif').DataTable({
+        destroy: true,
         data: formatted,
         pageLength: 10,
         dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'>>" +
@@ -1902,7 +1952,7 @@ function bukaModalTambahAkun() {
         if (m) {
             const form = document.getElementById('formTambahAkun');
             if (form) form.reset();
-            
+
             // Clear edit mode metadata
             delete m.dataset.mode;
             delete m.dataset.originalNip;
@@ -1916,40 +1966,40 @@ function bukaModalTambahAkun() {
                 nikFeedback.textContent = '';
                 nikFeedback.className = '';
             }
-            
+
             const title = m.querySelector('.modal-title');
-            if(title) title.innerHTML = '<i class="fas fa-user-plus"></i> Tambah Akun Baru';
+            if (title) title.innerHTML = '<i class="fas fa-user-plus"></i> Tambah Akun Baru';
             const header = m.querySelector('.modal-header');
-            if(header) {
+            if (header) {
                 header.classList.remove('bg-warning', 'text-dark');
                 header.classList.add('bg-primary', 'text-white');
             }
             const btn = m.querySelector('button[onclick="simpanAkunPegawai()"]');
-            if(btn) {
+            if (btn) {
                 btn.classList.remove('btn-warning');
                 btn.classList.add('btn-primary');
                 btn.innerHTML = '<i class="fas fa-save"></i> Simpan Akun';
             }
-            
+
             const pwField = document.getElementById('akun_password');
-            if(pwField) {
+            if (pwField) {
                 pwField.readOnly = false;
                 pwField.placeholder = 'Masukkan Password';
             }
-            
+
             const modal = bootstrap.Modal.getInstance(m) || new bootstrap.Modal(m);
             modal.show();
         } else {
             console.error('modalTambahAkun not found');
             alert('Error: Modal Tambah Akun tidak ditemukan di halaman.');
         }
-    } catch(e) {
+    } catch (e) {
         console.error('Error bukaModalTambahAkun:', e);
         alert('Gagal membuka modal: ' + e.message);
     }
 }
 
-window.editAkun = async function(nip) {
+window.editAkun = async function (nip) {
     try {
         const res = await dbManager.getAllAkun();
         if (!res || res.success === false) return Swal.fire('Error', 'Gagal memuat data akun', 'error');
@@ -1965,10 +2015,10 @@ window.editAkun = async function(nip) {
         document.getElementById('akun_nama').value = akun.nama || '';
         document.getElementById('akun_nik').value = akun.nik || '';
         document.getElementById('akun_tglLahir').value = akun.tglLahir || '';
-        if(akun.statusPegawai) document.getElementById('akun_statusPegawai').value = akun.statusPegawai;
+        if (akun.statusPegawai) document.getElementById('akun_statusPegawai').value = akun.statusPegawai;
 
         const pwField = document.getElementById('akun_password');
-        if(pwField) {
+        if (pwField) {
             pwField.value = '';
             pwField.placeholder = '(Gunakan tombol Reset Password)';
             pwField.readOnly = true;
@@ -1980,14 +2030,14 @@ window.editAkun = async function(nip) {
         m.dataset.mode = 'edit';
 
         const title = m.querySelector('.modal-title');
-        if(title) title.innerHTML = '<i class="fas fa-user-edit"></i> Edit Akun';
+        if (title) title.innerHTML = '<i class="fas fa-user-edit"></i> Edit Akun';
         const header = m.querySelector('.modal-header');
-        if(header) {
+        if (header) {
             header.classList.remove('bg-primary', 'text-white');
             header.classList.add('bg-warning', 'text-dark');
         }
         const btn = m.querySelector('button[onclick="simpanAkunPegawai()"]');
-        if(btn) {
+        if (btn) {
             btn.classList.remove('btn-primary');
             btn.classList.add('btn-warning');
             btn.innerHTML = '<i class="fas fa-save"></i> Simpan Perubahan';
@@ -1995,7 +2045,7 @@ window.editAkun = async function(nip) {
 
         const modal = bootstrap.Modal.getInstance(m) || new bootstrap.Modal(m);
         modal.show();
-    } catch(e) {
+    } catch (e) {
         console.error('Error editAkun:', e);
     }
 }
@@ -2032,7 +2082,7 @@ async function simpanAkunPegawai() {
     if (password) payload.password = password;
 
     Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
-    
+
     try {
         // Jika edit mode dan NIP berubah, perlu cascade update
         if (isEditMode && originalNip && originalNip !== nip) {
@@ -2100,13 +2150,13 @@ async function renderTabelAkun() {
     if (!document.getElementById('tblAkun')) return;
 
     if ($.fn.DataTable.isDataTable('#tblAkun')) {
-        try { $('#tblAkun').DataTable().clear().destroy(); } catch(e){}
+        try { $('#tblAkun').DataTable().clear().destroy(); } catch (e) { }
     }
 
     let dataAkun = [];
     try {
         dataAkun = await dbManager.getAllAkun();
-    } catch(e) {
+    } catch (e) {
         console.error("Gagal mengambil data akun:", e);
     }
 
@@ -2131,7 +2181,8 @@ async function renderTabelAkun() {
         ]);
     });
 
-    $('#tblAkun').DataTable({ destroy: true,
+    $('#tblAkun').DataTable({
+        destroy: true,
         data: formatted,
         pageLength: 10,
         columns: [
@@ -2163,8 +2214,8 @@ async function hapusAkun(nip) {
         Swal.fire({ title: 'Menghapus...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
         try {
             // Hapus akun dan data pegawai - abaikan error individual
-            await dbManager.deleteAkun(nip).catch(() => {});
-            await dbManager.deletePegawai(nip).catch(() => {});
+            await dbManager.deleteAkun(nip).catch(() => { });
+            await dbManager.deletePegawai(nip).catch(() => { });
             Swal.fire('Terhapus!', 'Akun dan seluruh data pegawai terkait telah dihapus.', 'success');
             renderTabelAkun();
             renderTabelPNS();
@@ -2204,10 +2255,10 @@ async function resetPasswordAkun(nip) {
             const allAkun = await dbManager.getAllAkun();
             const akun = allAkun.find(a => a.nip === nip);
             if (!akun) throw new Error('Akun tidak ditemukan');
-            
+
             akun.password = nip;
             await dbManager.saveAkun(akun);
-            
+
             Swal.fire('Berhasil!', 'Password telah direset menjadi NIP/Username.', 'success');
         } catch (e) {
             Swal.fire('Gagal', e.message || 'Terjadi kesalahan', 'error');
@@ -2225,10 +2276,10 @@ async function toggleKunciData(nip) {
             Swal.fire('Error', 'Data pegawai tidak ditemukan', 'error');
             return;
         }
-        
+
         peg.isLocked = !peg.isLocked;
         await dbManager.savePegawai(peg);
-        
+
         Swal.fire({
             icon: 'success',
             title: peg.isLocked ? 'Data Terkunci' : 'Kunci Terbuka',
@@ -2237,7 +2288,7 @@ async function toggleKunciData(nip) {
             showConfirmButton: false
         });
         renderTabelPNS(); // Memuat ulang semua tabel PNS, PPPK, dll.
-    } catch(e) {
+    } catch (e) {
         Swal.fire('Error', 'Gagal mengubah status kunci', 'error');
     }
 }
@@ -2250,22 +2301,22 @@ async function validasiNipAkun(nip, inputEl) {
     const m = document.getElementById('modalTambahAkun');
     const isEditMode = m && m.dataset.mode === 'edit';
     const originalNip = m ? m.dataset.originalNip : null;
-    
+
     // Reset
     inputEl.classList.remove('is-invalid', 'is-valid');
     if (feedbackEl) feedbackEl.textContent = '';
 
     if (!nip || nip.trim() === '') return;
-    
+
     const nipBersih = nip.trim();
-    
+
     // Cek panjang
     if (nipBersih.length !== 18) {
         inputEl.classList.add('is-invalid');
         if (feedbackEl) feedbackEl.textContent = 'NIP harus 18 digit. Saat ini: ' + nipBersih.length + ' digit.';
         return false;
     }
-    
+
     // Cek duplikat HANYA jika mode tambah baru, atau jika NIP berubah dari NIP asli saat edit
     const nipBerubah = !isEditMode || (originalNip && originalNip !== nipBersih);
     if (nipBerubah) {
@@ -2279,11 +2330,11 @@ async function validasiNipAkun(nip, inputEl) {
                     return false;
                 }
             }
-        } catch(e) {
+        } catch (e) {
             // Jika gagal cek DB, cukup lolos validasi panjang
         }
     }
-    
+
     inputEl.classList.add('is-valid');
     if (isEditMode && originalNip !== nipBersih) {
         if (feedbackEl) feedbackEl.textContent = 'NIP akan diubah dari ' + originalNip + ' → ' + nipBersih + ' (semua data terkait akan ikut berubah)';
@@ -2295,22 +2346,22 @@ async function validasiNipAkun(nip, inputEl) {
 async function validasiNikAkun(nik, inputEl) {
     if (!inputEl) inputEl = document.getElementById('akun_nik');
     const feedbackEl = document.getElementById('akun_nik_feedback');
-    
+
     // Reset
     inputEl.classList.remove('is-invalid', 'is-valid');
     if (feedbackEl) feedbackEl.textContent = '';
-    
+
     if (!nik || nik.trim() === '') return;
-    
+
     const nikBersih = nik.trim();
-    
+
     // Cek panjang
     if (nikBersih.length !== 16) {
         inputEl.classList.add('is-invalid');
         if (feedbackEl) feedbackEl.textContent = 'NIK harus 16 digit. Saat ini: ' + nikBersih.length + ' digit.';
         return false;
     }
-    
+
     // Cek duplikat
     try {
         const allPegawai = await dbManager.getAllPegawai();
@@ -2320,10 +2371,10 @@ async function validasiNikAkun(nik, inputEl) {
             if (feedbackEl) feedbackEl.textContent = 'NIK ini sudah terdaftar atas nama: ' + (existing.nama || existing.nip) + '. Harap cek kembali.';
             return false;
         }
-    } catch(e) {
+    } catch (e) {
         // Jika gagal cek DB, cukup lolos validasi panjang
     }
-    
+
     inputEl.classList.add('is-valid');
     return true;
 }
@@ -2341,8 +2392,8 @@ function toggleNipPasangan() {
 
 
 async function renderTabelSKUMPTK() {
-    if ($.fn.DataTable.isDataTable('#tblSkumptkPns')) { try { $('#tblSkumptkPns').DataTable().clear().destroy(); } catch(e){} }
-    if ($.fn.DataTable.isDataTable('#tblSkumptkPppk')) { try { $('#tblSkumptkPppk').DataTable().clear().destroy(); } catch(e){} }
+    if ($.fn.DataTable.isDataTable('#tblSkumptkPns')) { try { $('#tblSkumptkPns').DataTable().clear().destroy(); } catch (e) { } }
+    if ($.fn.DataTable.isDataTable('#tblSkumptkPppk')) { try { $('#tblSkumptkPppk').DataTable().clear().destroy(); } catch (e) { } }
     const allPegawai = await dbManager.getAllPegawai();
 
     const processData = (statusFilter) => {
@@ -2414,7 +2465,7 @@ async function cetakSkumptk(nip) {
 
     // Formatting date
     let tglCetakFormat = new Date(formValues.tanggal).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-    if(tglCetakFormat === 'Invalid Date') tglCetakFormat = formValues.tanggal;
+    if (tglCetakFormat === 'Invalid Date') tglCetakFormat = formValues.tanggal;
 
     // Constructing HTML for Word Document
     let htmlContent = `
@@ -2447,7 +2498,7 @@ async function cetakSkumptk(nip) {
     const hp = pengaturan.hp || '';
     const email = pengaturan.email || '';
     const web = pengaturan.web || '';
-    
+
     htmlContent += `
     <table style="width: 100%; border-bottom: 3px solid black; margin-bottom: 20px;">
         <tr>
@@ -2533,7 +2584,7 @@ async function cetakSkumptk(nip) {
         <tbody>
     `;
 
-        if (data.pasanganNama) {
+    if (data.pasanganNama) {
         htmlContent += `
             <tr>
                 <td class="text-center">1</td>
@@ -2605,16 +2656,3 @@ async function cetakSkumptk(nip) {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
