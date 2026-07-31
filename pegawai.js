@@ -56,7 +56,7 @@ async function simpanPegawai() {
     const nikVal = (document.getElementById('peg_nik')?.value || '').trim();
 
     if (nipVal) {
-        const existNip = allPegawai.find(p => p.nip === nipVal && p.nip !== currentNipLama);
+        const existNip = allPegawai.find(p => p.nip === nipVal && p.nip !== window.currentEditUtamaNip);
         if (existNip) {
             Swal.fire('Error', `NIP ${nipVal} sudah dipakai atas nama ${existNip.nama}. Data tidak bisa disimpan untuk mencegah tertimpa!`, 'error');
             return;
@@ -64,7 +64,7 @@ async function simpanPegawai() {
     }
 
     if (nikVal) {
-        const existNik = allPegawai.find(p => p.nik === nikVal && p.nip !== currentNipLama);
+        const existNik = allPegawai.find(p => p.nik === nikVal && p.nip !== window.currentEditUtamaNip);
         if (existNik) {
             Swal.fire('Error', `NIK ${nikVal} sudah dipakai atas nama ${existNik.nama}. Data tidak bisa disimpan!`, 'error');
             return;
@@ -122,8 +122,8 @@ async function simpanPegawai() {
     let riwayatKGB = extractTableData('tabelKGB');
     let riwayatPendidikan = extractTableData('tabelPendidikan');
     let riwayatAnak = extractTableData('tabelAnak');
-    let riwayatDiklat = extractTableData('tabelDiklat');
-
+        let riwayatDiklat = extractTableData('tabelDiklat');
+    
     riwayatPangkat = sortRiwayatArray(riwayatPangkat, 1);
     riwayatKontrak = sortRiwayatArray(riwayatKontrak, 2);
     riwayatJabatan = sortRiwayatArray(riwayatJabatan, 4);
@@ -134,6 +134,7 @@ async function simpanPegawai() {
         return r;
     });
     riwayatDiklat = sortRiwayatArray(riwayatDiklat, 2, true);
+    riwayatSertifikasi = sortRiwayatArray(riwayatSertifikasi, 2, true);
 
     // Get latest data for main table
     let golongan = '';
@@ -208,13 +209,20 @@ async function simpanPegawai() {
         tmtKgbLalu: tmtKgbLalu,
         tmtKgbBaru: kgbDate,
         tmtPensiun: '',
+        pasanganNama: document.getElementById('peg_pasangan_nama')?.value || '',
+        pasanganNik: document.getElementById('peg_pasangan_nik')?.value || '',
+        pasanganTmptLahir: document.getElementById('peg_pasangan_tmpt_lahir')?.value || '',
+        pasanganTglLahir: document.getElementById('peg_pasangan_tgl_lahir')?.value || '',
+        pasanganPekerjaan: document.getElementById('peg_pasangan_pekerjaan')?.value || '',
+        pasanganNip: document.getElementById('peg_pasangan_nip')?.value || '',
         riwayatPangkat: riwayatPangkat,
         riwayatKontrak: riwayatKontrak,
         riwayatJabatan: riwayatJabatan,
         riwayatKGB: riwayatKGB,
         riwayatPendidikan: riwayatPendidikan,
-        riwayatAnak: riwayatAnak,
-        riwayatDiklat: riwayatDiklat
+                riwayatAnak: riwayatAnak,
+        riwayatDiklat: riwayatDiklat,
+        riwayatSertifikasi: riwayatSertifikasi
     };
 
     try {
@@ -535,7 +543,8 @@ function tambahBaris(tabelId) {
             <td><input type='text' class='form-control form-control-sm'></td>
             <td><input type='number' class='form-control form-control-sm' placeholder='2006'></td>
             <td><input type='number' class='form-control form-control-sm' placeholder='2010'></td>
-            <td><input type='text' class='form-control form-control-sm'></td>
+            <td><input type='text' class='form-control form-control-sm' placeholder='Gelar Depan'></td>
+            <td><input type='text' class='form-control form-control-sm' placeholder='Gelar Belakang'></td>
             <td><div class='d-flex'><input type='file' class='form-control form-control-sm' accept='application/pdf' onchange='handleFileUpload(this)'><input type='hidden' class='row-file-data'><button type='button' class='btn btn-sm btn-info ms-1 d-none btn-view-file' onclick='viewFileApp(this.previousElementSibling.value)'><i class='fas fa-eye'></i></button></div></td><td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
         `;
     } else if (tabelId === 'tabelDiklat') {
@@ -551,8 +560,14 @@ function tambahBaris(tabelId) {
         tr.innerHTML = `
             <td><input type='text' class='form-control form-control-sm'></td>
             <td><input type='text' class='form-control form-control-sm'></td>
+            <td><select class='form-select form-select-sm'><option>Laki-laki</option><option>Perempuan</option></select></td>
+            <td><input type='text' class='form-control form-control-sm'></td>
             <td><input type='date' class='form-control form-control-sm'></td>
             <td><select class='form-select form-select-sm'><option>Kandung</option><option>Tiri</option><option>Angkat</option></select></td>
+            <td><select class='form-select form-select-sm'><option value=''>Pilih</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option><option value='4'>4</option><option value='5'>5</option><option value='6'>6</option></select></td>
+            <td><select class='form-select form-select-sm'><option>Tidak</option><option>Ya</option></select></td>
+            <td><input type='text' class='form-control form-control-sm'></td>
+            <td><select class='form-select form-select-sm'><option>Belum</option><option>Sudah</option></select></td>
             <td><div class='d-flex'><input type='file' class='form-control form-control-sm' accept='application/pdf' onchange='handleFileUpload(this)'><input type='hidden' class='row-file-data'><button type='button' class='btn btn-sm btn-info ms-1 d-none btn-view-file' onclick='viewFileApp(this.previousElementSibling.value)'><i class='fas fa-eye'></i></button></div></td><td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
         `;
     } else if (tabelId === 'tabelKontrak') {
@@ -687,8 +702,7 @@ async function validasiNIK(el) {
 
     if (typeof dbManager !== 'undefined') {
         const allPegawai = await dbManager.getAllPegawai();
-        const currentNipLama = document.getElementById('peg_nip_lama')?.value || '';
-        const existing = allPegawai.find(p => p.nik === val && p.nipLama !== currentNipLama && p.nip !== currentNipLama);
+        const existing = allPegawai.find(p => p.nik === val && p.nip !== window.currentEditUtamaNip);
         if (existing) {
             Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: `NIK ini sudah ada atas nama ${existing.nama}`, showConfirmButton: false, timer: 4000 });
             el.classList.add('is-invalid');
@@ -718,8 +732,7 @@ async function validasiNIP(el) {
 
     if (typeof dbManager !== 'undefined') {
         const allPegawai = await dbManager.getAllPegawai();
-        const currentNipLama = document.getElementById('peg_nip_lama')?.value || '';
-        const existing = allPegawai.find(p => p.nip === val && p.nipLama !== currentNipLama && p.nip !== currentNipLama);
+        const existing = allPegawai.find(p => p.nip === val && p.nip !== window.currentEditUtamaNip);
         if (existing) {
             Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: `NIP ini sudah ada atas nama ${existing.nama}`, showConfirmButton: false, timer: 4000 });
             el.classList.add('is-invalid');
@@ -730,6 +743,7 @@ async function validasiNIP(el) {
 }
 
 function bukaModalTambah() {
+    window.currentEditUtamaNip = null;
     // Kosongkan form secara manual karena tidak ada tag <form>
     const modalEl = document.getElementById('modalPegawai');
     if (modalEl) {
@@ -773,6 +787,8 @@ async function editPegawai(nip) {
         return;
     }
 
+    window.currentEditUtamaNip = p.nip;
+
     const setVal = (id, val) => {
         const el = document.getElementById(id);
         if (el) el.value = val;
@@ -780,9 +796,9 @@ async function editPegawai(nip) {
 
     // Populate Data
     setVal('peg_nip', p.nip || '');
-    setVal('peg_nip_lama', p.nip || ''); // Kunci NIP asli
+    setVal('peg_nip_lama', p.nipLama || ''); // Opsional, bisa diisi NIP lama jika ada
     const nipInput = document.getElementById('peg_nip');
-    if (nipInput) nipInput.readOnly = true; // Tidak bisa diedit
+    if (nipInput) nipInput.readOnly = true; // NIP baru tidak bisa diedit
 
     setVal('peg_no_hp', p.noHp || '');
     setVal('peg_email', p.email || '');
@@ -800,9 +816,17 @@ async function editPegawai(nip) {
     setVal('peg_kelamin', p.kelamin || 'Laki-Laki');
     setVal('peg_agama', p.agama || 'Islam');
     setVal('peg_status_kawin', p.statusKawin || 'Kawin');
-    setVal('peg_alamat', p.alamat || '');
+    
+    setVal('peg_pasangan_nama', p.pasanganNama || '');
+    setVal('peg_pasangan_nik', p.pasanganNik || '');
+    setVal('peg_pasangan_tmpt_lahir', p.pasanganTmptLahir || '');
+    setVal('peg_pasangan_tgl_lahir', p.pasanganTglLahir || '');
+    setVal('peg_pasangan_pekerjaan', p.pasanganPekerjaan || '');
+    setVal('peg_pasangan_nip', p.pasanganNip || '');
+    if (typeof toggleNipPasangan === 'function') toggleNipPasangan();
 
-    // Isi dropdown Provinsi & Kab/Kota
+    setVal('peg_alamat', p.alamat || '');
+    setVal('peg_alamat_provinsi', p.alamatProvinsi || '');
     const selProv = document.getElementById('peg_alamat_provinsi');
     const selKab = document.getElementById('peg_alamat_kabkota');
     if (selProv && p.alamatProvinsi) {
@@ -858,13 +882,45 @@ async function editPegawai(nip) {
         }
     };
 
+    // Shim for tabelPendidikan (added Gelar Belakang at index 6, old length 7)
+    if (p.riwayatPendidikan) {
+        p.riwayatPendidikan = p.riwayatPendidikan.map(r => {
+            if (r.length === 7) return [r[0], r[1], r[2], r[3], r[4], r[5], '', r[6]];
+            return r;
+        });
+    }
+
+    // Shim for tabelAnak (added NIK at 1, JK at 2, old length 5) (added IstriKe, Tunjangan, Kerja, Sekolah, old length 7)
+    if (p.riwayatAnak) {
+        p.riwayatAnak = p.riwayatAnak.map(r => {
+            if (r.length === 5) return [r[0], '', 'Laki-laki', r[1], r[2], r[3], '', 'Tidak', '', 'Belum', r[4]];
+            if (r.length === 7) return [r[0], r[1], r[2], r[3], r[4], r[5], '', 'Tidak', '', 'Belum', r[6]];
+            return r;
+        });
+    }
+
     populateTable('tabelPangkat', p.riwayatPangkat);
     populateTable('tabelKontrak', p.riwayatKontrak);
     populateTable('tabelJabatan', p.riwayatJabatan);
     populateTable('tabelKGB', p.riwayatKGB);
     populateTable('tabelPendidikan', p.riwayatPendidikan);
     populateTable('tabelAnak', p.riwayatAnak);
-    populateTable('tabelDiklat', p.riwayatDiklat);
+        populateTable('tabelDiklat', p.riwayatDiklat);
+    
+    setVal('cert_no', p.certNo || '');
+    setVal('cert_tgl', p.certTgl || '');
+    setVal('cert_nrg', p.certNrg || '');
+    setVal('cert_nuptk', p.certNuptk || '');
+    setVal('cert_tahun', p.certTahun || '');
+    setVal('cert_mapel', p.certMapel || '');
+    setVal('cert_lptk', p.certLptk || '');
+    setVal('cert_pejabat', p.certPejabat || '');
+    setVal('cert_file_data', p.certFileData || '');
+    
+    if (p.certFileData) {
+        const btnFile = document.querySelector('#cert_file_data').nextElementSibling;
+        if (btnFile && btnFile.classList.contains('btn-view-file')) btnFile.classList.remove('d-none');
+    }
 
     // Foto
     const imgEl = document.getElementById('previewFotoPegawai');
@@ -895,10 +951,17 @@ async function editPegawai(nip) {
                 }
                 if(el.id === 'btnUploadFoto' || el.id === 'btnCaptureFoto') el.disabled = isLocked;
             } else {
-                if(el.id === 'peg_nip_lama' || el.id === 'peg_nip') el.readOnly = true;
+                if(el.id === 'peg_nip') el.readOnly = true;
                 else el.disabled = isLocked;
             }
         });
+
+        const ssoToken = localStorage.getItem('SIMPEEL_TOKEN_ONLINE') || localStorage.getItem('SIMPEEL_TOKEN_OFFLINE');
+        let session = null;
+        if(ssoToken) {
+            try { session = JSON.parse(ssoToken); } catch(e){}
+        }
+        const isPegawai = session && session.role === 'pegawai';
 
         const titleEl = modalEl.querySelector('.modal-title');
         if(titleEl) {
@@ -907,8 +970,10 @@ async function editPegawai(nip) {
                 : '<i class="fas fa-user-edit"></i> Edit Data Pegawai';
         }
 
-        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-        modal.show();
+        if (!isPegawai) {
+            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modal.show();
+        }
     } else {
         Swal.fire('Error', 'Modal edit tidak ditemukan di HTML.', 'error');
     }
@@ -1562,7 +1627,7 @@ async function renderTabelPensiun() {
     const allPegawai = await dbManager.getAllPegawai();
     const dataAktif = allPegawai.filter(p => p.statusKepegawaian === 'Aktif');
 
-    const formatted = dataAktif.map(p => {
+    const formatted = dataAktif.map((p, index) => {
         let bup = 58; // default
         let jnsJabatan = "-";
 
@@ -1594,11 +1659,13 @@ async function renderTabelPensiun() {
         }
 
         return [
-            `${p.nama}<br><small>${p.nip}</small>`,
-            p.tglLahir || '-',
-            jnsJabatan,
+            index + 1,
+            p.nip,
+            p.nama,
             p.jabatan || '-',
+            p.unitKerja || '-',
             bup + " Tahun",
+            p.tglLahir || '-',
             `<b>${estPensiunStr}</b>`
         ];
     });
@@ -1637,7 +1704,16 @@ async function handleFileUpload(inputElement) {
         // Upload logic
         Swal.showLoading();
         try {
-            if (typeof apiCall === 'function') { // Online version
+            if (typeof window.require !== 'undefined') { // Local Electron version
+                const { ipcRenderer } = window.require('electron');
+                const res = await ipcRenderer.invoke('simpeel-save-file', file.name, base64Data);
+                if (res && res.success) {
+                    fileIdOrUrl = res.filePath;
+                    Swal.fire('Sukses', 'File berhasil disimpan lokal', 'success');
+                } else {
+                    Swal.fire('Error', 'Gagal simpan lokal: ' + (res ? res.message : 'Unknown error'), 'error');
+                }
+            } else if (typeof apiCall === 'function') { // Online version
                 const res = await apiCall('uploadFile', {
                     filename: file.name,
                     mimeType: file.type,
@@ -1648,15 +1724,6 @@ async function handleFileUpload(inputElement) {
                     Swal.fire('Sukses', 'File berhasil diunggah ke Drive', 'success');
                 } else {
                     Swal.fire('Error', 'Gagal upload ke Drive: ' + (res ? res.message : 'Unknown error'), 'error');
-                }
-            } else if (typeof window.require !== 'undefined') { // Local Electron version
-                const { ipcRenderer } = window.require('electron');
-                const res = await ipcRenderer.invoke('simpeel-save-file', file.name, base64Data);
-                if (res && res.success) {
-                    fileIdOrUrl = res.filePath;
-                    Swal.fire('Sukses', 'File berhasil disimpan lokal', 'success');
-                } else {
-                    Swal.fire('Error', 'Gagal simpan lokal', 'error');
                 }
             }
             
@@ -2260,3 +2327,294 @@ async function validasiNikAkun(nik, inputEl) {
     inputEl.classList.add('is-valid');
     return true;
 }
+
+function toggleNipPasangan() {
+    const pekerjaan = document.getElementById('peg_pasangan_pekerjaan').value;
+    const divNip = document.getElementById('div_pasangan_nip');
+    if (pekerjaan === 'ASN PNS' || pekerjaan === 'ASN PPPK' || pekerjaan === 'TNI/POLRI') {
+        divNip.classList.remove('d-none');
+    } else {
+        divNip.classList.add('d-none');
+        document.getElementById('peg_pasangan_nip').value = '';
+    }
+}
+
+
+async function renderTabelSKUMPTK() {
+    if ($.fn.DataTable.isDataTable('#tblSkumptkPns')) { try { $('#tblSkumptkPns').DataTable().clear().destroy(); } catch(e){} }
+    if ($.fn.DataTable.isDataTable('#tblSkumptkPppk')) { try { $('#tblSkumptkPppk').DataTable().clear().destroy(); } catch(e){} }
+    const allPegawai = await dbManager.getAllPegawai();
+
+    const processData = (statusFilter) => {
+        const dataFilter = allPegawai.filter(p => p.statusKepegawaian === 'Aktif' && p.statusPegawai === statusFilter);
+        let no = 1;
+        return dataFilter.map(p => {
+            return [
+                no++,
+                p.nama,
+                p.nip,
+                p.jabatan || '-',
+                p.golongan || '-',
+                "<button class='btn btn-sm btn-info text-white' title='Cetak SKUMPTK' onclick='cetakSkumptk(\"" + p.nip + "\")'><i class='fas fa-print'></i> Cetak</button>"
+            ];
+        });
+    };
+
+    const dataPNS = processData('PNS');
+    const dataPPPK = processData('PPPK');
+
+    $('#tblSkumptkPns').DataTable({ data: dataPNS, pageLength: 20 });
+    $('#tblSkumptkPppk').DataTable({ data: dataPPPK, pageLength: 20 });
+}
+
+async function cetakSkumptk(nip) {
+    Swal.fire({ title: 'Memuat data...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+    const allPegawai = await dbManager.getAllPegawai();
+    const data = allPegawai.find(x => x.nip === nip);
+    const pengaturan = await dbManager.getPengaturan() || {};
+
+    if (!data) return Swal.fire('Error', 'Data Pegawai tidak ditemukan.', 'error');
+
+    Swal.close();
+    await new Promise(r => setTimeout(r, 300));
+
+    let latestKgb = data.riwayatKgb && data.riwayatKgb.length > 0 ? data.riwayatKgb[data.riwayatKgb.length - 1] : null;
+    let defaultGajiPokok = latestKgb ? (latestKgb.gajiLama || '') : '';
+
+    const { value: formValues } = await Swal.fire({
+        title: 'Lengkapi Data SKUMPTK',
+        html:
+            '<div class="text-start">' +
+            '<div class="mb-2"><label class="form-label small fw-bold">Gaji Bersih (Sesuai Amprah)</label>' +
+            '<input id="sk_gaji_bersih" class="form-control form-control-sm" placeholder="Contoh: Rp. 4.500.000"></div>' +
+            '<div class="mb-2"><label class="form-label small fw-bold">Gaji Pokok</label>' +
+            '<input id="sk_gaji_pokok" class="form-control form-control-sm" value="' + defaultGajiPokok + '" placeholder="Contoh: Rp. 3.000.000"></div>' +
+            '<div class="mb-2"><label class="form-label small fw-bold">Dasar Gaji (Berdasarkan PP)</label>' +
+            '<input id="sk_dasar_gaji" class="form-control form-control-sm" placeholder="Contoh: PP Nomor 15 Tahun 2019"></div>' +
+            '<div class="mb-2"><label class="form-label small fw-bold">Tempat Cetak TTD</label>' +
+            '<input id="sk_tempat" class="form-control form-control-sm" value="Tempat..."></div>' +
+            '<div class="mb-2"><label class="form-label small fw-bold">Tanggal Cetak TTD</label>' +
+            '<input type="date" id="sk_tanggal" class="form-control form-control-sm" value="' + new Date().toISOString().split('T')[0] + '"></div>' +
+            '</div>',
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Cetak Dokumen',
+        preConfirm: () => {
+            return {
+                gajiBersih: document.getElementById('sk_gaji_bersih').value || '.......................................................',
+                gajiPokok: document.getElementById('sk_gaji_pokok').value || '.......................................................',
+                dasarGaji: document.getElementById('sk_dasar_gaji').value || '.......................................................',
+                tempat: document.getElementById('sk_tempat').value || '...',
+                tanggal: document.getElementById('sk_tanggal').value || '...',
+            }
+        }
+    });
+
+    if (!formValues) return;
+
+    // Formatting date
+    let tglCetakFormat = new Date(formValues.tanggal).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+    if(tglCetakFormat === 'Invalid Date') tglCetakFormat = formValues.tanggal;
+
+    // Constructing HTML for Word Document
+    let htmlContent = `
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset='utf-8'><title>SKUMPTK</title>
+<style>
+    body { font-family: "Times New Roman", Times, serif; font-size: 11pt; color: #000; }
+    table { width: 100%; border-collapse: collapse; }
+    .table-border, .table-border th, .table-border td { border: 1px solid black; padding: 4px; text-align: left; }
+    .text-center { text-align: center; }
+    .fw-bold { font-weight: bold; }
+
+    /* Word Section Styles */
+    @page Section1 { size: 21cm 29.7cm; margin: 2cm 2cm 2cm 2cm; mso-page-orientation: portrait; }
+    div.Section1 { page: Section1; }
+    
+    @page Section2 { size: 29.7cm 21cm; margin: 2cm 2cm 2cm 2cm; mso-page-orientation: landscape; }
+    div.Section2 { page: Section2; }
+</style>
+</head>
+<body>
+    <div class="Section1">
+    `;
+
+    // Kop Surat
+    const instansi = pengaturan.instansi || '';
+    const opd = pengaturan.opd || '';
+    const sekolah = pengaturan.sekolah || '';
+    const alamat = pengaturan.alamat || '';
+    const hp = pengaturan.hp || '';
+    const email = pengaturan.email || '';
+    const web = pengaturan.web || '';
+    
+    htmlContent += `
+    <table style="width: 100%; border-bottom: 3px solid black; margin-bottom: 20px;">
+        <tr>
+            <td style="width: 15%; text-align: center; vertical-align: middle;">
+                ${pengaturan.logoInstansi ? `<img src="${pengaturan.logoInstansi}" style="width: 80px; height: 80px;">` : ''}
+            </td>
+            <td style="width: 70%; text-align: center; vertical-align: middle; line-height: 1.2;">
+                <div style="font-size: 14pt; font-weight: bold;">${instansi.toUpperCase()}</div>
+                ${opd ? `<div style="font-size: 14pt; font-weight: bold;">${opd.toUpperCase()}</div>` : ''}
+                <div style="font-size: 17pt; font-weight: bold;">${sekolah.toUpperCase()}</div>
+                <div style="font-size: 9pt;">${alamat}</div>
+                <div style="font-size: 9pt;">Telp/HP: ${hp} | Email: ${email} | Web: ${web}</div>
+            </td>
+            <td style="width: 15%; text-align: center; vertical-align: middle;">
+                ${pengaturan.logoSekolah ? `<img src="${pengaturan.logoSekolah}" style="width: 80px; height: 80px;">` : ''}
+            </td>
+        </tr>
+    </table>
+    `;
+
+    htmlContent += `
+    <div style="text-align: right; font-size: 10pt; margin-bottom: 10px;">
+        LAMPIRAN SURAT EDARAN MENTERI KEUANGAN<br>REPUBLIK INDONESIA NO. SE-29/PJ.04/1989
+    </div>
+    
+    <div class="text-center fw-bold" style="font-size: 12pt; text-decoration: underline; margin-bottom: 20px;">
+        SURAT KETERANGAN UNTUK MENDAPATKAN PEMBAYARAN TUNJANGAN KELUARGA
+    </div>
+
+    <p style="text-align: justify;">Yang bertanda tangan di bawah ini:</p>
+    
+    <table style="margin-left: 20px; margin-bottom: 20px; width: 90%;">
+        <tr><td style="width: 250px;">1. Nama Lengkap</td><td>: ${data.nama || '-'}</td></tr>
+        <tr><td>2. NIP</td><td>: ${data.nip || '-'}</td></tr>
+        <tr><td>3. Pangkat / Golongan Ruang</td><td>: ${data.golongan || '-'}</td></tr>
+        <tr><td>4. Tempat, Tanggal Lahir</td><td>: ${data.tmptLahir || '-'}, ${data.tglLahir || '-'}</td></tr>
+        <tr><td>5. Jenis Kelamin</td><td>: ${data.kelamin || '-'}</td></tr>
+        <tr><td>6. Agama</td><td>: ${data.agama || '-'}</td></tr>
+        <tr><td>7. Jabatan Struktural / Fungsional</td><td>: ${data.jabatan || '-'}</td></tr>
+        <tr><td>8. Instansi / Unit Kerja</td><td>: ${sekolah || '-'}</td></tr>
+        <tr><td>9. Alamat Lengkap</td><td>: ${data.alamat || '-'}</td></tr>
+    </table>
+
+    <p style="text-align: justify;">
+        Menerangkan dengan sesungguhnya bahwa saya mempunyai penghasilan Gaji Pokok sebesar <b>${formValues.gajiPokok}</b> (Berdasarkan ${formValues.dasarGaji}) dengan Gaji Bersih sebesar <b>${formValues.gajiBersih}</b>.
+        <br><br>
+        Selanjutnya menerangkan bahwa saya mempunyai tanggungan keluarga sebagaimana terlampir. Keterangan ini saya buat dengan sesungguhnya dan apabila keterangan ini ternyata tidak benar (palsu), saya bersedia dituntut di muka pengadilan berdasarkan undang-undang yang berlaku, dan bersedia mengembalikan semua uang tunjangan yang telah saya terima yang seharusnya bukan menjadi hak saya.
+    </p>
+
+    <table style="width: 100%; margin-top: 50px;">
+        <tr>
+            <td style="width: 50%; text-align: center; vertical-align: bottom;">
+                Mengetahui / Mengesahkan,<br>
+                Kepala Sekolah / Pimpinan<br><br><br><br><br>
+                <b><u>${pengaturan.kepsekNama || '.....................................'}</u></b><br>
+                NIP. ${pengaturan.kepsekNip || '.....................................'}
+            </td>
+            <td style="width: 50%; text-align: center; vertical-align: bottom;">
+                ${formValues.tempat}, ${tglCetakFormat}<br>
+                Yang Menerangkan,<br><br><br><br><br>
+                <b><u>${data.nama || '.....................................'}</u></b><br>
+                NIP. ${data.nip || '.....................................'}
+            </td>
+        </tr>
+    </table>
+    </div>
+
+    <!-- PAGE BREAK TO LANDSCAPE -->
+    <br clear="all" style="page-break-before:always; mso-break-type:section-break">
+
+    <div class="Section2">
+    <b>A. SUAMI / ISTRI</b>
+    <table class="table-border" style="margin-top: 10px; margin-bottom: 20px;">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Nama Istri / Suami</th>
+                <th>Tempat, Tanggal Lahir</th>
+                <th>NIP / NIK</th>
+                <th>Pekerjaan</th>
+            </tr>
+        </thead>
+        <tbody>
+    `;
+
+        if (data.pasanganNama) {
+        htmlContent += `
+            <tr>
+                <td class="text-center">1</td>
+                <td>${data.pasanganNama || '-'}</td>
+                <td>${data.pasanganTmptLahir || '-'}, ${data.pasanganTglLahir || '-'}</td>
+                <td>${data.pasanganNip || data.pasanganNik || '-'}</td>
+                <td>${data.pasanganPekerjaan || '-'}</td>
+            </tr>
+        `;
+    } else {
+        htmlContent += `<tr><td colspan="5" class="text-center">- Tidak ada data pasangan -</td></tr>`;
+    }
+
+    htmlContent += `
+        </tbody>
+    </table>
+
+    <b>B. ANAK-ANAK YANG MENJADI TANGGUNGAN</b>
+    <table class="table-border" style="margin-top: 10px; margin-bottom: 20px;">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Nama Anak</th>
+                <th>Tempat, Tanggal Lahir</th>
+                <th>Status Anak</th>
+                <th>Jenis Kelamin</th>
+                <th>Pekerjaan / Sekolah</th>
+                <th>Dapat Tunjangan</th>
+            </tr>
+        </thead>
+        <tbody>
+    `;
+
+    if (data.anak && data.anak.length > 0) {
+        data.anak.forEach((a, idx) => {
+            htmlContent += `
+            <tr>
+                <td class="text-center">${idx + 1}</td>
+                <td>${a.nama || '-'}</td>
+                <td>${a.kotaLahir || '-'}, ${a.tglLahir || '-'}</td>
+                <td>${a.statusKeluarga || '-'}</td>
+                <td>${a.kelamin || '-'}</td>
+                <td>${a.pekerjaan || a.statusSekolah || '-'}</td>
+                <td>${a.dapatTunjangan || '-'}</td>
+            </tr>
+            `;
+        });
+    } else {
+        htmlContent += `<tr><td colspan="7" class="text-center">- Tidak ada data anak -</td></tr>`;
+    }
+
+    htmlContent += `
+        </tbody>
+    </table>
+    </div>
+</body></html>
+    `;
+
+    // Create Blob and Download
+    const blob = new Blob(['\ufeff', htmlContent], {
+        type: 'application/msword'
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = "SKUMPTK_" + (data.nama || data.nip) + ".doc";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
