@@ -190,7 +190,7 @@ async function simpanPegawai() {
                         const ctx = canvas.getContext('2d');
                         let width = img.width;
                         let height = img.height;
-                        const MAX_SIZE = 150;
+                        const MAX_SIZE = 250;
                         if (width > height) {
                             if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
                         } else {
@@ -200,7 +200,7 @@ async function simpanPegawai() {
                         canvas.height = height;
                         ctx.drawImage(img, 0, 0, width, height);
                         // Convert to highly compressed JPEG
-                        let compressed = canvas.toDataURL('image/jpeg', 0.5);
+                        let compressed = canvas.toDataURL('image/jpeg', 0.7);
                         resolve(compressed);
                     };
                     img.onerror = () => resolve(imgEl.src);
@@ -2656,3 +2656,4 @@ async function cetakSkumptk(nip) {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 };
+
