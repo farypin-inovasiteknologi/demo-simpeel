@@ -687,3 +687,95 @@ body {
 .floating-animation {
     animation: floatUpDown 3s ease-in-out infinite;
 }
+/* ========================== MOBILE UI (APP-LIKE) ========================== */
+.mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background: #ffffff;
+    border-top: 1px solid #e3e6f0;
+    z-index: 1050;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px 5px;
+    padding-bottom: calc(env(safe-area-inset-bottom, 8px) + 8px); 
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+}
+.nav-item-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none !important;
+    color: #b7b9cc;
+    flex: 1;
+    transition: all 0.2s ease-in-out;
+}
+.nav-item-bottom i {
+    font-size: 1.25rem;
+    margin-bottom: 4px;
+}
+.nav-item-bottom span {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1;
+}
+.nav-item-bottom:hover, .nav-item-bottom.active {
+    color: #4e73df;
+}
+.nav-item-bottom.active i {
+    transform: scale(1.15);
+}
+
+/* Center Action Button (Floating) */
+.nav-center-action {
+    position: relative;
+    top: -20px;
+    z-index: 1060;
+}
+.nav-center-action .nav-action-circle {
+    background: linear-gradient(135deg, #4e73df, #224abe);
+    color: white !important;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(78, 115, 223, 0.4);
+    border: 5px solid #f8f9fc;
+    transition: all 0.3s ease;
+    margin: 0 auto 5px auto;
+}
+.nav-center-action .nav-action-circle i {
+    font-size: 1.5rem;
+    margin-bottom: 0;
+}
+.nav-center-action.active .nav-action-circle {
+    background: linear-gradient(135deg, #1cc88a, #13855c);
+    box-shadow: 0 4px 15px rgba(28, 200, 138, 0.4);
+}
+.nav-center-action span {
+    color: #858796;
+}
+.nav-center-action.active span {
+    color: #1cc88a;
+}
+
+@media (max-width: 767.98px) {
+    #mainContainer {
+        padding-bottom: 90px !important; 
+    }
+    #content-wrapper {
+        background-color: #f8f9fc;
+    }
+}
+/* Mobile Topbar Specific */
+.mobile-topbar-header img {
+    object-fit: contain;
+    background: white;
+}
