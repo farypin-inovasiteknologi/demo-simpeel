@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>SiMPeEL - Sistem Informasi Pegawai Elektronik</title>
+    <title>SiMPeEL - Sistem Informasi Manajemen Pegawai Elektronik</title>
     <link rel="icon" type="image/png" href="./logo-simpeel.png">
     <!-- Google Fonts (lokal fallback ke system font jika offline) -->
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -32,14 +32,15 @@
             <h3 id="textInstansi" class="text-uppercase mb-1"
                 style="font-size: 0.9rem; font-weight: 500; letter-spacing: 1px;">Nama Instansi</h3>
             <h1 id="textSekolah" class="text-uppercase mb-3"
-                style="font-size: 2.8rem; font-weight: 900; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Nama Sekolah</h1>
+                style="font-size: 1.6rem; font-weight: 900; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Nama Sekolah</h1>
 
             <div class="my-3 text-center">
                 <img src="./logo-simpeel.png" alt="Logo SiMPeEL"
                     style="height: 100px; width: auto; object-fit: contain;">
             </div>
 
-            <p class="mb-4 text-light opacity-75">Sistem Informasi Pegawai Elektronik terintegrasi untuk memudahkan
+            <p class="mb-4 text-light opacity-75">Sistem Informasi Manajemen Pegawai Elektronik terintegrasi untuk
+                memudahkan
                 manajemen kepegawaian Anda secara cerdas dan efisien.</p>
 
             <button onclick="showLoginView()" class="btn-masuk floating-animation" style="animation-delay: 1s;">
@@ -95,7 +96,7 @@
         </div>
 
         <!-- Footer Login -->
-        <footer class="mt-4 text-center text-white" style="z-index: 10;">
+        <footer class="mt-4 text-center text-white" style="z-index: 10; font-size: 13px;">
             <p class="mb-1">&copy; 2026 SiMPeEL. Hak Cipta Dilindungi.</p>
             <a href="#" class="text-white text-decoration-underline" onclick="showPrivacyPolicy(event)">Kebijakan
                 Privasi</a> | Powered By: <a href="https://www.farypin-inovasiteknologi.com" target="_blank"
@@ -108,14 +109,22 @@
     <div id="wrapper" class="d-none">
 
         <!-- Sidebar -->
-        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion d-none d-md-flex" id="accordionSidebar">
 
             <!-- Sidebar - Brand -->
-            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="#"
+            <a class="sidebar-brand d-flex align-items-center justify-content-center mt-2" href="#"
                 onclick="nav('dashboard')">
-                <div class="sidebar-brand-icon"><i class="fa-solid fa-users-gear"></i></div>
+                <div class="sidebar-brand-icon">
+                    <img src="./logo-simpeel.png" width="30" alt="SiMPeEL Logo" class="rounded">
+                </div>
                 <div class="sidebar-brand-text mx-3">SiMPeEL</div>
             </a>
+            
+            <!-- Logo & Nama Sekolah -->
+            <div class="text-center mt-2 mb-3 px-2">
+                <img src="./logo-simpeel.png" id="sidebar-sekolah-logo" width="60" alt="Logo Sekolah" class="rounded-circle shadow-sm mb-2 bg-white" style="object-fit: contain; aspect-ratio: 1/1;">
+                <div class="text-white fw-bold lh-sm" id="sidebar-sekolah-nama" style="font-size: 0.85rem;">Nama Sekolah</div>
+            </div>
 
             <hr class="sidebar-divider my-0">
 
@@ -165,15 +174,18 @@
 
             <!-- SIDEBAR PEGAWAI -->
             <div id="sidebar-pegawai" class="d-none">
+                <!-- Input Data -->
+                <li class="nav-item" data-page="input-data-pegawai">
+                    <a class="nav-link" href="#" onclick="bukaInputDataSendiri()">
+                        <i class="fas fa-fw fa-edit"></i>
+                        <span>Input Data Saya</span></a>
+                </li>
+                <hr class="sidebar-divider">
+                <!-- Profil Saya -->
                 <li class="nav-item" data-page="profil-pegawai">
                     <a class="nav-link" href="#" onclick="nav('profil-pegawai')">
                         <i class="fas fa-fw fa-id-card"></i>
                         <span>Profil Saya</span></a>
-                </li>
-                <li class="nav-item" data-page="update-data">
-                    <a class="nav-link" href="#" onclick="bukaFormUpdateData()">
-                        <i class="fas fa-fw fa-edit"></i>
-                        <span>Update Data</span></a>
                 </li>
             </div>
 
@@ -195,21 +207,25 @@
 
                 <!-- Topbar -->
                 <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow-sm">
-                    <!-- Sidebar Toggle (Topbar) -->
-                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                    
+                    <!-- Mobile Header (Left) -->
+                    <div class="d-flex align-items-center d-md-none mobile-topbar-header px-2" style="flex: 1;">
+                        <img src="./logo-simpeel.png" id="mobile-top-sekolah-logo" width="35" height="35" class="rounded-circle shadow-sm border border-light me-2" alt="Logo">
+                        <span id="mobile-top-sekolah-nama" class="fw-bold text-gray-800 text-truncate" style="font-size: 0.9rem; max-width: 150px;">Nama Sekolah</span>
+                    </div>
+
+                    <!-- Sidebar Toggle (Topbar) - Hidden on Mobile since using Bottom Nav -->
+                    <button id="sidebarToggleTop" class="btn btn-link d-none rounded-circle mr-3">
                         <i class="fa fa-bars"></i>
                     </button>
 
                     <!-- Topbar Navbar -->
                     <ul class="navbar-nav ms-auto align-items-center">
 
-                        <!-- Status & Sync Button -->
+                        <!-- Status Badge (Sync button hidden in online version) -->
                         <li class="nav-item d-flex align-items-center me-3">
                             <span id="connectionStatus" class="badge bg-danger me-2" style="font-size: 0.85rem;"><i
                                     class="fas fa-wifi-slash"></i> Offline</span>
-                            <button class="btn btn-sm btn-outline-primary shadow-sm fw-bold" onclick="bukaModalSync()">
-                                <i class="fas fa-sync-alt"></i> Singkron
-                            </button>
                         </li>
 
                         <div class="topbar-divider d-none d-sm-block"></div>
@@ -826,6 +842,9 @@
                         <div class="card shadow-sm mb-4">
                             <div class="card-header py-3">
                                 <ul class="nav nav-tabs card-header-tabs" id="monitorTabs" role="tablist">
+                                      <li class="nav-item"><button class="nav-link fw-bold" id="tab-mon-skumptk"
+                                              data-bs-toggle="tab" data-bs-target="#mon-skumptk" type="button"><i
+                                                  class="fas fa-file-invoice me-1"></i> SKUMPTK</button></li>
                                     <li class="nav-item"><button class="nav-link active fw-bold" id="tab-mon-duk"
                                             data-bs-toggle="tab" data-bs-target="#mon-duk" type="button"><i
                                                 class="fas fa-list-ol me-1"></i> DUK</button></li>
@@ -842,6 +861,56 @@
                             </div>
                             <div class="card-body">
                                 <div class="tab-content" id="monitorTabsContent">
+                                      <!-- SKUMPTK Tab -->
+                                      <div class="tab-pane fade" id="mon-skumptk" role="tabpanel">
+                                          <div class="d-flex justify-content-between align-items-center mb-3">
+                                              <h6 class="fw-bold mb-0 text-primary">Daftar Pegawai SKUMPTK</h6>
+                                          </div>
+                                          <ul class="nav nav-pills mb-3" id="pills-tab-skumptk" role="tablist">
+                                              <li class="nav-item" role="presentation">
+                                                <button class="nav-link active" id="pills-skumptk-pns-tab" data-bs-toggle="pill" data-bs-target="#pills-skumptk-pns" type="button" role="tab">PNS</button>
+                                              </li>
+                                              <li class="nav-item" role="presentation">
+                                                <button class="nav-link" id="pills-skumptk-pppk-tab" data-bs-toggle="pill" data-bs-target="#pills-skumptk-pppk" type="button" role="tab">PPPK</button>
+                                              </li>
+                                          </ul>
+                                          <div class="tab-content" id="pills-tabContent-skumptk">
+                                              <div class="tab-pane fade show active" id="pills-skumptk-pns" role="tabpanel">
+                                                  <div class="table-responsive">
+                                                      <table class="table table-bordered table-striped w-100 table-sm text-center align-middle" id="tblSkumptkPns">
+                                                          <thead class="table-dark">
+                                                              <tr>
+                                                                  <th>No</th>
+                                                                  <th>Nama</th>
+                                                                  <th>NIP</th>
+                                                                  <th>Jabatan Terakhir</th>
+                                                                  <th>Pangkat/Gol Terakhir</th>
+                                                                  <th>Aksi</th>
+                                                              </tr>
+                                                          </thead>
+                                                          <tbody></tbody>
+                                                      </table>
+                                                  </div>
+                                              </div>
+                                              <div class="tab-pane fade" id="pills-skumptk-pppk" role="tabpanel">
+                                                  <div class="table-responsive">
+                                                      <table class="table table-bordered table-striped w-100 table-sm text-center align-middle" id="tblSkumptkPppk">
+                                                          <thead class="table-dark">
+                                                              <tr>
+                                                                  <th>No</th>
+                                                                  <th>Nama</th>
+                                                                  <th>NIP</th>
+                                                                  <th>Jabatan Terakhir</th>
+                                                                  <th>Pangkat/Gol Terakhir</th>
+                                                                  <th>Aksi</th>
+                                                              </tr>
+                                                          </thead>
+                                                          <tbody></tbody>
+                                                      </table>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                      </div>
                                     <!-- DUK TAB -->
                                     <div class="tab-pane fade show active" id="mon-duk" role="tabpanel">
                                         <ul class="nav nav-pills mt-2 mb-2 gap-1">
@@ -959,9 +1028,9 @@
                                                         <th>Nama</th>
                                                         <th>Gol/Jabatan</th>
                                                         <th>Unit Kerja</th>
-                                                        <th>Tgl Lahir</th>
-                                                        <th>Est. Pensiun</th>
-                                                        <th>Sisa (Tahun)</th>
+                                                        <th>BUP</th>
+                                                          <th>Tgl Lahir</th>
+                                                          <th>Est. Pensiun</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody></tbody>
@@ -1568,99 +1637,89 @@
                                     </div>
                                     <div class="card-body">
                                         <div class="tab-content">
-                                            <!-- Tab Informasi Instansi -->
-                                            <div class="tab-pane fade show active" id="content-umum" role="tabpanel">
-                                                <form>
-                                                    <div class="row mb-3">
-                                                        <div class="col-md-6">
-                                                            <label class="form-label">Nama Instansi</label>
-                                                            <input type="text" class="form-control" id="set_instansi"
-                                                                placeholder="Contoh: Pemerintah Provinsi">
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <label class="form-label">Nama OPD / Dinas</label>
-                                                            <input type="text" class="form-control" id="set_opd"
-                                                                placeholder="Contoh: Dinas Pendidikan">
-                                                        </div>
-                                                    </div>
+<!-- Tab Informasi Instansi -->
+<div class="tab-pane fade show active" id="content-umum" role="tabpanel">
+    <form>
+        <div class="row">
+            <!-- Kolom Kiri -->
+            <div class="col-md-6 border-end">
+                <h6 class="fw-bold text-primary mb-3"><i class="fas fa-building me-1"></i> Data Instansi</h6>
+                <div class="mb-2">
+                    <label class="form-label small mb-1 fw-bold">Nama Instansi</label>
+                    <input type="text" class="form-control form-control-sm" id="set_instansi" placeholder="Pemerintah Provinsi">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small mb-1 fw-bold">Nama OPD / Dinas <span class="text-muted fw-normal">(Opsional)</span></label>
+                    <input type="text" class="form-control form-control-sm" id="set_opd" placeholder="Dinas Pendidikan">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small mb-1 fw-bold">Nama Sekolah / Unit Kerja</label>
+                    <input type="text" class="form-control form-control-sm" id="set_sekolah" placeholder="Nama Sekolah">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small mb-1 fw-bold">Alamat Lengkap</label>
+                    <textarea class="form-control form-control-sm" rows="2" id="set_alamat_text" placeholder="Alamat lengkap"></textarea>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small mb-1 fw-bold">No Telpon / HP</label>
+                    <input type="text" class="form-control form-control-sm" id="set_hp" placeholder="08123456789">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small mb-1 fw-bold">Email</label>
+                    <input type="email" class="form-control form-control-sm" id="set_email" placeholder="email@contoh.com">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small mb-1 fw-bold">Website</label>
+                    <input type="text" class="form-control form-control-sm" id="set_web" placeholder="https://www.contoh.com">
+                </div>
+            </div>
 
-                                                    <div class="row mb-3">
-                                                        <div class="col-md-6">
-                                                            <label class="form-label">Nama Sekolah / Unit Kerja</label>
-                                                            <input type="text" class="form-control" id="set_sekolah"
-                                                                placeholder="Nama Sekolah atau Unit Kerja">
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <label class="form-label">Nomor Handphone / WhatsApp</label>
-                                                            <input type="text" class="form-control" id="set_hp"
-                                                                placeholder="08123456789">
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Alamat Lengkap</label>
-                                                        <textarea class="form-control" rows="2" id="set_alamat_text"
-                                                            placeholder="Alamat lengkap instansi/sekolah"></textarea>
-                                                    </div>
-
-                                                    <div class="row mb-4">
-                                                        <div class="col-md-6">
-                                                            <label class="form-label">Alamat Email</label>
-                                                            <input type="email" class="form-control" id="set_email"
-                                                                placeholder="email@contoh.com">
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <label class="form-label">Website</label>
-                                                            <input type="text" class="form-control" id="set_web"
-                                                                placeholder="https://www.contoh.com">
-                                                        </div>
-                                                    </div>
-
-
-                                                    <hr>
-
-                                                    <div class="row mb-4">
-                                                        <div class="col-md-6 text-center">
-                                                            <label class="form-label fw-bold">Logo Instansi
-                                                                (1:1)</label>
-                                                            <div class="border rounded p-2 mb-2 bg-light mx-auto"
-                                                                style="width: 150px; height: 150px; display: flex; align-items: center; justify-content: center;">
-                                                                <img id="previewLogoInstansi"
-                                                                    src="https://via.placeholder.com/150?text=Logo+Instansi"
-                                                                    alt="Logo Instansi" class="img-fluid"
-                                                                    style="max-height: 100%;">
-                                                            </div>
-                                                            <input type="file" id="inputLogoInstansi" class="d-none"
-                                                                accept="image/*"
-                                                                onchange="openCropper(this, 'previewLogoInstansi', 1/1)">
-                                                            <button type="button" class="btn btn-sm btn-outline-primary"
-                                                                onclick="document.getElementById('inputLogoInstansi').click()"><i
-                                                                    class="fas fa-upload"></i> Unggah Logo</button>
-                                                        </div>
-                                                        <div class="col-md-6 text-center">
-                                                            <label class="form-label fw-bold">Logo Sekolah/Unit
-                                                                (1:1)</label>
-                                                            <div class="border rounded p-2 mb-2 bg-light mx-auto"
-                                                                style="width: 150px; height: 150px; display: flex; align-items: center; justify-content: center;">
-                                                                <img id="previewLogoSekolah"
-                                                                    src="https://via.placeholder.com/150?text=Logo+Sekolah"
-                                                                    alt="Logo Sekolah" class="img-fluid"
-                                                                    style="max-height: 100%;">
-                                                            </div>
-                                                            <input type="file" id="inputLogoSekolah" class="d-none"
-                                                                accept="image/*"
-                                                                onchange="openCropper(this, 'previewLogoSekolah', 1/1)">
-                                                            <button type="button" class="btn btn-sm btn-outline-primary"
-                                                                onclick="document.getElementById('inputLogoSekolah').click()"><i
-                                                                    class="fas fa-upload"></i> Unggah Logo</button>
-                                                        </div>
-                                                    </div>
-
-                                                    <button type="button" class="btn btn-primary"
-                                                        onclick="simpanPengaturan()"><i class="fas fa-save"></i> Simpan
-                                                        Pengaturan</button>
-                                                </form>
-                                            </div>
+            <!-- Kolom Kanan -->
+            <div class="col-md-6">
+                <h6 class="fw-bold text-primary mb-3"><i class="fas fa-user-tie me-1"></i> Data Pejabat & Logo</h6>
+                <div class="mb-2">
+                    <label class="form-label small mb-1 fw-bold">Nama Kepala Sekolah / Pimpinan</label>
+                    <input type="text" class="form-control form-control-sm" id="set_kepsek_nama" placeholder="Nama Pimpinan">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small mb-1 fw-bold">NIP Kepala Sekolah / Pimpinan</label>
+                    <input type="text" class="form-control form-control-sm" id="set_kepsek_nip" placeholder="NIP Pimpinan">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small mb-1 fw-bold">Nama Bendahara Gaji / Dinas</label>
+                    <input type="text" class="form-control form-control-sm" id="set_bendahara_nama" placeholder="Nama Bendahara">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small mb-1 fw-bold">NIP Bendahara Gaji / Dinas</label>
+                    <input type="text" class="form-control form-control-sm" id="set_bendahara_nip" placeholder="NIP Bendahara">
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-6 text-center">
+                        <label class="form-label small fw-bold">Logo Instansi</label>
+                        <div class="border rounded p-1 mb-2 bg-light mx-auto" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+                            <img id="previewLogoInstansi" src="https://via.placeholder.com/80?text=Logo" alt="Logo Instansi" class="img-fluid" style="max-height: 100%;">
+                        </div>
+                        <input type="file" id="inputLogoInstansi" class="d-none" accept="image/*" onchange="openCropper(this, 'previewLogoInstansi', 1/1)">
+                        <button type="button" class="btn btn-sm btn-outline-primary py-0" onclick="document.getElementById('inputLogoInstansi').click()"><i class="fas fa-upload" style="font-size: 0.8rem;"></i></button>
+                    </div>
+                    <div class="col-6 text-center">
+                        <label class="form-label small fw-bold">Logo Sekolah</label>
+                        <div class="border rounded p-1 mb-2 bg-light mx-auto" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+                            <img id="previewLogoSekolah" src="https://via.placeholder.com/80?text=Logo" alt="Logo Sekolah" class="img-fluid" style="max-height: 100%;">
+                        </div>
+                        <input type="file" id="inputLogoSekolah" class="d-none" accept="image/*" onchange="openCropper(this, 'previewLogoSekolah', 1/1)">
+                        <button type="button" class="btn btn-sm btn-outline-primary py-0" onclick="document.getElementById('inputLogoSekolah').click()"><i class="fas fa-upload" style="font-size: 0.8rem;"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <hr>
+        <button type="button" class="btn btn-primary w-100" onclick="simpanPengaturan()"><i class="fas fa-save"></i> Simpan Pengaturan</button>
+    </form>
+</div>
 
                                             <!-- Tab Keamanan Akun -->
                                             <div class="tab-pane fade" id="content-keamanan" role="tabpanel">
@@ -1746,6 +1805,13 @@
                                                 onclick="restoreDataJSON()"><i class="fas fa-upload"></i> Restore Backup
                                                 (JSON)</button>
                                         </div>
+                                        <hr>
+                                        <p class="text-muted small fw-bold mb-1">Standar Sync URL (Bawaan)</p>
+                                        <p class="text-muted small" style="font-size: 0.75rem;">URL Google Apps Script bawaan aplikasi (hanya bisa disalin).</p>
+                                        <div class="input-group input-group-sm mb-2">
+                                            <input type="text" class="form-control" id="defaultSyncUrlReadonly" readonly value="Memuat...">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="navigator.clipboard.writeText(document.getElementById('defaultSyncUrlReadonly').value); Swal.fire({toast:true, position:'top-end', icon:'success', title:'URL disalin!', showConfirmButton:false, timer:2000})"><i class="fas fa-copy"></i></button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1786,12 +1852,67 @@
                     <!-- ========================== PROFIL PEGAWAI VIEW ========================== -->
                     <div id="view-profil-pegawai" class="page-view d-none animate-fade-in">
                         <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                            <h1 class="h3 mb-0 text-gray-800 fw-bold">Profil Pegawai</h1>
+                            <h1 class="h3 mb-0 text-gray-800 fw-bold"><i
+                                    class="fas fa-id-card me-2 text-primary"></i>Profil Saya</h1>
                         </div>
-                        <div class="card shadow-sm mb-4">
-                            <div class="card-body" id="profil-pegawai-container">
-                                <!-- Data Profil akan dirender di sini via JS -->
+                        <div class="card shadow-sm mb-4 border-left-primary">
+                            <div class="card-header py-3 bg-gradient-primary">
+                                <h6 class="m-0 fw-bold text-white"><i class="fas fa-user me-2"></i>Informasi Akun</h6>
                             </div>
+                            <div class="card-body">
+                                <div class="row mb-4 align-items-center">
+                                    <div class="col-md-4 text-center mb-3 mb-md-0">
+                                        <div class="avatar-placeholder mx-auto mb-3 shadow"
+                                            style="width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,#4e73df,#224abe);display:flex;align-items:center;justify-content:center;">
+                                            <i class="fas fa-user fa-3x text-white"></i>
+                                        </div>
+                                        <span class="badge bg-primary px-3 py-2 shadow-sm" id="profil-role-badge">Pegawai</span>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold text-gray-700"><i class="fas fa-user me-1"></i>Nama Lengkap</label>
+                                            <input type="text" class="form-control bg-light" id="profil-nama" readonly placeholder="-">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold text-gray-700"><i class="fas fa-id-badge me-1"></i>NIP / Username</label>
+                                            <input type="text" class="form-control bg-light" id="profil-nip" readonly placeholder="-">
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr>
+                                <h6 class="fw-bold text-gray-700 mb-3"><i class="fas fa-lock me-2"></i>Ubah Password</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-gray-700">Password Baru</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="profil-password-baru" placeholder="Masukkan password baru">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassVisibility('profil-password-baru', this)">
+                                                <i class="fas fa-eye"></i></button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-4">
+                                        <label class="form-label fw-bold text-gray-700">Konfirmasi Password</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="profil-password-konfirm" placeholder="Ulangi password baru">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassVisibility('profil-password-konfirm', this)">
+                                                <i class="fas fa-eye"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary w-100 fw-bold shadow-sm py-2" onclick="simpanUbahPassword()">
+                                    <i class="fas fa-save me-1"></i> Simpan Perubahan Password
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================== INPUT DATA PEGAWAI VIEW ========================== -->
+                    <div id="view-pegawai-input" class="page-view d-none animate-fade-in">
+                        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                            <h1 class="h3 mb-0 text-gray-800 fw-bold"><i class="fas fa-edit me-2 text-primary"></i>Input Data Saya</h1>
+                        </div>
+                        <div id="pegawai-input-container">
+                            <!-- modal-content will be injected here dynamically by script.js -->
                         </div>
                     </div>
 
@@ -1939,6 +2060,47 @@
 
     </div>
     <!-- End of Page Wrapper -->
+
+    <!-- ========================== MOBILE BOTTOM NAV ========================== -->
+    <!-- ADMIN BOTTOM NAV -->
+    <nav id="mobile-bottom-nav-admin" class="mobile-bottom-nav d-none d-md-none">
+        <a href="#" class="nav-item-bottom" onclick="nav('data-induk')" id="mob-nav-data-induk">
+            <i class="fas fa-users"></i>
+            <span>Data Induk</span>
+        </a>
+        <a href="#" class="nav-item-bottom" onclick="nav('status-pegawai')" id="mob-nav-status-pegawai">
+            <i class="fas fa-users-cog"></i>
+            <span>Aktif/Non</span>
+        </a>
+        <a href="#" class="nav-item-bottom nav-center-action" onclick="nav('dashboard')" id="mob-nav-dashboard-admin">
+            <div class="nav-action-circle shadow"><i class="fas fa-home"></i></div>
+            <span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item-bottom" onclick="nav('monitor-kgb')" id="mob-nav-monitor-kgb">
+            <i class="fas fa-clock"></i>
+            <span>Monitor</span>
+        </a>
+        <a href="#" class="nav-item-bottom" onclick="nav('pengaturan')" id="mob-nav-pengaturan">
+            <i class="fas fa-cog"></i>
+            <span>Pengaturan</span>
+        </a>
+    </nav>
+
+    <!-- PEGAWAI BOTTOM NAV -->
+    <nav id="mobile-bottom-nav-pegawai" class="mobile-bottom-nav d-none d-md-none">
+        <a href="#" class="nav-item-bottom" onclick="nav('dashboard')" id="mob-nav-dashboard-pegawai">
+            <i class="fas fa-home"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item-bottom nav-center-action" onclick="nav('pegawai-input')" id="mob-nav-pegawai-input">
+            <div class="nav-action-circle shadow"><i class="fas fa-edit"></i></div>
+            <span>Input Data</span>
+        </a>
+        <a href="#" class="nav-item-bottom" onclick="nav('profil-pegawai')" id="mob-nav-profil-pegawai">
+            <i class="fas fa-user"></i>
+            <span>Profil Saya</span>
+        </a>
+    </nav>
 
     <!-- ========================== MODALS ========================== -->
 
@@ -2251,7 +2413,7 @@
                                         id="peg_nip" required placeholder="18 digit NIP" onblur="validasiNIP(this)"
                                         maxlength="18" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                 </div>
-                                <div class="col-md-4"><label class="form-label">NIP Lama</label><input type="text"
+                                <div class="col-md-4"><label class="form-label">NIP Lama (9 digit)</label><input type="text"
                                         class="form-control" id="peg_nip_lama" placeholder="Opsional"></div>
                                 <div class="col-md-3">
                                     <label class="form-label label-required" style="color:#1cc88a;">Status Pegawai <span
@@ -2533,15 +2695,44 @@
 
                         <!-- TAB 6: DATA KELUARGA -->
                         <div class="tab-pane fade" id="f-keluarga" role="tabpanel">
-                            <h5 class="fw-bold text-primary mb-3">Data Suami / Istri</h5>
-                            <div class="row mb-3">
-                                <div class="col-md-4"><label class="form-label">Nama Pasangan</label><input type="text"
-                                        class="form-control"></div>
-                                <div class="col-md-4"><label class="form-label">Pekerjaan</label><input type="text"
-                                        class="form-control"></div>
-                                <div class="col-md-4"><label class="form-label">Tgl Lahir</label><input type="date"
-                                        class="form-control"></div>
-                            </div>
+                              <h5 class="fw-bold text-primary mb-3">Data Suami / Istri</h5>
+                              <div class="row mb-3">
+                                  <div class="col-md-3"><label class="form-label">Nama Pasangan</label><input type="text" class="form-control" id="peg_pasangan_nama"></div>
+                                  <div class="col-md-3"><label class="form-label">NIK</label><input type="text" class="form-control" id="peg_pasangan_nik"></div>
+                                  <div class="col-md-3"><label class="form-label">Tempat Lahir</label><input type="text" class="form-control" id="peg_pasangan_tmpt_lahir"></div>
+                                  <div class="col-md-3"><label class="form-label">Tgl Lahir</label><input type="date" class="form-control" id="peg_pasangan_tgl_lahir"></div>
+                              </div>
+                              <div class="row mb-3">
+                                  <div class="col-md-4">
+                                      <label class="form-label">Pekerjaan</label>
+                                      <input list="pekerjaanList" class="form-control" id="peg_pasangan_pekerjaan" placeholder="Ketik/pilih pekerjaan..." onchange="toggleNipPasangan()">
+                                      <datalist id="pekerjaanList">
+                                          <option value="Belum/Tidak Bekerja">
+                                          <option value="Mengurus Rumah Tangga">
+                                          <option value="Pelajar/Mahasiswa">
+                                          <option value="Pensiunan">
+                                          <option value="ASN PNS">
+                                          <option value="ASN PPPK">
+                                          <option value="TNI/POLRI">
+                                          <option value="Pegawai BUMN/BUMD">
+                                          <option value="Pegawai Swasta">
+                                          <option value="Wiraswasta / Pedagang">
+                                          <option value="Petani/Pekebun">
+                                          <option value="Peternak">
+                                          <option value="Nelayan/Perikanan">
+                                          <option value="Industri / Buruh">
+                                          <option value="Konstruksi">
+                                          <option value="Transportasi / Supir">
+                                          <option value="Tenaga Medis (Dokter/Bidan/Perawat)">
+                                          <option value="Dosen / Guru / Pengajar">
+                                          <option value="Lainnya">
+                                      </datalist>
+                                  </div>
+                                  <div class="col-md-4 d-none" id="div_pasangan_nip">
+                                      <label class="form-label">NIP / NRP Pasangan</label>
+                                      <input type="text" class="form-control" id="peg_pasangan_nip" placeholder="Wajib untuk ASN/TNI/POLRI">
+                                  </div>
+                              </div>
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Buku Nikah / Akta Cerai (PDF, max 250kb)</label>
@@ -2554,9 +2745,6 @@
                                                 class="fas fa-eye"></i></button>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Kartu Keluarga (KK) (PDF, max 250kb)</label>
                                     <div class="d-flex align-items-center">
@@ -2580,9 +2768,15 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th>Nama Anak</th>
+                                            <th>NIK</th>
+                                            <th>Jenis Kelamin</th>
                                             <th>Kota Tempat Lahir</th>
                                             <th>Tanggal Lahir</th>
                                             <th>Status Keluarga</th>
+                                            <th>Dari Istri/Suami Ke-</th>
+                                            <th>Dapat Tunjangan</th>
+                                            <th>Pekerjaan</th>
+                                            <th>Status Sekolah</th>
                                             <th>Upload (PDF)</th>
                                             <th>Aksi</th>
                                         </tr>
@@ -3057,3 +3251,8 @@
 </body>
 
 </html>
+
+
+
+
+
