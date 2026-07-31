@@ -174,10 +174,15 @@ async function simpanPengaturan() {
         sekolah: document.getElementById('set_sekolah').value,
         hp: document.getElementById('set_hp').value,
         alamat: (document.getElementById('set_alamat_text') || document.getElementById('set_alamat'))?.value || '',
-        email: document.getElementById('set_email').value,
-        web: document.getElementById('set_web').value,
+        email: document.getElementById('set_email')?.value || '',
+        web: document.getElementById('set_web')?.value || '',
+        kepsekNama: document.getElementById('set_kepsek_nama')?.value || '',
+        kepsekNip: document.getElementById('set_kepsek_nip')?.value || '',
+        bendaharaNama: document.getElementById('set_bendahara_nama')?.value || '',
+        bendaharaNip: document.getElementById('set_bendahara_nip')?.value || '',
         logoInstansi: document.getElementById('previewLogoInstansi').src,
-        logoSekolah: document.getElementById('previewLogoSekolah').src
+        logoSekolah: document.getElementById('previewLogoSekolah').src,
+        updatedAt: new Date().toISOString()
     };
 
     Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
@@ -194,7 +199,8 @@ async function simpanTemaBackground() {
     const data = {
         ...existingData,
         warnaTema: document.getElementById('set_warna_tema').value,
-        bgLanding: bgToSave
+        bgLanding: bgToSave,
+        updatedAt: new Date().toISOString()
     };
 
     Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
@@ -259,12 +265,22 @@ async function loadPengaturan() {
         document.getElementById('set_sekolah').value = data.sekolah;
         const txtSekolah = document.getElementById('textSekolah');
         if (txtSekolah) txtSekolah.innerText = data.sekolah;
+        const sideNama = document.getElementById('sidebar-sekolah-nama');
+        if (sideNama) sideNama.innerText = data.sekolah;
+        const mobTopNama = document.getElementById('mobile-top-sekolah-nama');
+        if (mobTopNama) mobTopNama.innerText = data.sekolah;
     }
     if (data.hp) document.getElementById('set_hp').value = data.hp;
     if (data.alamat) {
         const el = document.getElementById('set_alamat_text') || document.getElementById('set_alamat');
         if (el) el.value = data.alamat;
     }
+    if (data.email && document.getElementById('set_email')) document.getElementById('set_email').value = data.email;
+    if (data.web && document.getElementById('set_web')) document.getElementById('set_web').value = data.web;
+    if (data.kepsekNama && document.getElementById('set_kepsek_nama')) document.getElementById('set_kepsek_nama').value = data.kepsekNama;
+    if (data.kepsekNip && document.getElementById('set_kepsek_nip')) document.getElementById('set_kepsek_nip').value = data.kepsekNip;
+    if (data.bendaharaNama && document.getElementById('set_bendahara_nama')) document.getElementById('set_bendahara_nama').value = data.bendaharaNama;
+    if (data.bendaharaNip && document.getElementById('set_bendahara_nip')) document.getElementById('set_bendahara_nip').value = data.bendaharaNip;
     if (data.email) document.getElementById('set_email').value = data.email;
     if (data.web) document.getElementById('set_web').value = data.web;
     if (data.logoInstansi && data.logoInstansi.startsWith('data:')) {
@@ -276,6 +292,10 @@ async function loadPengaturan() {
         document.getElementById('previewLogoSekolah').src = data.logoSekolah;
         const imgSek = document.getElementById('imgSekolah');
         if (imgSek) imgSek.src = data.logoSekolah;
+        const sideLogo = document.getElementById('sidebar-sekolah-logo');
+        if (sideLogo) sideLogo.src = data.logoSekolah;
+        const mobTopLogo = document.getElementById('mobile-top-sekolah-logo');
+        if (mobTopLogo) mobTopLogo.src = data.logoSekolah;
     }
 
     if (data.warnaTema) document.getElementById('set_warna_tema').value = data.warnaTema;
@@ -498,26 +518,40 @@ function checkSSOSession() {
         if (loginView) loginView.classList.add('d-none');
         if (wrapper) wrapper.classList.remove('d-none');
 
-        // Jika login sebagai pegawai, sembunyikan menu admin
+        const sidebarAdmin = document.getElementById('sidebar-admin');
+        const sidebarPegawai = document.getElementById('sidebar-pegawai');
+        
         if (data.role === 'pegawai') {
+            // Tampilkan sidebar & bottom nav pegawai, sembunyikan admin
+            if (sidebarAdmin) sidebarAdmin.classList.add('d-none');
+            if (sidebarPegawai) sidebarPegawai.classList.remove('d-none');
+            const mobAdmin = document.getElementById('mobile-bottom-nav-admin');
+            const mobPegawai = document.getElementById('mobile-bottom-nav-pegawai');
+            if (mobAdmin) mobAdmin.classList.add('d-none');
+            if (mobPegawai) mobPegawai.classList.remove('d-none');
+
             document.querySelectorAll('[data-admin-only]').forEach(el => el.classList.add('d-none'));
-            // Tampilkan view profil pegawai (jika ada)
+            // Navigate ke dashboard pegawaiboard pegawai
             setTimeout(() => {
-                const profilView = document.getElementById('view-profil-pegawai');
-                if (profilView && data.nip) {
-                    nav('profil-pegawai');
-                    // Load data profil pegawai
-                    if (typeof loadProfilPegawai === 'function') loadProfilPegawai(data.nip);
-                }
+                nav('dashboard');
+                if (typeof renderProfilPegawai === 'function') renderProfilPegawai();
             }, 200);
         } else {
-            // Admin: tampilkan semua menu
+            // Admin: Tampilkan sidebar & bottom nav admin, sembunyikan pegawai
+            if (sidebarAdmin) sidebarAdmin.classList.remove('d-none');
+            if (sidebarPegawai) sidebarPegawai.classList.add('d-none');
+            const mobAdmin = document.getElementById('mobile-bottom-nav-admin');
+            const mobPegawai = document.getElementById('mobile-bottom-nav-pegawai');
+            if (mobAdmin) mobAdmin.classList.remove('d-none');
+            if (mobPegawai) mobPegawai.classList.add('d-none');
+
             document.querySelectorAll('[data-admin-only]').forEach(el => el.classList.remove('d-none'));
+            setTimeout(() => nav('dashboard'), 200);
         }
 
         // Update badge koneksi setelah login
         setTimeout(updateConnectionStatus, 100);
-    } catch (e) { }
+    } catch (e) { console.error('checkSSOSession error', e); }
 }
 
 function showLoginView() {
@@ -541,6 +575,9 @@ function nav(page) {
     document.querySelectorAll('.nav-item').forEach(el => {
         el.classList.remove('active');
     });
+    document.querySelectorAll('.nav-item-bottom').forEach(el => {
+        el.classList.remove('active');
+    });
 
     const targetPage = document.getElementById('view-' + page);
     if (targetPage) {
@@ -550,6 +587,12 @@ function nav(page) {
     const targetNav = document.querySelector(`.nav-item[data-page="${page}"]`);
     if (targetNav) {
         targetNav.classList.add('active');
+    }
+
+    // Update bottom nav active state
+    const targetBottomNav = document.querySelector(`.nav-item-bottom[onclick*="'${page}'"]`);
+    if (targetBottomNav) {
+        targetBottomNav.classList.add('active');
     }
 
     // NEW MERGED PAGES
@@ -574,6 +617,11 @@ function nav(page) {
             tabGaji.addEventListener('shown.bs.tab', () => renderTabelKGB());
             tabGaji._navBound = true;
         }
+        const tabSkumptk = document.getElementById('tab-mon-skumptk');
+        if (tabSkumptk && !tabSkumptk._navBound) {
+            tabSkumptk.addEventListener('shown.bs.tab', () => renderTabelSKUMPTK());
+            tabSkumptk._navBound = true;
+        }
         const tabPensiun = document.getElementById('tab-mon-pensiun');
         if (tabPensiun && !tabPensiun._navBound) {
             tabPensiun.addEventListener('shown.bs.tab', () => renderTabelPensiun());
@@ -596,6 +644,7 @@ function nav(page) {
     if (page === 'guru-sertif') renderTabelGuruSertif();
     if (page === 'akun') renderTabelAkun();
     if (page === 'profil-pegawai') { if(typeof renderProfilPegawai === 'function') renderProfilPegawai(); }
+    if (page === 'input-data-pegawai') { if(typeof loadInputDataPegawai === 'function') loadInputDataPegawai(); }
 }
 
 async function logoutSSO() {
@@ -1029,24 +1078,7 @@ if ($.fn && $.fn.dataTable) {
 }
 
 window.mulaiSinkronisasi = async function() {
-    const execUrl = document.getElementById('syncExecUrl').value;
-    if (!execUrl) return Swal.fire('Error', 'Link Exec tidak boleh kosong', 'error');
-    
-    Swal.fire({
-        title: 'Menyinkronkan...',
-        allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading() }
-    });
-
-    try {
-        const { ipcRenderer } = window.require('electron');
-        await ipcRenderer.invoke('simpeel-save-config', { syncUrl: execUrl });
-        Swal.fire('Berhasil', 'Konfigurasi sinkronisasi disimpan. (Fitur sinkronisasi cloud dalam tahap pengembangan)', 'success');
-        const modal = bootstrap.Modal.getInstance(document.getElementById('modalSync'));
-        if (modal) modal.hide();
-    } catch(e) {
-        Swal.fire('Error', e.message, 'error');
-    }
+    Swal.fire('Info', 'Fitur sinkronisasi hanya tersedia melalui Aplikasi Desktop (Offline).', 'info');
 }
 
 // Badge Online/Offline
@@ -1065,3 +1097,277 @@ function updateConnectionStatus() {
 window.addEventListener('online', updateConnectionStatus);
 window.addEventListener('offline', updateConnectionStatus);
 document.addEventListener('DOMContentLoaded', updateConnectionStatus);
+
+// ==========================================
+// 👤 PROFIL & INPUT DATA PEGAWAI SELF
+// ==========================================
+
+window.togglePassVisibility = function(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
+    } else {
+        input.type = 'password';
+        if (icon) { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
+    }
+};
+
+window.renderProfilPegawai = function() {
+    try {
+        const ssoToken = localStorage.getItem(TOKEN_KEY);
+        if (!ssoToken) return;
+        const session = JSON.parse(ssoToken);
+        const nama = session.displayName || '-';
+        const nip = session.nip || '-';
+
+        const elNama = document.getElementById('profil-nama');
+        const elNip = document.getElementById('profil-nip');
+        const elDisplay = document.getElementById('profil-nama-display');
+
+        if (elNama) elNama.value = nama;
+        if (elNip) elNip.value = nip;
+        if (elDisplay) elDisplay.textContent = nama;
+
+        const elPass = document.getElementById('profil-password-baru');
+        const elKonfirm = document.getElementById('profil-password-konfirm');
+        if (elPass) elPass.value = '';
+        if (elKonfirm) elKonfirm.value = '';
+    } catch(e) { console.error('renderProfilPegawai error', e); }
+};
+
+window.simpanUbahPassword = async function() {
+    const passBaru = document.getElementById('profil-password-baru').value.trim();
+    const passKonfirm = document.getElementById('profil-password-konfirm').value.trim();
+
+    if (!passBaru) return Swal.fire('Peringatan', 'Password baru tidak boleh kosong!', 'warning');
+    if (passBaru !== passKonfirm) return Swal.fire('Peringatan', 'Password baru dan konfirmasi tidak cocok!', 'warning');
+    if (passBaru.length < 6) return Swal.fire('Peringatan', 'Password minimal 6 karakter!', 'warning');
+
+    try {
+        const ssoToken = localStorage.getItem(TOKEN_KEY);
+        if (!ssoToken) return;
+        const session = JSON.parse(ssoToken);
+        const nip = session.nip;
+        if (!nip) return Swal.fire('Error', 'Sesi tidak valid, silakan login ulang.', 'error');
+
+        const allAkun = await apiCall('getAllAkun');
+        const akun = allAkun ? allAkun.find(a => String(a.nip) === String(nip)) : null;
+        if (!akun) return Swal.fire('Error', 'Data akun tidak ditemukan!', 'error');
+
+        const dataUpdate = { ...akun, password: passBaru, updatedAt: new Date().toISOString() };
+        const res = await apiCall('saveAkun', dataUpdate);
+
+        if (res && res.success) {
+            Swal.fire('Berhasil!', 'Password berhasil diubah.', 'success');
+            document.getElementById('profil-password-baru').value = '';
+            document.getElementById('profil-password-konfirm').value = '';
+        } else {
+            Swal.fire('Gagal', (res && res.message) ? res.message : 'Gagal mengubah password.', 'error');
+        }
+    } catch(e) {
+        Swal.fire('Error', e.message, 'error');
+    }
+};
+
+window.loadInputDataPegawai = async function() {
+    const container = document.getElementById('input-data-pegawai-container');
+    if (!container) return;
+
+    try {
+        const ssoToken = localStorage.getItem(TOKEN_KEY);
+        if (!ssoToken) return;
+        const session = JSON.parse(ssoToken);
+        const nip = session.nip;
+        if (!nip) { container.innerHTML = '<div class="alert alert-warning">Sesi tidak valid.</div>'; return; }
+
+        container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Memuat data pegawai...</p></div>';
+
+        const allPegawai = await apiCall('getAllPegawai');
+        const pegawai = Array.isArray(allPegawai) ? allPegawai.find(p => String(p.nip) === String(nip)) : null;
+
+        if (!pegawai) {
+            container.innerHTML = `<div class="alert alert-info text-center">
+                <i class="fas fa-info-circle fa-2x mb-2 d-block"></i>
+                <strong>Data belum ada.</strong><br>
+                Data pegawai Anda belum terdaftar di sistem. Hubungi admin untuk mendaftarkan data Anda.
+            </div>`;
+            return;
+        }
+
+        const isKunci = pegawai.kunciData === true || pegawai.kunciData === 1 || String(pegawai.kunciData) === '1';
+        const readonlyAttr = isKunci ? 'readonly' : '';
+        const disabledAttr = isKunci ? 'disabled' : '';
+        const kunciInfo = isKunci ? '<div class="alert alert-warning mb-3"><i class="fas fa-lock me-2"></i><strong>Data dikunci oleh Admin.</strong> Anda tidak dapat mengubah data saat ini. Hubungi admin untuk membuka kunci.</div>' : '';
+
+        container.innerHTML = `
+            ${kunciInfo}
+            <ul class="nav nav-tabs mb-3" id="inputDataTabs" role="tablist">
+                <li class="nav-item" role="presentation"><button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#idt-identitas" type="button">📋 Identitas</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#idt-kepegawaian" type="button">🏢 Kepegawaian</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#idt-pendidikan" type="button">🎓 Pendidikan</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#idt-lainnya" type="button">📁 Lainnya</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="idt-identitas">
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="form-label fw-bold">NIP</label><input class="form-control" id="self-nip" value="${pegawai.nip||''}" readonly></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Nama Lengkap</label><input class="form-control" id="self-nama" value="${pegawai.nama||''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">NIK</label><input class="form-control" id="self-nik" value="${pegawai.nik||''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Tempat Lahir</label><input class="form-control" id="self-tempatLahir" value="${pegawai.tempatLahir||''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Tanggal Lahir</label><input type="date" class="form-control" id="self-tglLahir" value="${pegawai.tglLahir||''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Jenis Kelamin</label>
+                            <select class="form-select" id="self-jenisKelamin" ${disabledAttr}>
+                                <option value="">-- Pilih --</option>
+                                <option value="Laki-laki" ${pegawai.jenisKelamin==='Laki-laki'?'selected':''}>Laki-laki</option>
+                                <option value="Perempuan" ${pegawai.jenisKelamin==='Perempuan'?'selected':''}>Perempuan</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Agama</label><input class="form-control" id="self-agama" value="${pegawai.agama||''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">No HP</label><input class="form-control" id="self-noHp" value="${pegawai.noHp||''}" ${readonlyAttr}></div>
+                        <div class="col-12"><label class="form-label fw-bold">Alamat</label><textarea class="form-control" id="self-alamat" rows="2" ${readonlyAttr}>${pegawai.alamat||''}</textarea></div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="idt-kepegawaian">
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="form-label fw-bold">Status Pegawai</label><input class="form-control" value="${pegawai.statusPegawai||''}" readonly></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Status Kepegawaian</label><input class="form-control" value="${pegawai.statusKepegawaian||''}" readonly></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Golongan</label><input class="form-control" value="${pegawai.golongan||''}" readonly></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Jabatan</label><input class="form-control" value="${pegawai.jabatan||''}" readonly></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Unit Kerja</label><input class="form-control" value="${pegawai.unitKerja||''}" readonly></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">TMT CPNS/PPPK</label><input type="date" class="form-control" value="${pegawai.tmtCpns||''}" readonly></div>
+                    </div>
+                    <p class="text-muted mt-3 small"><i class="fas fa-info-circle"></i> Data kepegawaian hanya dapat diubah oleh Admin.</p>
+                </div>
+                <div class="tab-pane fade" id="idt-pendidikan">
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="form-label fw-bold">Pendidikan Terakhir</label><input class="form-control" id="self-pendidikan" value="${pegawai.pendidikan||''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Jurusan/Prodi</label><input class="form-control" id="self-jurusan" value="${pegawai.jurusan||''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Nama Sekolah/Universitas</label><input class="form-control" id="self-namaSekolah" value="${pegawai.namaSekolah||''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Tahun Lulus</label><input class="form-control" id="self-tahunLulus" value="${pegawai.tahunLulus||''}" ${readonlyAttr}></div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="idt-lainnya">
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="form-label fw-bold">Nama Ibu Kandung</label><input class="form-control" id="self-namaIbu" value="${pegawai.namaIbu||''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Status Pernikahan</label>
+                            <select class="form-select" id="self-statusNikah" ${disabledAttr}>
+                                <option value="">-- Pilih --</option>
+                                <option value="Belum Menikah" ${pegawai.statusNikah==='Belum Menikah'?'selected':''}>Belum Menikah</option>
+                                <option value="Menikah" ${pegawai.statusNikah==='Menikah'?'selected':''}>Menikah</option>
+                                <option value="Cerai" ${pegawai.statusNikah==='Cerai'?'selected':''}>Cerai</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Nama Pasangan</label><input class="form-control" id="self-namaPasangan" value="${pegawai.namaPasangan||''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">No NPWP</label><input class="form-control" id="self-npwp" value="${pegawai.npwp||''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">No BPJS Kesehatan</label><input class="form-control" id="self-bpjsKes" value="${pegawai.bpjsKes||''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">No BPJS Ketenagakerjaan</label><input class="form-control" id="self-bpjsTK" value="${pegawai.bpjsTK||''}" ${readonlyAttr}></div>
+                    </div>
+                </div>
+            </div>`;
+
+        container.dataset.nip = nip;
+    } catch(e) {
+        console.error('loadInputDataPegawai error', e);
+        if (container) container.innerHTML = '<div class="alert alert-danger">Gagal memuat data: ' + e.message + '</div>';
+    }
+};
+
+window.simpanDataPegawaiSelf = async function() {
+    const container = document.getElementById('input-data-pegawai-container');
+    const nip = container ? container.dataset.nip : null;
+    if (!nip) return Swal.fire('Error', 'Data NIP tidak ditemukan. Refresh halaman.', 'error');
+
+    const allPegawai = await apiCall('getAllPegawai');
+    const pegawaiAsli = Array.isArray(allPegawai) ? allPegawai.find(p => String(p.nip) === String(nip)) : null;
+    if (!pegawaiAsli) return Swal.fire('Error', 'Data pegawai tidak ditemukan!', 'error');
+
+    if (pegawaiAsli.kunciData === true || pegawaiAsli.kunciData === 1 || String(pegawaiAsli.kunciData) === '1') {
+        return Swal.fire('Terkunci', 'Data Anda dikunci oleh Admin. Tidak dapat menyimpan.', 'warning');
+    }
+
+    const getValue = (id) => { const el = document.getElementById(id); return el ? el.value : (pegawaiAsli[id.replace('self-','')] || ''); };
+
+    const dataUpdate = {
+        ...pegawaiAsli,
+        nama: getValue('self-nama'),
+        nik: getValue('self-nik'),
+        tempatLahir: getValue('self-tempatLahir'),
+        tglLahir: getValue('self-tglLahir'),
+        jenisKelamin: getValue('self-jenisKelamin'),
+        agama: getValue('self-agama'),
+        noHp: getValue('self-noHp'),
+        alamat: getValue('self-alamat'),
+        pendidikan: getValue('self-pendidikan'),
+        jurusan: getValue('self-jurusan'),
+        namaSekolah: getValue('self-namaSekolah'),
+        tahunLulus: getValue('self-tahunLulus'),
+        namaIbu: getValue('self-namaIbu'),
+        statusNikah: getValue('self-statusNikah'),
+        namaPasangan: getValue('self-namaPasangan'),
+        npwp: getValue('self-npwp'),
+        bpjsKes: getValue('self-bpjsKes'),
+        bpjsTK: getValue('self-bpjsTK'),
+        updatedAt: new Date().toISOString()
+    };
+
+    Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    const res = await apiCall('savePegawai', dataUpdate);
+    if (res && res.success) {
+        await dbManager.forceFetchFromServer();
+        Swal.fire('Berhasil!', 'Data Anda berhasil disimpan.', 'success');
+    } else {
+        Swal.fire('Gagal', (res && res.message) || 'Gagal menyimpan data.', 'error');
+    }
+};
+window.bukaInputDataSendiri = async function() {
+    const ssoToken = localStorage.getItem(TOKEN_KEY);
+    if (!ssoToken) return Swal.fire('Error', 'Sesi tidak valid.', 'error');
+    const session = JSON.parse(ssoToken);
+    const nip = session.nip;
+    if (!nip) return;
+
+    if (typeof dbManager !== 'undefined') {
+        const allPegawai = await dbManager.getAllPegawai();
+        const pegawai = Array.isArray(allPegawai) ? allPegawai.find(p => String(p.nip) === String(nip)) : null;
+
+        if (!pegawai) {
+            Swal.fire('Info', 'Data pegawai belum terdaftar di sistem. Hubungi admin.', 'info');
+            return;
+        }
+
+        if (pegawai.kunciData === true || pegawai.kunciData === 1 || String(pegawai.kunciData) === '1') {
+            Swal.fire('Terkunci', 'Data Anda dikunci oleh Admin. Tidak dapat diedit.', 'warning');
+            return;
+        }
+    }
+
+    if (typeof editPegawai === 'function') {
+        const modalEl = document.getElementById('modalPegawai');
+        if (modalEl) {
+            const content = modalEl.querySelector('.modal-content');
+            if (content) {
+                const container = document.getElementById('pegawai-input-container');
+                if (container && !container.contains(content)) {
+                    container.innerHTML = '';
+                    container.appendChild(content);
+                    content.classList.remove('modal-content');
+                    content.classList.add('card', 'shadow-sm', 'border-0', 'w-100');
+                    const header = content.querySelector('.modal-header');
+                    if(header) header.style.display = 'none';
+                    const footer = content.querySelector('.modal-footer');
+                    if(footer) footer.classList.replace('modal-footer', 'card-footer');
+                    const closeBtn = content.querySelector('button[data-bs-dismiss="modal"]');
+                    if(closeBtn) closeBtn.style.display = 'none';
+                }
+            }
+        }
+        editPegawai(nip);
+        if (typeof nav === 'function') nav('pegawai-input');
+    }
+};
+
+
