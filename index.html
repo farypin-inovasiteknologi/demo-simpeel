@@ -2596,7 +2596,7 @@
                                     <label class="form-label">Upload Sertifikat (PDF, max 250kb)</label>
                                     <div class="d-flex align-items-center">
                                         <input type="file" class="form-control file-upload-input"
-                                            accept="application/pdf" data-max-size="250" data-target="cert_file_data">
+                                            accept="application/pdf" data-max-size="250" data-target="cert_file_data" onchange="handleFileUpload(this)">
                                         <input type="hidden" id="cert_file_data">
                                         <button type="button" class="btn btn-sm btn-info ms-2 d-none btn-view-file"
                                             onclick="viewFileApp(document.getElementById('cert_file_data').value)"><i
@@ -2738,7 +2738,7 @@
                                     <label class="form-label">Buku Nikah / Akta Cerai (PDF, max 250kb)</label>
                                     <div class="d-flex align-items-center">
                                         <input type="file" class="form-control file-upload-input"
-                                            accept="application/pdf" data-max-size="250" data-target="file_buku_nikah">
+                                            accept="application/pdf" data-max-size="250" data-target="file_buku_nikah" onchange="handleFileUpload(this)">
                                         <input type="hidden" id="file_buku_nikah">
                                         <button type="button" class="btn btn-sm btn-info ms-2 d-none btn-view-file"
                                             onclick="viewFileApp(document.getElementById('file_buku_nikah').value)"><i
@@ -2749,7 +2749,7 @@
                                     <label class="form-label">Kartu Keluarga (KK) (PDF, max 250kb)</label>
                                     <div class="d-flex align-items-center">
                                         <input type="file" class="form-control file-upload-input"
-                                            accept="application/pdf" data-max-size="250" data-target="file_kk">
+                                            accept="application/pdf" data-max-size="250" data-target="file_kk" onchange="handleFileUpload(this)">
                                         <input type="hidden" id="file_kk">
                                         <button type="button" class="btn btn-sm btn-info ms-2 d-none btn-view-file"
                                             onclick="viewFileApp(document.getElementById('file_kk').value)"><i
@@ -3251,6 +3251,8 @@
 </body>
 
 </html>
+
+
 
 
 
