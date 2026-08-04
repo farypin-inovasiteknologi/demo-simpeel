@@ -34,7 +34,10 @@ const CACHE_KEY = "SIMPEEL_CACHE_ONLINE";
 // ==========================================
 async function apiCall(action, data = null) {
     try {
-        const payload = { action: action };
+        const payload = { 
+            apiKey: 'SIMPEEL_SECURE_2026_XYZ_999',
+            action: action 
+        };
         if (data) payload.data = data;
 
         const response = await fetch(API_URL, {
