@@ -41,7 +41,7 @@ async function apiCall(action, data = null) {
             method: 'POST',
             body: JSON.stringify(payload)
         });
-        
+
         const result = await response.json();
         return result;
     } catch (error) {
@@ -467,10 +467,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 if (result && result.success) {
                     // Simpan sesi termasuk role dan nip jika login sebagai pegawai
+                    const resData = result.data || result;
                     const sessionData = {
-                        displayName: result.nama || user,
-                        role: result.role || 'admin',
-                        nip: result.nip || null
+                        displayName: resData.nama || user,
+                        role: resData.role || 'admin',
+                        nip: resData.nip || null
                     };
                     localStorage.setItem(TOKEN_KEY, JSON.stringify(sessionData));
                     document.getElementById('inputUsername').value = '';
@@ -641,10 +642,10 @@ function nav(page) {
     if (page === 'pensiun') renderTabelPensiun();
     if (page === 'guru-sertif') renderTabelGuruSertif();
     if (page === 'akun') renderTabelAkun();
-    if (page === 'profil-pegawai') { if(typeof renderProfilPegawai === 'function') renderProfilPegawai(); }
-    if (page === 'pegawai-input') { if(typeof loadInputDataPegawai === 'function') loadInputDataPegawai(); }
-    if (page === 'dashboard-pegawai') { if(typeof renderDashboardPegawai === 'function') renderDashboardPegawai(); }
-    if (page === 'update-data') { if(typeof bukaFormUpdateData === 'function') bukaFormUpdateData(); }
+    if (page === 'profil-pegawai') { if (typeof renderProfilPegawai === 'function') renderProfilPegawai(); }
+    if (page === 'pegawai-input') { if (typeof loadInputDataPegawai === 'function') loadInputDataPegawai(); }
+    if (page === 'dashboard-pegawai') { if (typeof renderDashboardPegawai === 'function') renderDashboardPegawai(); }
+    if (page === 'update-data') { if (typeof bukaFormUpdateData === 'function') bukaFormUpdateData(); }
 }
 
 async function logoutSSO() {
@@ -795,7 +796,7 @@ function doCrop() {
 // ==========================================
 async function exportToExcel(tableId, fileName) {
     const table = $('#' + tableId).DataTable();
-    const originalData = table.rows({ search: 'applied' }).data().toArray(); 
+    const originalData = table.rows({ search: 'applied' }).data().toArray();
 
     if (originalData.length === 0) {
         Swal.fire('Peringatan', 'Tidak ada data untuk di-export!', 'warning');
@@ -862,7 +863,7 @@ async function exportToExcel(tableId, fileName) {
 
                 let mk = '-';
                 if (p.riwayatPangkat && p.riwayatPangkat.length > 0) {
-                    const lp = p.riwayatPangkat[0]; 
+                    const lp = p.riwayatPangkat[0];
                     if (lp && lp.length >= 7) mk = `${lp[5]} Thn ${lp[6]} Bln`;
                 }
                 if (mk === '-' && p.riwayatKGB && p.riwayatKGB.length > 0) {
@@ -984,18 +985,18 @@ async function backupDataJSON() {
         const semuaPegawai = await dbManager.getAllPegawai();
         const pengaturan = await dbManager.getPengaturan();
         const semuaAkun = await dbManager.getAllAkun();
-        
+
         const backupData = {
             pegawai: semuaPegawai || [],
             pengaturan: pengaturan || {},
             akun: semuaAkun || [],
             tanggalBackup: new Date().toISOString()
         };
-        
+
         const dataStr = JSON.stringify(backupData, null, 2);
         const blob = new Blob([dataStr], { type: "application/json" });
         const url = URL.createObjectURL(blob);
-        
+
         const a = document.createElement('a');
         a.href = url;
         const tgl = new Date().toISOString().split('T')[0];
@@ -1004,9 +1005,9 @@ async function backupDataJSON() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        
+
         Swal.fire('Berhasil', 'Backup data berhasil diunduh!', 'success');
-    } catch(e) {
+    } catch (e) {
         console.error(e);
         Swal.fire('Gagal', 'Terjadi kesalahan saat membackup data.', 'error');
     }
@@ -1034,7 +1035,7 @@ async function restoreDataJSON() {
                     } else {
                         Swal.fire('Gagal', res.message || 'Gagal restore data.', 'error');
                     }
-                } catch(err) {
+                } catch (err) {
                     Swal.fire('Gagal', 'File JSON tidak valid.', 'error');
                 }
             };
@@ -1060,7 +1061,7 @@ window.currentKgbNip = null;
 // ==========================================
 // MODAL SYNC
 // ==========================================
-window.bukaModalSync = async function() {
+window.bukaModalSync = async function () {
     try {
         const m = document.getElementById('modalSync');
         if (m) {
@@ -1071,7 +1072,7 @@ window.bukaModalSync = async function() {
             const modal = bootstrap.Modal.getInstance(m) || new bootstrap.Modal(m);
             modal.show();
         }
-    } catch(e) {
+    } catch (e) {
         console.error('Error bukaModalSync:', e);
     }
 }
@@ -1081,13 +1082,13 @@ if (typeof $ !== 'undefined' && $.fn && $.fn.dataTable) {
     $.fn.dataTable.ext.errMode = 'none';
 }
 
-window.mulaiSinkronisasi = async function() {
+window.mulaiSinkronisasi = async function () {
     const execUrl = document.getElementById('syncExecUrl').value.trim();
     if (!execUrl) return Swal.fire('Error', 'Link Exec tidak boleh kosong', 'error');
-    
+
     // Simpan URL dulu
     await apiCall('saveSyncUrl', execUrl);
-    
+
     Swal.fire({
         title: 'Menyinkronkan Data...',
         html: '<div>Mohon tunggu, sedang menghitung perbedaan data...</div>',
@@ -1097,7 +1098,7 @@ window.mulaiSinkronisasi = async function() {
 
     try {
         const result = await apiCall('sinkronisasi', execUrl);
-        
+
         if (result && result.success) {
             const { pushed, pulled } = result;
             Swal.fire({
@@ -1124,7 +1125,7 @@ window.mulaiSinkronisasi = async function() {
         } else {
             Swal.fire('❌ Gagal', (result && result.message) ? result.message : 'Sinkronisasi gagal. Periksa URL API dan koneksi internet.', 'error');
         }
-    } catch(e) {
+    } catch (e) {
         Swal.fire('Error', e.message, 'error');
     }
 }
@@ -1153,7 +1154,7 @@ document.addEventListener('DOMContentLoaded', updateConnectionStatus);
 /**
  * Toggle visibility password field dengan ikon mata
  */
-window.togglePassVisibility = function(inputId, btn) {
+window.togglePassVisibility = function (inputId, btn) {
     const input = document.getElementById(inputId);
     if (!input) return;
     const icon = btn.querySelector('i');
@@ -1169,7 +1170,7 @@ window.togglePassVisibility = function(inputId, btn) {
 /**
  * Render halaman Profil Saya - isi nama dan NIP dari session
  */
-window.renderProfilPegawai = function() {
+window.renderProfilPegawai = function () {
     try {
         const ssoToken = localStorage.getItem(TOKEN_KEY);
         if (!ssoToken) return;
@@ -1190,13 +1191,13 @@ window.renderProfilPegawai = function() {
         const elKonfirm = document.getElementById('profil-password-konfirm');
         if (elPass) elPass.value = '';
         if (elKonfirm) elKonfirm.value = '';
-    } catch(e) { console.error('renderProfilPegawai error', e); }
+    } catch (e) { console.error('renderProfilPegawai error', e); }
 };
 
 /**
  * Simpan password baru dari halaman Profil Saya
  */
-window.simpanUbahPassword = async function() {
+window.simpanUbahPassword = async function () {
     const passBaru = document.getElementById('profil-password-baru').value.trim();
     const passKonfirm = document.getElementById('profil-password-konfirm').value.trim();
 
@@ -1227,7 +1228,7 @@ window.simpanUbahPassword = async function() {
         } else {
             Swal.fire('Gagal', (res && res.message) ? res.message : 'Gagal mengubah password.', 'error');
         }
-    } catch(e) {
+    } catch (e) {
         Swal.fire('Error', e.message, 'error');
     }
 };
@@ -1235,7 +1236,7 @@ window.simpanUbahPassword = async function() {
 /**
  * Load data pegawai ke dalam form Input Data Saya
  */
-window.loadInputDataPegawai = async function() {
+window.loadInputDataPegawai = async function () {
     const container = document.getElementById('pegawai-input-container');
     if (!container) return;
 
@@ -1267,12 +1268,12 @@ window.loadInputDataPegawai = async function() {
         const kunciInfo = isKunci ? '<div class="alert alert-warning mb-3"><i class="fas fa-lock me-2"></i><strong>Data dikunci oleh Admin.</strong> Anda tidak dapat mengubah data saat ini. Hubungi admin untuk membuka kunci.</div>' : '';
 
         const formatDate = (str) => {
-            if(!str) return '-';
+            if (!str) return '-';
             try {
                 const d = new Date(str);
-                if(isNaN(d.getTime())) return str;
-                return d.toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'});
-            } catch(e) { return str; }
+                if (isNaN(d.getTime())) return str;
+                return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            } catch (e) { return str; }
         };
 
         // Render form pegawai (tabs seperti modal admin)
@@ -1302,60 +1303,60 @@ window.loadInputDataPegawai = async function() {
                 <!-- TAB IDENTITAS -->
                 <div class="tab-pane fade show active" id="idt-identitas">
                     <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label fw-bold">NIP</label><input class="form-control" id="self-nip" value="${pegawai.nip||''}" readonly></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Nama Lengkap</label><input class="form-control" id="self-nama" value="${pegawai.nama||''}" ${readonlyAttr}></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">NIK</label><input class="form-control" id="self-nik" value="${pegawai.nik||''}" ${readonlyAttr}></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Tempat Lahir</label><input class="form-control" id="self-tempatLahir" value="${pegawai.tempatLahir||''}" ${readonlyAttr}></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Tanggal Lahir</label><input type="date" class="form-control" id="self-tglLahir" value="${pegawai.tglLahir||''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">NIP</label><input class="form-control" id="self-nip" value="${pegawai.nip || ''}" readonly></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Nama Lengkap</label><input class="form-control" id="self-nama" value="${pegawai.nama || ''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">NIK</label><input class="form-control" id="self-nik" value="${pegawai.nik || ''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Tempat Lahir</label><input class="form-control" id="self-tempatLahir" value="${pegawai.tempatLahir || ''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Tanggal Lahir</label><input type="date" class="form-control" id="self-tglLahir" value="${pegawai.tglLahir || ''}" ${readonlyAttr}></div>
                         <div class="col-md-6"><label class="form-label fw-bold">Jenis Kelamin</label>
                             <select class="form-select" id="self-jenisKelamin" ${disabledAttr}>
                                 <option value="">-- Pilih --</option>
-                                <option value="Laki-laki" ${pegawai.jenisKelamin==='Laki-laki'?'selected':''}>Laki-laki</option>
-                                <option value="Perempuan" ${pegawai.jenisKelamin==='Perempuan'?'selected':''}>Perempuan</option>
+                                <option value="Laki-laki" ${pegawai.jenisKelamin === 'Laki-laki' ? 'selected' : ''}>Laki-laki</option>
+                                <option value="Perempuan" ${pegawai.jenisKelamin === 'Perempuan' ? 'selected' : ''}>Perempuan</option>
                             </select>
                         </div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Agama</label><input class="form-control" id="self-agama" value="${pegawai.agama||''}" ${readonlyAttr}></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">No HP</label><input class="form-control" id="self-noHp" value="${pegawai.noHp||''}" ${readonlyAttr}></div>
-                        <div class="col-12"><label class="form-label fw-bold">Alamat</label><textarea class="form-control" id="self-alamat" rows="2" ${readonlyAttr}>${pegawai.alamat||''}</textarea></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Agama</label><input class="form-control" id="self-agama" value="${pegawai.agama || ''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">No HP</label><input class="form-control" id="self-noHp" value="${pegawai.noHp || ''}" ${readonlyAttr}></div>
+                        <div class="col-12"><label class="form-label fw-bold">Alamat</label><textarea class="form-control" id="self-alamat" rows="2" ${readonlyAttr}>${pegawai.alamat || ''}</textarea></div>
                     </div>
                 </div>
                 <!-- TAB KEPEGAWAIAN -->
                 <div class="tab-pane fade" id="idt-kepegawaian">
                     <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label fw-bold">Status Pegawai</label><input class="form-control" value="${pegawai.statusPegawai||''}" readonly></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Status Kepegawaian</label><input class="form-control" value="${pegawai.statusKepegawaian||''}" readonly></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Golongan</label><input class="form-control" value="${pegawai.golongan||''}" readonly></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Jabatan</label><input class="form-control" value="${pegawai.jabatan||''}" readonly></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Unit Kerja</label><input class="form-control" value="${pegawai.unitKerja||''}" readonly></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">TMT CPNS/PPPK</label><input type="date" class="form-control" value="${pegawai.tmtCpns||''}" readonly></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Status Pegawai</label><input class="form-control" value="${pegawai.statusPegawai || ''}" readonly></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Status Kepegawaian</label><input class="form-control" value="${pegawai.statusKepegawaian || ''}" readonly></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Golongan</label><input class="form-control" value="${pegawai.golongan || ''}" readonly></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Jabatan</label><input class="form-control" value="${pegawai.jabatan || ''}" readonly></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Unit Kerja</label><input class="form-control" value="${pegawai.unitKerja || ''}" readonly></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">TMT CPNS/PPPK</label><input type="date" class="form-control" value="${pegawai.tmtCpns || ''}" readonly></div>
                     </div>
                     <p class="text-muted mt-3 small"><i class="fas fa-info-circle"></i> Data kepegawaian hanya dapat diubah oleh Admin.</p>
                 </div>
                 <!-- TAB PENDIDIKAN -->
                 <div class="tab-pane fade" id="idt-pendidikan">
                     <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label fw-bold">Pendidikan Terakhir</label><input class="form-control" id="self-pendidikan" value="${pegawai.pendidikan||''}" ${readonlyAttr}></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Jurusan/Prodi</label><input class="form-control" id="self-jurusan" value="${pegawai.jurusan||''}" ${readonlyAttr}></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Nama Sekolah/Universitas</label><input class="form-control" id="self-namaSekolah" value="${pegawai.namaSekolah||''}" ${readonlyAttr}></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Tahun Lulus</label><input class="form-control" id="self-tahunLulus" value="${pegawai.tahunLulus||''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Pendidikan Terakhir</label><input class="form-control" id="self-pendidikan" value="${pegawai.pendidikan || ''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Jurusan/Prodi</label><input class="form-control" id="self-jurusan" value="${pegawai.jurusan || ''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Nama Sekolah/Universitas</label><input class="form-control" id="self-namaSekolah" value="${pegawai.namaSekolah || ''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Tahun Lulus</label><input class="form-control" id="self-tahunLulus" value="${pegawai.tahunLulus || ''}" ${readonlyAttr}></div>
                     </div>
                 </div>
                 <!-- TAB LAINNYA -->
                 <div class="tab-pane fade" id="idt-lainnya">
                     <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label fw-bold">Nama Ibu Kandung</label><input class="form-control" id="self-namaIbu" value="${pegawai.namaIbu||''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Nama Ibu Kandung</label><input class="form-control" id="self-namaIbu" value="${pegawai.namaIbu || ''}" ${readonlyAttr}></div>
                         <div class="col-md-6"><label class="form-label fw-bold">Status Pernikahan</label>
                             <select class="form-select" id="self-statusNikah" ${disabledAttr}>
                                 <option value="">-- Pilih --</option>
-                                <option value="Belum Menikah" ${pegawai.statusNikah==='Belum Menikah'?'selected':''}>Belum Menikah</option>
-                                <option value="Menikah" ${pegawai.statusNikah==='Menikah'?'selected':''}>Menikah</option>
-                                <option value="Cerai" ${pegawai.statusNikah==='Cerai'?'selected':''}>Cerai</option>
+                                <option value="Belum Menikah" ${pegawai.statusNikah === 'Belum Menikah' ? 'selected' : ''}>Belum Menikah</option>
+                                <option value="Menikah" ${pegawai.statusNikah === 'Menikah' ? 'selected' : ''}>Menikah</option>
+                                <option value="Cerai" ${pegawai.statusNikah === 'Cerai' ? 'selected' : ''}>Cerai</option>
                             </select>
                         </div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Nama Pasangan</label><input class="form-control" id="self-namaPasangan" value="${pegawai.namaPasangan||''}" ${readonlyAttr}></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">No NPWP</label><input class="form-control" id="self-npwp" value="${pegawai.npwp||''}" ${readonlyAttr}></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">No BPJS Kesehatan</label><input class="form-control" id="self-bpjsKes" value="${pegawai.bpjsKes||''}" ${readonlyAttr}></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">No BPJS Ketenagakerjaan</label><input class="form-control" id="self-bpjsTK" value="${pegawai.bpjsTK||''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Nama Pasangan</label><input class="form-control" id="self-namaPasangan" value="${pegawai.namaPasangan || ''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">No NPWP</label><input class="form-control" id="self-npwp" value="${pegawai.npwp || ''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">No BPJS Kesehatan</label><input class="form-control" id="self-bpjsKes" value="${pegawai.bpjsKes || ''}" ${readonlyAttr}></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">No BPJS Ketenagakerjaan</label><input class="form-control" id="self-bpjsTK" value="${pegawai.bpjsTK || ''}" ${readonlyAttr}></div>
                     </div>
                 </div>
                 <!-- TAB KGB -->
@@ -1378,11 +1379,11 @@ window.loadInputDataPegawai = async function() {
                                 </tr>
                             </thead>
                             <tbody>
-                                ${Array.isArray(pegawai.riwayatKGB) && pegawai.riwayatKGB.length > 0 ? 
-                                    pegawai.riwayatKGB.map(r => {
-                                        if(!r || !r[0]) return '';
-                                        const fileBtn = r[6] ? `<button type="button" class="btn btn-sm btn-info text-white" onclick="viewFileApp('${r[6]}')"><i class="fas fa-eye"></i> Lihat PDF</button>` : '-';
-                                        return `<tr>
+                                ${Array.isArray(pegawai.riwayatKGB) && pegawai.riwayatKGB.length > 0 ?
+                pegawai.riwayatKGB.map(r => {
+                    if (!r || !r[0]) return '';
+                    const fileBtn = r[6] ? `<button type="button" class="btn btn-sm btn-info text-white" onclick="viewFileApp('${r[6]}')"><i class="fas fa-eye"></i> Lihat PDF</button>` : '-';
+                    return `<tr>
                                             <td>${r[0]}</td>
                                             <td>${formatDate(r[1])}</td>
                                             <td>${formatDate(r[2])}</td>
@@ -1391,8 +1392,8 @@ window.loadInputDataPegawai = async function() {
                                             <td>${r[5] || '0'}</td>
                                             <td>${fileBtn}</td>
                                         </tr>`;
-                                    }).join('') : `<tr><td colspan="7" class="text-center py-3 text-muted">Belum ada riwayat KGB.</td></tr>`
-                                }
+                }).join('') : `<tr><td colspan="7" class="text-center py-3 text-muted">Belum ada riwayat KGB.</td></tr>`
+            }
                             </tbody>
                         </table>
                     </div>
@@ -1415,7 +1416,7 @@ window.loadInputDataPegawai = async function() {
 
         // Simpan NIP sementara untuk disimpan nanti
         container.dataset.nip = nip;
-    } catch(e) {
+    } catch (e) {
         console.error('loadInputDataPegawai error', e);
         if (container) container.innerHTML = '<div class="alert alert-danger">Gagal memuat data: ' + e.message + '</div>';
     }
@@ -1424,7 +1425,7 @@ window.loadInputDataPegawai = async function() {
 /**
  * Simpan data pegawai yang diisi oleh diri sendiri (self-edit)
  */
-window.simpanDataPegawaiSelf = async function() {
+window.simpanDataPegawaiSelf = async function () {
     const container = document.getElementById('pegawai-input-container');
     const nip = container ? container.dataset.nip : null;
     if (!nip) return Swal.fire('Error', 'Data NIP tidak ditemukan. Refresh halaman.', 'error');
@@ -1438,7 +1439,7 @@ window.simpanDataPegawaiSelf = async function() {
         return Swal.fire('Terkunci', 'Data Anda dikunci oleh Admin. Tidak dapat menyimpan.', 'warning');
     }
 
-    const getValue = (id) => { const el = document.getElementById(id); return el ? el.value : (pegawaiAsli[id.replace('self-','')] || ''); };
+    const getValue = (id) => { const el = document.getElementById(id); return el ? el.value : (pegawaiAsli[id.replace('self-', '')] || ''); };
 
     const dataUpdate = {
         ...pegawaiAsli,
@@ -1474,7 +1475,7 @@ window.simpanDataPegawaiSelf = async function() {
     }
 };
 
-window.bukaInputDataSendiri = async function() {
+window.bukaInputDataSendiri = async function () {
     const ssoToken = localStorage.getItem(TOKEN_KEY);
     if (!ssoToken) return Swal.fire('Error', 'Sesi tidak valid.', 'error');
     const session = JSON.parse(ssoToken);
@@ -1508,11 +1509,11 @@ window.bukaInputDataSendiri = async function() {
                     content.classList.remove('modal-content');
                     content.classList.add('card', 'shadow-sm', 'border-0', 'w-100');
                     const header = content.querySelector('.modal-header');
-                    if(header) header.style.display = 'none';
+                    if (header) header.style.display = 'none';
                     const footer = content.querySelector('.modal-footer');
-                    if(footer) footer.classList.replace('modal-footer', 'card-footer');
+                    if (footer) footer.classList.replace('modal-footer', 'card-footer');
                     const closeBtn = content.querySelector('button[data-bs-dismiss="modal"]');
-                    if(closeBtn) closeBtn.style.display = 'none';
+                    if (closeBtn) closeBtn.style.display = 'none';
                 }
             }
         }
@@ -1589,7 +1590,7 @@ async function exportAllToExcel(type) {
             }
 
             const worksheet = workbook.addWorksheet(config.name);
-            
+
             let headers = [];
             if (type === 'Aktif') {
                 headers = ['No.', 'Nama', 'NIP', 'Golongan', 'Jabatan', 'Pendidikan', 'Status Pegawai', 'Tempat Tanggal Lahir', 'Jenis Kelamin', 'Masa Kerja'];
@@ -1699,7 +1700,7 @@ async function exportAllToExcel(type) {
 }
 
 
-document.addEventListener('input', function(e) {
+document.addEventListener('input', function (e) {
     if (e.target && e.target.classList.contains('format-rupiah')) {
         let val = e.target.value.replace(/\D/g, '');
         if (val) {
@@ -1725,7 +1726,7 @@ function bukaFormUpdateData() {
         viewUpdate.id = 'view-update-data';
         viewUpdate.className = 'page-view animate-fade-in p-2';
         const container = document.querySelector('#content-wrapper .container-fluid');
-        if(container) container.appendChild(viewUpdate);
+        if (container) container.appendChild(viewUpdate);
     }
 
     // Pindahkan konten modalPegawai ke view ini
@@ -1736,12 +1737,12 @@ function bukaFormUpdateData() {
         modalContent.style.borderRadius = '0.5rem';
         const closeBtn = modalContent.querySelector('.btn-close');
         if (closeBtn) closeBtn.style.display = 'none';
-        
+
         viewUpdate.appendChild(modalContent);
     }
 
     viewUpdate.classList.remove('d-none');
-    
+
     // Muat data pegawai yang sedang login (tanpa popup karena isPegawai = true)
     const ssoToken = localStorage.getItem(TOKEN_KEY);
     let sessionNip = window.currentSessionNip;
@@ -1749,7 +1750,7 @@ function bukaFormUpdateData() {
         try {
             const user = JSON.parse(ssoToken);
             sessionNip = user.username || user.nip || window.currentSessionNip;
-        } catch(e) {}
+        } catch (e) { }
     }
     if (sessionNip && typeof editPegawai === 'function') {
         editPegawai(sessionNip);
@@ -1765,7 +1766,7 @@ async function renderDashboardPegawai() {
     const ssoToken = localStorage.getItem(TOKEN_KEY);
     if (!ssoToken) return;
     const user = JSON.parse(ssoToken);
-    
+
     // Ambil NIP Pegawai dari token
     const nip = user.username || user.nip; // menyesuaikan field dari token
 
@@ -1773,7 +1774,7 @@ async function renderDashboardPegawai() {
     let kgbInfo = "Belum ada data KGB.";
     let kgbDateStr = "-";
     let gajiPokok = "-";
-    
+
     try {
         if (typeof dbManager !== 'undefined' && nip) {
             const allPegawai = await dbManager.getAllPegawai();
@@ -1784,31 +1785,31 @@ async function renderDashboardPegawai() {
                 // Asumsi indeks: [0] No SK, [1] Tgl SK, [2] TMT KGB, [3] Gaji Pokok, [4] Masa Kerja
                 // Format tanggal: YYYY-MM-DD
                 let latestKGB = riwayatKGB[riwayatKGB.length - 1]; // jika disort ascending, atau ambil yang ada if descending
-                
+
                 // Urutkan berdasarkan TMT KGB (indeks 2)
                 const sortedKGB = [...riwayatKGB].sort((a, b) => {
                     const dateA = new Date(a[2]);
                     const dateB = new Date(b[2]);
                     return dateB - dateA; // descending, indeks 0 adalah yang terbaru
                 });
-                
+
                 latestKGB = sortedKGB[0];
                 const tmtKgbLalu = latestKGB[2];
                 gajiPokok = latestKGB[3];
-                
+
                 let kgbDate = tmtKgbLalu ? (parseInt(tmtKgbLalu.substring(0, 4)) + 2) + tmtKgbLalu.substring(4) : '';
                 kgbDateStr = kgbDate || "-";
-                
+
                 if (kgbDate) {
                     const kDate = new Date(kgbDate);
                     const currDate = new Date();
                     const diffTime = kDate - currDate;
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    
+
                     if (diffDays <= 30 && diffDays > 0) {
                         kgbInfo = `<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> KGB Anda berikutnya jatuh pada <b>${kgbDate}</b> (dalam ${diffDays} hari). Segera persiapkan berkas pengajuan!</div>`;
                     } else if (diffDays <= 0) {
-                         kgbInfo = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Waktu KGB Anda <b>${kgbDate}</b> sudah tiba/lewat. Harap segera lapor!</div>`;
+                        kgbInfo = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Waktu KGB Anda <b>${kgbDate}</b> sudah tiba/lewat. Harap segera lapor!</div>`;
                     } else {
                         kgbInfo = `<div class="alert alert-info"><i class="fas fa-info-circle"></i> Waktu pengajuan KGB Anda berikutnya: <b>${kgbDate}</b></div>`;
                     }
@@ -1818,7 +1819,7 @@ async function renderDashboardPegawai() {
     } catch (e) {
         console.error("Error fetching KGB for dashboard", e);
     }
-    
+
     const html = `
         <div class="row">
             <div class="col-12 mb-4">
