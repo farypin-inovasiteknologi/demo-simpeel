@@ -4,17 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>SiMPeEL - Sistem Informasi Manajemen Pegawai Elektronik</title>
+    <title>SiMPeEL - Sistem Informasi Pegawai Elektronik</title>
     <link rel="icon" type="image/png" href="./logo-simpeel.png">
-    <!-- Google Fonts (lokal fallback ke system font jika offline) -->
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-    <!-- Bootstrap CSS (lokal) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome (CDN) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- DataTables (CDN) -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <!-- CSS lokal agar aplikasi tetap berfungsi mode offline -->
+    <link href="assets/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome (lokal) -->
+    <link rel="stylesheet" href="assets/css/fontawesome.all.min.css">
+    <!-- DataTables (lokal) -->
+    <link rel="stylesheet" href="assets/css/dataTables.bootstrap5.min.css">
     <!-- Custom CSS -->
+        <link rel="stylesheet" href="assets/css/cropper.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -24,23 +23,15 @@
     <div id="spa-landing-view">
         <div class="landing-card">
             <div class="logos">
-                <img src="./logo-simpeel.png" alt="Logo Instansi" id="imgInstansi" class="floating-animation">
-                <img src="./logo-simpeel.png" alt="Logo Sekolah" id="imgSekolah" class="floating-animation"
+                <img src="logo-simpeel.png" alt="Logo Instansi" id="imgInstansi" class="floating-animation">
+                <img src="logo-simpeel.png" alt="Logo Sekolah" id="imgSekolah" class="floating-animation"
                     style="animation-delay: 0.5s;">
             </div>
 
-            <h3 id="textInstansi" class="text-uppercase mb-1"
-                style="font-size: 0.9rem; font-weight: 500; letter-spacing: 1px;">Nama Instansi</h3>
-            <h1 id="textSekolah" class="text-uppercase mb-3"
-                style="font-size: 1.6rem; font-weight: 900; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Nama Sekolah</h1>
+            <h1 id="textInstansi">Nama Instansi</h1>
+            <h2 id="textSekolah">Nama Sekolah</h2>
 
-            <div class="my-3 text-center">
-                <img src="./logo-simpeel.png" alt="Logo SiMPeEL"
-                    style="height: 100px; width: auto; object-fit: contain;">
-            </div>
-
-            <p class="mb-4 text-light opacity-75">Sistem Informasi Manajemen Pegawai Elektronik terintegrasi untuk
-                memudahkan
+            <p class="mb-4 text-light opacity-75">Sistem Informasi Pegawai Elektronik terintegrasi untuk memudahkan
                 manajemen kepegawaian Anda secara cerdas dan efisien.</p>
 
             <button onclick="showLoginView()" class="btn-masuk floating-animation" style="animation-delay: 1s;">
@@ -70,7 +61,7 @@
             <i class="fas fa-laptop icon-6"></i>
         </div>
         <div class="login-card">
-            <img src="./logo-simpeel.png" alt="Logo SiMPeEL" class="login-logo floating-animation">
+            <img src="logo-simpeel.png" alt="Logo SiMPeEL" class="login-logo floating-animation">
             <h4 class="fw-bold mb-1 text-gray-900">Selamat Datang!</h4>
             <p class="text-muted mb-4 small">Silakan login untuk mengelola data kepegawaian.</p>
 
@@ -96,7 +87,7 @@
         </div>
 
         <!-- Footer Login -->
-        <footer class="mt-4 text-center text-white" style="z-index: 10; font-size: 13px;">
+        <footer class="mt-4 text-center text-white" style="z-index: 10;">
             <p class="mb-1">&copy; 2026 SiMPeEL. Hak Cipta Dilindungi.</p>
             <a href="#" class="text-white text-decoration-underline" onclick="showPrivacyPolicy(event)">Kebijakan
                 Privasi</a> | Powered By: <a href="https://www.farypin-inovasiteknologi.com" target="_blank"
@@ -109,27 +100,18 @@
     <div id="wrapper" class="d-none">
 
         <!-- Sidebar -->
-        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion d-none d-md-flex" id="accordionSidebar">
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
             <!-- Sidebar - Brand -->
-            <a class="sidebar-brand d-flex align-items-center justify-content-center mt-2" href="#"
-                onclick="nav('dashboard')">
-                <div class="sidebar-brand-icon">
-                    <img src="./logo-simpeel.png" width="30" alt="SiMPeEL Logo" class="rounded">
-                </div>
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="#" onclick="nav('dashboard')">
+                <div class="sidebar-brand-icon"><i class="fa-solid fa-users-gear"></i></div>
                 <div class="sidebar-brand-text mx-3">SiMPeEL</div>
             </a>
-            
-            <!-- Logo & Nama Sekolah -->
-            <div class="text-center mt-2 mb-3 px-2">
-                <img src="./logo-simpeel.png" id="sidebar-sekolah-logo" width="60" alt="Logo Sekolah" class="rounded-circle shadow-sm mb-2 bg-white" style="object-fit: contain; aspect-ratio: 1/1;">
-                <div class="text-white fw-bold lh-sm" id="sidebar-sekolah-nama" style="font-size: 0.85rem;">Nama Sekolah</div>
-            </div>
 
             <hr class="sidebar-divider my-0">
 
             <!-- 1. Dashboard -->
-            <li class="nav-item active" data-page="dashboard">
+            <li class="nav-item active" data-page="dashboard" data-admin-only="true">
                 <a class="nav-link" href="#" onclick="nav('dashboard')">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>Dashboard</span></a>
@@ -174,18 +156,20 @@
 
             <!-- SIDEBAR PEGAWAI -->
             <div id="sidebar-pegawai" class="d-none">
-                <!-- Input Data -->
-                <li class="nav-item" data-page="input-data-pegawai">
-                    <a class="nav-link" href="#" onclick="bukaInputDataSendiri()">
-                        <i class="fas fa-fw fa-edit"></i>
-                        <span>Input Data Saya</span></a>
+                <li class="nav-item" data-page="dashboard-pegawai">
+                    <a class="nav-link" href="#" onclick="nav('dashboard-pegawai')">
+                        <i class="fas fa-fw fa-home"></i>
+                        <span>Beranda</span></a>
                 </li>
-                <hr class="sidebar-divider">
-                <!-- Profil Saya -->
                 <li class="nav-item" data-page="profil-pegawai">
                     <a class="nav-link" href="#" onclick="nav('profil-pegawai')">
                         <i class="fas fa-fw fa-id-card"></i>
                         <span>Profil Saya</span></a>
+                </li>
+                <li class="nav-item" data-page="update-data">
+                    <a class="nav-link" href="#" onclick="nav('update-data')">
+                        <i class="fas fa-fw fa-edit"></i>
+                        <span>Update Data</span></a>
                 </li>
             </div>
 
@@ -207,25 +191,21 @@
 
                 <!-- Topbar -->
                 <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow-sm">
-                    
-                    <!-- Mobile Header (Left) -->
-                    <div class="d-flex align-items-center d-md-none mobile-topbar-header px-2" style="flex: 1;">
-                        <img src="./logo-simpeel.png" id="mobile-top-sekolah-logo" width="35" height="35" class="rounded-circle shadow-sm border border-light me-2" alt="Logo">
-                        <span id="mobile-top-sekolah-nama" class="fw-bold text-gray-800 text-truncate" style="font-size: 0.9rem; max-width: 150px;">Nama Sekolah</span>
-                    </div>
-
-                    <!-- Sidebar Toggle (Topbar) - Hidden on Mobile since using Bottom Nav -->
-                    <button id="sidebarToggleTop" class="btn btn-link d-none rounded-circle mr-3">
+                    <!-- Sidebar Toggle (Topbar) -->
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
                         <i class="fa fa-bars"></i>
                     </button>
 
                     <!-- Topbar Navbar -->
                     <ul class="navbar-nav ms-auto align-items-center">
 
-                        <!-- Status Badge (Sync button hidden in online version) -->
+                        <!-- Status & Sync Button -->
                         <li class="nav-item d-flex align-items-center me-3">
                             <span id="connectionStatus" class="badge bg-danger me-2" style="font-size: 0.85rem;"><i
                                     class="fas fa-wifi-slash"></i> Offline</span>
+                            <button class="btn btn-sm btn-outline-primary shadow-sm fw-bold" onclick="bukaModalSync()">
+                                <i class="fas fa-sync-alt"></i> Singkron
+                            </button>
                         </li>
 
                         <div class="topbar-divider d-none d-sm-block"></div>
@@ -235,8 +215,7 @@
                                 data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="mr-2 d-none d-lg-inline text-gray-600 small fw-bold"
                                     id="topName">Administrator</span>
-                                <img class="img-profile rounded-circle"
-                                    src="https://ui-avatars.com/api/?name=Admin&background=4e73df&color=fff">
+                                <i class="fas fa-user-circle text-gray-500" style="font-size: 2rem;"></i>
                             </a>
                             <!-- Dropdown - User Information -->
                             <div class="dropdown-menu dropdown-menu-end shadow animated--grow-in"
@@ -374,25 +353,27 @@
                     </div>
 
                     <!-- ========================== DATA PEGAWAI VIEW ========================== -->
-
+                    
                     <!-- ========================== DATA INDUK VIEW (Merged: Akun + Pegawai) ========================== -->
                     <div id="view-data-induk" class="page-view d-none animate-fade-in">
                         <div class="d-sm-flex align-items-center justify-content-between mb-4">
                             <h1 class="h3 mb-0 text-gray-800 fw-bold">Data Induk Pegawai</h1>
+                            <div>
+                                <button class="btn btn-success shadow-sm me-2" data-bs-toggle="modal" data-bs-target="#modalImport"><i class="fas fa-file-excel fa-sm text-white-50"></i> Import Data</button>
+                                <button class="btn btn-primary shadow-sm fw-bold" onclick="bukaModalTambahAkun()"><i class="fas fa-user-plus fa-sm text-white-50"></i> Tambah Akun</button>
+                            </div>
                         </div>
 
                         <div class="card shadow-sm mb-4">
                             <div class="card-header py-3">
                                 <ul class="nav nav-tabs card-header-tabs" id="dataIndukTabs" role="tablist">
                                     <li class="nav-item" role="presentation">
-                                        <button class="nav-link active fw-bold text-primary" id="tab-di-akun"
-                                            data-bs-toggle="tab" data-bs-target="#di-akun" type="button" role="tab">
+                                        <button class="nav-link active fw-bold text-primary" id="tab-di-akun" data-bs-toggle="tab" data-bs-target="#di-akun" type="button" role="tab">
                                             <i class="fas fa-user-shield me-1"></i> Akun Pegawai
                                         </button>
                                     </li>
                                     <li class="nav-item" role="presentation">
-                                        <button class="nav-link fw-bold text-dark" id="tab-di-pegawai"
-                                            data-bs-toggle="tab" data-bs-target="#di-pegawai" type="button" role="tab">
+                                        <button class="nav-link fw-bold text-dark" id="tab-di-pegawai" data-bs-toggle="tab" data-bs-target="#di-pegawai" type="button" role="tab">
                                             <i class="fas fa-users me-1"></i> Data Pegawai Lengkap
                                         </button>
                                     </li>
@@ -402,30 +383,9 @@
                                 <div class="tab-content" id="dataIndukTabsContent">
                                     <!-- TAB AKUN PEGAWAI -->
                                     <div class="tab-pane fade show active" id="di-akun" role="tabpanel">
-                                        <!-- Toolbar Akun -->
-                                        <div class="d-flex gap-2 mt-3 mb-2 flex-wrap">
-                                            <button class="btn btn-primary shadow-sm fw-bold"
-                                                onclick="bukaModalTambahAkun()">
-                                                <i class="fas fa-user-plus fa-sm text-white-50"></i> Tambah Akun
-                                            </button>
-                                            <button class="btn btn-success shadow-sm" data-bs-toggle="modal"
-                                                data-bs-target="#modalImportAkun">
-                                                <i class="fas fa-file-excel fa-sm text-white-50"></i> Import Akun
-                                            </button>
-                                        </div>
-                                        <div class="table-responsive">
-                                            <table class="table table-bordered table-hover" id="tblAkun" width="100%"
-                                                cellspacing="0">
-                                                <thead>
-                                                    <tr>
-                                                        <th>NIP / Username</th>
-                                                        <th>Nama</th>
-                                                        <th>Status Pegawai</th>
-                                                        <th>Tanggal Daftar</th>
-                                                        <th>Role</th>
-                                                        <th>Aksi</th>
-                                                    </tr>
-                                                </thead>
+                                        <div class="table-responsive mt-3">
+                                            <table class="table table-bordered table-hover" id="tblAkun" width="100%" cellspacing="0">
+                                                <thead><tr><th>NIP / Username</th><th>Nama</th><th>Status Pegawai</th><th>Tanggal Daftar</th><th>Role</th><th>Aksi</th></tr></thead>
                                                 <tbody></tbody>
                                             </table>
                                         </div>
@@ -434,142 +394,31 @@
                                     <!-- TAB DATA PEGAWAI LENGKAP -->
                                     <div class="tab-pane fade" id="di-pegawai" role="tabpanel">
                                         <ul class="nav nav-pills mt-3 mb-2 gap-1" id="pegawaiSubTabs" role="tablist">
-                                            <li class="nav-item"><button class="nav-link active fw-bold btn-sm"
-                                                    id="sub-pns" data-bs-toggle="tab" data-bs-target="#content-pns"
-                                                    type="button">PNS</button></li>
-                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm" id="sub-pppk"
-                                                    data-bs-toggle="tab" data-bs-target="#content-pppk"
-                                                    type="button">PPPK</button></li>
-                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm" id="sub-pppkpw"
-                                                    data-bs-toggle="tab" data-bs-target="#content-pppkpw"
-                                                    type="button">PPPK Paruh Waktu</button></li>
-                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm"
-                                                    id="sub-honorer" data-bs-toggle="tab"
-                                                    data-bs-target="#content-honorer" type="button">Honorer</button>
-                                            </li>
-                                            <li class="nav-item ms-auto">
-                                                <button class="btn btn-success btn-sm shadow-sm" data-bs-toggle="modal"
-                                                    data-bs-target="#modalImport">
-                                                    <i class="fas fa-file-excel fa-sm"></i> Import Data Lengkap
-                                                </button>
-                                            </li>
+                                            <li class="nav-item"><button class="nav-link active fw-bold btn-sm" id="sub-pns" data-bs-toggle="tab" data-bs-target="#content-pns" type="button">PNS</button></li>
+                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm" id="sub-pppk" data-bs-toggle="tab" data-bs-target="#content-pppk" type="button">PPPK</button></li>
+                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm" id="sub-pppkpw" data-bs-toggle="tab" data-bs-target="#content-pppkpw" type="button">PPPK Paruh Waktu</button></li>
+                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm" id="sub-honorer" data-bs-toggle="tab" data-bs-target="#content-honorer" type="button">Honorer</button></li>
                                         </ul>
                                         <div class="tab-content" id="pegawaiSubTabsContent">
                                             <div class="tab-pane fade show active" id="content-pns" role="tabpanel">
                                                 <div class="row mt-2 mb-2">
-                                                    <div class="col-md-3"><input type="text" id="filterNamaPNS"
-                                                            class="form-control form-control-sm"
-                                                            placeholder="Cari Nama/NIP..."></div>
-                                                    <div class="col-md-3"><select id="filterGolPNS"
-                                                            class="form-select form-select-sm">
-                                                            <option value="">Semua Golongan</option>
-                                                            <option value="I/">Gol I</option>
-                                                            <option value="II/">Gol II</option>
-                                                            <option value="III/">Gol III</option>
-                                                            <option value="IV/">Gol IV</option>
-                                                        </select></div>
-                                                    <div class="col-md-6 text-end"><button
-                                                            class="btn btn-sm btn-success"
-                                                            onclick="exportToExcel('tblPNS','Data_PNS')"><i
-                                                                class="fas fa-file-excel"></i> Excel</button></div>
+                                                    <div class="col-md-3"><input type="text" id="filterNamaPNS" class="form-control form-control-sm" placeholder="Cari Nama/NIP..."></div>
+                                                    <div class="col-md-3"><select id="filterGolPNS" class="form-select form-select-sm"><option value="">Semua Golongan</option><option value="I/">Gol I</option><option value="II/">Gol II</option><option value="III/">Gol III</option><option value="IV/">Gol IV</option></select></div>
+                                                    <div class="col-md-6 text-end"><button class="btn btn-sm btn-success" onclick="exportToExcel('tblPNS','Data_PNS')"><i class="fas fa-file-excel"></i> Excel</button></div>
                                                 </div>
-                                                <div class="table-responsive">
-                                                    <table class="table table-bordered table-hover" id="tblPNS"
-                                                        width="100%" cellspacing="0">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>NIP</th>
-                                                                <th>Nama</th>
-                                                                <th>Golongan</th>
-                                                                <th>Jabatan</th>
-                                                                <th>Unit Kerja</th>
-                                                                <th>Aksi</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody></tbody>
-                                                    </table>
-                                                </div>
+                                                <div class="table-responsive"><table class="table table-bordered table-hover" id="tblPNS" width="100%" cellspacing="0"><thead><tr><th>NIP</th><th>Nama</th><th>Golongan</th><th>Jabatan</th><th>Unit Kerja</th><th>Aksi</th></tr></thead><tbody></tbody></table></div>
                                             </div>
                                             <div class="tab-pane fade" id="content-pppk" role="tabpanel">
-                                                <div class="row mt-2 mb-2">
-                                                    <div class="col-md-4"><input type="text" id="filterNamaPPPK"
-                                                            class="form-control form-control-sm"
-                                                            placeholder="Cari Nama/NIP..."></div>
-                                                    <div class="col-md-8 text-end"><button
-                                                            class="btn btn-sm btn-success"
-                                                            onclick="exportToExcel('tblPPPK','Data_PPPK')"><i
-                                                                class="fas fa-file-excel"></i> Excel</button></div>
-                                                </div>
-                                                <div class="table-responsive">
-                                                    <table class="table table-bordered table-hover" id="tblPPPK"
-                                                        width="100%" cellspacing="0">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>NIP</th>
-                                                                <th>Nama</th>
-                                                                <th>Golongan</th>
-                                                                <th>Jabatan</th>
-                                                                <th>Unit Kerja</th>
-                                                                <th>Aksi</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody></tbody>
-                                                    </table>
-                                                </div>
+                                                <div class="row mt-2 mb-2"><div class="col-md-4"><input type="text" id="filterNamaPPPK" class="form-control form-control-sm" placeholder="Cari Nama/NIP..."></div><div class="col-md-8 text-end"><button class="btn btn-sm btn-success" onclick="exportToExcel('tblPPPK','Data_PPPK')"><i class="fas fa-file-excel"></i> Excel</button></div></div>
+                                                <div class="table-responsive"><table class="table table-bordered table-hover" id="tblPPPK" width="100%" cellspacing="0"><thead><tr><th>NIP</th><th>Nama</th><th>Golongan</th><th>Jabatan</th><th>Unit Kerja</th><th>Aksi</th></tr></thead><tbody></tbody></table></div>
                                             </div>
                                             <div class="tab-pane fade" id="content-pppkpw" role="tabpanel">
-                                                <div class="row mt-2 mb-2">
-                                                    <div class="col-md-4"><input type="text" id="filterNamaPPPKPW"
-                                                            class="form-control form-control-sm"
-                                                            placeholder="Cari Nama/NIP..."></div>
-                                                    <div class="col-md-8 text-end"><button
-                                                            class="btn btn-sm btn-success"
-                                                            onclick="exportToExcel('tblPPPKPW','Data_PPPKPW')"><i
-                                                                class="fas fa-file-excel"></i> Excel</button></div>
-                                                </div>
-                                                <div class="table-responsive">
-                                                    <table class="table table-bordered table-hover" id="tblPPPKPW"
-                                                        width="100%" cellspacing="0">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>NIP</th>
-                                                                <th>Nama</th>
-                                                                <th>Golongan</th>
-                                                                <th>Jabatan</th>
-                                                                <th>Unit Kerja</th>
-                                                                <th>Aksi</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody></tbody>
-                                                    </table>
-                                                </div>
+                                                <div class="row mt-2 mb-2"><div class="col-md-4"><input type="text" id="filterNamaPPPKPW" class="form-control form-control-sm" placeholder="Cari Nama/NIP..."></div><div class="col-md-8 text-end"><button class="btn btn-sm btn-success" onclick="exportToExcel('tblPPPKPW','Data_PPPKPW')"><i class="fas fa-file-excel"></i> Excel</button></div></div>
+                                                <div class="table-responsive"><table class="table table-bordered table-hover" id="tblPPPKPW" width="100%" cellspacing="0"><thead><tr><th>NIP</th><th>Nama</th><th>Golongan</th><th>Jabatan</th><th>Unit Kerja</th><th>Aksi</th></tr></thead><tbody></tbody></table></div>
                                             </div>
                                             <div class="tab-pane fade" id="content-honorer" role="tabpanel">
-                                                <div class="row mt-2 mb-2">
-                                                    <div class="col-md-4"><input type="text" id="filterNamaHonorer"
-                                                            class="form-control form-control-sm"
-                                                            placeholder="Cari Nama/NIP..."></div>
-                                                    <div class="col-md-8 text-end"><button
-                                                            class="btn btn-sm btn-success"
-                                                            onclick="exportToExcel('tblHonorer','Data_Honorer')"><i
-                                                                class="fas fa-file-excel"></i> Excel</button></div>
-                                                </div>
-                                                <div class="table-responsive">
-                                                    <table class="table table-bordered table-hover" id="tblHonorer"
-                                                        width="100%" cellspacing="0">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>NIP</th>
-                                                                <th>Nama</th>
-                                                                <th>Golongan</th>
-                                                                <th>Jabatan</th>
-                                                                <th>Unit Kerja</th>
-                                                                <th>Aksi</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody></tbody>
-                                                    </table>
-                                                </div>
+                                                <div class="row mt-2 mb-2"><div class="col-md-4"><input type="text" id="filterNamaHonorer" class="form-control form-control-sm" placeholder="Cari Nama/NIP..."></div><div class="col-md-8 text-end"><button class="btn btn-sm btn-success" onclick="exportToExcel('tblHonorer','Data_Honorer')"><i class="fas fa-file-excel"></i> Excel</button></div></div>
+                                                <div class="table-responsive"><table class="table table-bordered table-hover" id="tblHonorer" width="100%" cellspacing="0"><thead><tr><th>NIP</th><th>Nama</th><th>Golongan</th><th>Jabatan</th><th>Unit Kerja</th><th>Aksi</th></tr></thead><tbody></tbody></table></div>
                                             </div>
                                         </div>
                                     </div>
@@ -578,7 +427,7 @@
                         </div>
                     </div>
 
-                    <!-- ========================== STATUS PEGAWAI VIEW (Aktif + Non Aktif) ========================== -->
+                     <!-- ========================== STATUS PEGAWAI VIEW (Aktif + Non Aktif) ========================== -->
                     <div id="view-status-pegawai" class="page-view d-none animate-fade-in">
                         <div class="d-sm-flex align-items-center justify-content-between mb-4">
                             <h1 class="h3 mb-0 text-gray-800 fw-bold">Pegawai Aktif / Non Aktif</h1>
@@ -600,20 +449,23 @@
                                 <div class="tab-content" id="statusPegawaiTabsContent">
                                     <!-- TAB AKTIF -->
                                     <div class="tab-pane fade show active" id="sp-aktif" role="tabpanel">
-                                        <ul class="nav nav-pills mt-3 mb-2 gap-1">
-                                            <li class="nav-item"><button class="nav-link active fw-bold btn-sm"
-                                                    data-bs-toggle="tab" data-bs-target="#rek-pns"
-                                                    type="button">PNS</button></li>
-                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm"
-                                                    data-bs-toggle="tab" data-bs-target="#rek-pppk"
-                                                    type="button">PPPK</button></li>
-                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm"
-                                                    data-bs-toggle="tab" data-bs-target="#rek-pppkpw" type="button">PPPK
-                                                    Paruh Waktu</button></li>
-                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm"
-                                                    data-bs-toggle="tab" data-bs-target="#rek-honorer"
-                                                    type="button">Honorer</button></li>
-                                        </ul>
+                                        <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
+                                            <ul class="nav nav-pills gap-1 mb-0">
+                                                <li class="nav-item"><button class="nav-link active fw-bold btn-sm"
+                                                        data-bs-toggle="tab" data-bs-target="#rek-pns"
+                                                        type="button">PNS</button></li>
+                                                <li class="nav-item"><button class="nav-link fw-bold btn-sm"
+                                                        data-bs-toggle="tab" data-bs-target="#rek-pppk"
+                                                        type="button">PPPK</button></li>
+                                                <li class="nav-item"><button class="nav-link fw-bold btn-sm"
+                                                        data-bs-toggle="tab" data-bs-target="#rek-pppkpw" type="button">PPPK
+                                                        Paruh Waktu</button></li>
+                                                <li class="nav-item"><button class="nav-link fw-bold btn-sm"
+                                                        data-bs-toggle="tab" data-bs-target="#rek-honorer"
+                                                        type="button">Honorer</button></li>
+                                            </ul>
+                                            <button class="btn btn-sm btn-success shadow-sm" onclick="exportAllToExcel('Aktif')"><i class="fas fa-file-excel"></i> Unduh Excel</button>
+                                        </div>
                                         <div class="tab-content">
                                             <div class="tab-pane fade show active" id="rek-pns" role="tabpanel">
                                                 <div class="row mt-2 mb-2">
@@ -716,24 +568,27 @@
 
                                     <!-- TAB NON AKTIF -->
                                     <div class="tab-pane fade" id="sp-nonaktif" role="tabpanel">
-                                        <ul class="nav nav-pills mt-3 mb-2 gap-1">
-                                            <li class="nav-item"><button class="nav-link active fw-bold btn-sm"
-                                                    data-bs-toggle="tab" data-bs-target="#content-pensiun"
-                                                    type="button"><i class="fas fa-user-clock me-1"></i>Pensiun</button>
-                                            </li>
-                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm"
-                                                    data-bs-toggle="tab" data-bs-target="#content-meninggal"
-                                                    type="button"><i
-                                                        class="fas fa-user-minus me-1"></i>Meninggal</button></li>
-                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm"
-                                                    data-bs-toggle="tab" data-bs-target="#content-mutasi"
-                                                    type="button"><i
-                                                        class="fas fa-exchange-alt me-1"></i>Mutasi</button></li>
-                                            <li class="nav-item"><button class="nav-link fw-bold btn-sm"
-                                                    data-bs-toggle="tab" data-bs-target="#content-berhenti"
-                                                    type="button"><i
-                                                        class="fas fa-user-slash me-1"></i>Berhenti/Resign</button></li>
-                                        </ul>
+                                        <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
+                                            <ul class="nav nav-pills gap-1 mb-0">
+                                                <li class="nav-item"><button class="nav-link active fw-bold btn-sm"
+                                                        data-bs-toggle="tab" data-bs-target="#content-pensiun"
+                                                        type="button"><i class="fas fa-user-clock me-1"></i>Pensiun</button>
+                                                </li>
+                                                <li class="nav-item"><button class="nav-link fw-bold btn-sm"
+                                                        data-bs-toggle="tab" data-bs-target="#content-meninggal"
+                                                        type="button"><i
+                                                            class="fas fa-user-minus me-1"></i>Meninggal</button></li>
+                                                <li class="nav-item"><button class="nav-link fw-bold btn-sm"
+                                                        data-bs-toggle="tab" data-bs-target="#content-mutasi"
+                                                        type="button"><i
+                                                            class="fas fa-exchange-alt me-1"></i>Mutasi</button></li>
+                                                <li class="nav-item"><button class="nav-link fw-bold btn-sm"
+                                                        data-bs-toggle="tab" data-bs-target="#content-berhenti"
+                                                        type="button"><i
+                                                            class="fas fa-user-slash me-1"></i>Berhenti/Resign</button></li>
+                                            </ul>
+                                            <button class="btn btn-sm btn-success shadow-sm" onclick="exportAllToExcel('NonAktif')"><i class="fas fa-file-excel"></i> Unduh Excel</button>
+                                        </div>
                                         <div class="tab-content">
                                             <div class="tab-pane fade show active" id="content-pensiun" role="tabpanel">
                                                 <div class="row mt-2 mb-2">
@@ -772,8 +627,8 @@
                                                                 <th>NIP</th>
                                                                 <th>Nama</th>
                                                                 <th>Status</th>
-                                                                <th>Keterangan</th>
                                                                 <th>Jabatan</th>
+                                                                <th>Tanggal Meninggal</th>
                                                                 <th>Aksi</th>
                                                             </tr>
                                                         </thead>
@@ -795,6 +650,7 @@
                                                                 <th>NIP</th>
                                                                 <th>Nama</th>
                                                                 <th>Status</th>
+                                                                <th>TMT Mutasi</th>
                                                                 <th>Keterangan Mutasi</th>
                                                                 <th>Jabatan</th>
                                                                 <th>Aksi</th>
@@ -818,7 +674,8 @@
                                                                 <th>NIP</th>
                                                                 <th>Nama</th>
                                                                 <th>Status</th>
-                                                                <th>Keterangan</th>
+                                                                <th>Tanggal Berhenti</th>
+                                                                <th>Alasan Berhenti</th>
                                                                 <th>Jabatan</th>
                                                                 <th>Aksi</th>
                                                             </tr>
@@ -1422,7 +1279,7 @@
                                                     class="form-control" placeholder="Cari Golongan..."></div>
                                             <div class="col-md-5 text-end">
                                                 <button class="btn btn-success"
-                                                    onclick="exportToExcel('tblDUKPNS', 'Data_DUK_PNS')"><i
+                                                    onclick="exportToExcel('tblDUKPNS', 'Daftar_Urut_Kepangkatan_PNS')"><i
                                                         class="fas fa-file-excel"></i> Unduh Excel</button>
                                             </div>
                                         </div>
@@ -1452,7 +1309,7 @@
                                                     class="form-control" placeholder="Cari Golongan..."></div>
                                             <div class="col-md-5 text-end">
                                                 <button class="btn btn-success"
-                                                    onclick="exportToExcel('tblDUKPPPK', 'Data_DUK_PPPK')"><i
+                                                    onclick="exportToExcel('tblDUKPPPK', 'Daftar_Urut_Kepangkatan_PPPK')"><i
                                                         class="fas fa-file-excel"></i> Unduh Excel</button>
                                             </div>
                                         </div>
@@ -1700,7 +1557,7 @@
                     <div class="col-6 text-center">
                         <label class="form-label small fw-bold">Logo Instansi</label>
                         <div class="border rounded p-1 mb-2 bg-light mx-auto" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
-                            <img id="previewLogoInstansi" src="https://via.placeholder.com/80?text=Logo" alt="Logo Instansi" class="img-fluid" style="max-height: 100%;">
+                            <img id="previewLogoInstansi" src="logo-simpeel.png" alt="Logo Instansi" class="img-fluid" style="max-height: 100%;">
                         </div>
                         <input type="file" id="inputLogoInstansi" class="d-none" accept="image/*" onchange="openCropper(this, 'previewLogoInstansi', 1/1)">
                         <button type="button" class="btn btn-sm btn-outline-primary py-0" onclick="document.getElementById('inputLogoInstansi').click()"><i class="fas fa-upload" style="font-size: 0.8rem;"></i></button>
@@ -1708,7 +1565,7 @@
                     <div class="col-6 text-center">
                         <label class="form-label small fw-bold">Logo Sekolah</label>
                         <div class="border rounded p-1 mb-2 bg-light mx-auto" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
-                            <img id="previewLogoSekolah" src="https://via.placeholder.com/80?text=Logo" alt="Logo Sekolah" class="img-fluid" style="max-height: 100%;">
+                            <img id="previewLogoSekolah" src="logo-simpeel.png" alt="Logo Sekolah" class="img-fluid" style="max-height: 100%;">
                         </div>
                         <input type="file" id="inputLogoSekolah" class="d-none" accept="image/*" onchange="openCropper(this, 'previewLogoSekolah', 1/1)">
                         <button type="button" class="btn btn-sm btn-outline-primary py-0" onclick="document.getElementById('inputLogoSekolah').click()"><i class="fas fa-upload" style="font-size: 0.8rem;"></i></button>
@@ -1755,11 +1612,10 @@
                                                     <div class="mb-4">
                                                         <label class="form-label fw-bold">Warna Tema Aplikasi</label>
                                                         <div class="d-flex align-items-center gap-3">
-                                                            <input type="color" class="form-control form-control-color"
-                                                                id="set_warna_tema" value="#4e73df"
-                                                                title="Pilih warna tema">
-                                                            <span class="text-muted small">Pilih warna kustom untuk
-                                                                mengubah tema gradien aplikasi.</span>
+                                                            <input type="color" class="form-control form-control-color" id="set_warna_tema" value="#4e73df" title="Warna Tema 1">
+                                                              <input type="color" class="form-control form-control-color" id="set_warna_tema2" value="#224abe" title="Warna Tema 2">
+                                                              <input type="color" class="form-control form-control-color" id="set_warna_tema3" value="#132a76" title="Warna Tema 3">
+                                                            <span class="text-muted small">Pilih 3 warna kustom untuk mengubah tema gradien aplikasi.</span>
                                                         </div>
                                                     </div>
                                                     <hr>
@@ -1846,6 +1702,17 @@
                                     </table>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================== DASHBOARD PEGAWAI VIEW ========================== -->
+                    <div id="view-dashboard-pegawai" class="page-view d-none animate-fade-in">
+                        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                            <h1 class="h3 mb-0 text-gray-800 fw-bold"><i class="fas fa-home me-2 text-primary"></i>Beranda Pegawai</h1>
+                        </div>
+                        <div id="dashboard-pegawai-content">
+                            <!-- Rendered dynamically by renderDashboardPegawai() in script.js -->
+                            <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
                         </div>
                     </div>
 
@@ -2088,11 +1955,11 @@
 
     <!-- PEGAWAI BOTTOM NAV -->
     <nav id="mobile-bottom-nav-pegawai" class="mobile-bottom-nav d-none d-md-none">
-        <a href="#" class="nav-item-bottom" onclick="nav('dashboard')" id="mob-nav-dashboard-pegawai">
+        <a href="#" class="nav-item-bottom" onclick="nav('dashboard-pegawai')" id="mob-nav-dashboard-pegawai">
             <i class="fas fa-home"></i>
             <span>Dashboard</span>
         </a>
-        <a href="#" class="nav-item-bottom nav-center-action" onclick="nav('pegawai-input')" id="mob-nav-pegawai-input">
+        <a href="#" class="nav-item-bottom nav-center-action" onclick="nav('update-data')" id="mob-nav-pegawai-input">
             <div class="nav-action-circle shadow"><i class="fas fa-edit"></i></div>
             <span>Input Data</span>
         </a>
@@ -2262,7 +2129,7 @@
                                 <h5 class="fw-bold text-primary">Data Pribadi</h5>
                             </div>
                             <div class="alert alert-warning py-2 px-3 mb-3"
-                                style="border-left:4px solid #e74a3b; font-size:0.82rem;">
+                                style="border-left:4px solid #e74a3b; font-size:0.82rem;" data-admin-only="true">
                                 <i class="fas fa-info-circle me-1"></i> Kolom dengan garis <strong>merah</strong> dan
                                 tanda <span class="req-asterisk" style="color:#e74a3b;font-weight:bold;">*</span> adalah
                                 kolom <strong>wajib diisi</strong>.
@@ -2278,7 +2145,8 @@
                                 <div class="col-md-8">
                                     <label class="form-label label-required">Nama Lengkap (tanpa gelar) <span
                                             class="req-asterisk">*</span></label>
-                                    <input type="text" class="form-control input-required" id="peg_nama" required
+                                    <input type="text" class="form-control input-required text-uppercase" id="peg_nama" required
+                                        oninput="this.value=this.value.toUpperCase()"
                                         placeholder="Nama sesuai KTP">
                                 </div>
                             </div>
@@ -2801,7 +2669,7 @@
                                     <div class="border rounded p-2 mb-3 bg-light mx-auto"
                                         style="min-height: 200px; display: flex; align-items: center; justify-content: center;">
                                         <img id="previewFotoPegawai"
-                                            src="https://via.placeholder.com/150x200?text=Foto+3x4" alt="Preview Foto"
+                                            src="logo-simpeel.png" alt="Preview Foto"
                                             class="img-thumbnail" style="max-width: 100%;">
                                     </div>
                                 </div>
@@ -3013,26 +2881,26 @@
                             <option value="Aktif">Aktif</option>
                             <option value="Pensiun">Pensiun</option>
                             <option value="Meninggal">Meninggal Dunia</option>
-                            <option value="Resign">Berhenti / Resign</option>
+                            <option value="Berhenti">Berhenti / Resign</option>
                             <option value="Mutasi">Mutasi Keluar</option>
                         </select>
                     </div>
                     <!-- Form Dinamis -->
                     <div id="form-pensiun-meninggal" class="d-none mb-3 bg-light p-2 rounded">
                         <label class="form-label" id="labelTglPensiunMeninggal">Tanggal Pensiun/Meninggal</label>
-                        <input type="date" class="form-control">
+                        <input type="date" class="form-control" id="statusTanggalKhusus">
                     </div>
                     <div id="form-resign" class="d-none mb-3 bg-light p-2 rounded">
                         <label class="form-label">Tanggal Berhenti</label>
-                        <input type="date" class="form-control mb-2">
+                        <input type="date" class="form-control mb-2" id="statusTanggalBerhenti">
                         <label class="form-label">Alasan Berhenti</label>
-                        <textarea class="form-control" rows="2"></textarea>
+                        <textarea class="form-control" rows="2" id="statusAlasanBerhenti"></textarea>
                     </div>
                     <div id="form-mutasi" class="d-none mb-3 bg-light p-2 rounded">
                         <label class="form-label">TMT Mutasi</label>
-                        <input type="date" class="form-control mb-2">
+                        <input type="date" class="form-control mb-2" id="statusTmtMutasi">
                         <label class="form-label">Mutasi Ke (Instansi/Daerah)</label>
-                        <input type="text" class="form-control">
+                        <input type="text" class="form-control" id="statusMutasiTujuan">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -3072,7 +2940,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Gaji Pokok Terakhir</label>
-                        <input type="text" class="form-control" id="kgb_gajiPokok" placeholder="Contoh: Rp 3.500.000">
+                        <input type="text" class="form-control" id="kgb_gajiPokok" class="form-control format-rupiah" placeholder="Contoh: Rp 3.500.000">
                     </div>
                     <div class="alert alert-info small p-2 mb-0">
                         <i class="fas fa-info-circle"></i> Sistem akan otomatis menampilkan notifikasi jika tanggal
@@ -3109,23 +2977,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Scripts (semua lokal, offline-ready) -->
-    <!-- Hack untuk Electron agar jQuery & library lain tetap terekspos sbg global meski ada nodeIntegration -->
-
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-    <!-- ExcelJS & FileSaver -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <!-- SheetJS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <!-- Kembalikan module untuk Electron IPC dll -->
 
@@ -3181,7 +3032,8 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Nama Lengkap <span
                                         class="text-danger">*</span></label>
-                                <input type="text" id="akun_nama" class="form-control" required
+                                <input type="text" id="akun_nama" class="form-control text-uppercase" required
+                                    oninput="this.value=this.value.toUpperCase()"
                                     placeholder="Nama sesuai identitas">
                             </div>
                         </div>
@@ -3239,22 +3091,50 @@
                 </div>
             </div>
         </div>
+
     </div>
 
 
-    <!-- SweetAlert2 (lokal) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-    <script src="wilayah.js"></script>
+    <!-- FIX: Sembunyikan module/exports Node.js dari jQuery agar jQuery terdaftar ke window.$ -->
+    <script>
+        // Electron dengan nodeIntegration:true membuat jQuery mendaftar diri sebagai
+        // CommonJS module (bukan window.$). Fix: simpan & sembunyikan module sementara.
+        window._savedModule = window.module;
+        window._savedExports = window.exports;
+        window.module = undefined;
+        window.exports = undefined;
+    </script>
+    <!-- Scripts lokal untuk mode offline (pastikan jQuery ter-load sebelum skrip aplikasi) -->
+    <script src="assets/js/jquery-3.6.0.min.js"></script>
+    <script>
+        // Kembalikan module & exports setelah jQuery dimuat
+        window.module = window._savedModule;
+        window.exports = window._savedExports;
+        delete window._savedModule;
+        delete window._savedExports;
+        // Pastikan jQuery terdaftar ke window secara eksplisit
+        if (typeof jQuery !== 'undefined') {
+            window.$ = jQuery;
+            window.jQuery = jQuery;
+        }
+    </script>
+    <script src="assets/js/jquery.dataTables.min.js"></script>
+    <script src="assets/js/dataTables.bootstrap5.min.js"></script>
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/chart.min.js"></script>
+    <script src="assets/js/cropper.min.js"></script>
+    <script src="assets/js/exceljs.min.js"></script>
+    <script src="assets/js/FileSaver.min.js"></script>
+    <script src="assets/js/xlsx.full.min.js"></script>
+    <script src="assets/js/sweetalert2.all.min.js"></script>
+    <script src="assets/js/wilayah.js"></script>
+
+    <!-- Skrip aplikasi (harus diletakkan setelah semua library) -->
     <script src="script.js"></script>
     <script src="pegawai.js"></script>
 </body>
 
 </html>
-
-
-
-
 
 
 
