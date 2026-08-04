@@ -36,12 +36,60 @@ function sortRiwayatArray(riwayatArray, dateIndex, isYear = false) {
     });
 }
 
+async function getPrimaryDataLock(nip) {
+    if (!nip) return null;
+
+    const akunList = await dbManager.getAllAkun();
+    const fromAkun = Array.isArray(akunList) ? akunList.find(a => a.nip === nip) : null;
+    if (fromAkun) {
+        return {
+            nip: fromAkun.nip || nip,
+            nama: fromAkun.nama || '',
+            nik: fromAkun.nik || '',
+            tglLahir: fromAkun.tglLahir || '',
+            statusPegawai: fromAkun.statusPegawai || 'PNS'
+        };
+    }
+
+    const pegList = await dbManager.getAllPegawai();
+    const fromPegawai = Array.isArray(pegList) ? pegList.find(p => p.nip === nip) : null;
+    if (!fromPegawai) return null;
+
+    return {
+        nip: fromPegawai.nip || nip,
+        nama: fromPegawai.nama || '',
+        nik: fromPegawai.nik || '',
+        tglLahir: fromPegawai.tglLahir || '',
+        statusPegawai: fromPegawai.statusPegawai || 'PNS'
+    };
+}
+
 async function simpanPegawai() {
     const nipVal = (document.getElementById('peg_nip')?.value || '').trim();
     const namaVal = (document.getElementById('peg_nama')?.value || '').trim().toUpperCase();
     const tglLahir = (document.getElementById('peg_tgl_lahir')?.value || '').trim();
     const kelamin = (document.getElementById('peg_kelamin')?.value || '').trim();
     const statusPgw = (document.getElementById('statusPegawai')?.value || '').trim();
+
+    // === PROTEKSI 5 DATA UTAMA ===
+    // Nilai utama selalu diambil dari sumber data akun/pegawai yang konsisten.
+    const isEditMode = !!window.currentEditUtamaNip;
+    const lockedSource = isEditMode ? await getPrimaryDataLock(window.currentEditUtamaNip) : null;
+    if (lockedSource && isEditMode) {
+        window._p5nip = lockedSource.nip || window.currentEditUtamaNip;
+        window._p5nama = lockedSource.nama || '';
+        window._p5nik = lockedSource.nik || '';
+        window._p5tgl = lockedSource.tglLahir || '';
+        window._p5status = lockedSource.statusPegawai || '';
+    }
+
+    if (isEditMode) {
+        if (document.getElementById('peg_nip')) document.getElementById('peg_nip').value = window._p5nip || window.currentEditUtamaNip;
+        if (document.getElementById('peg_nama')) document.getElementById('peg_nama').value = window._p5nama || '';
+        if (document.getElementById('peg_nik')) document.getElementById('peg_nik').value = window._p5nik || '';
+        if (document.getElementById('peg_tgl_lahir')) document.getElementById('peg_tgl_lahir').value = window._p5tgl || '';
+        if (document.getElementById('statusPegawai')) document.getElementById('statusPegawai').value = window._p5status || '';
+    }
 
     // Validasi wajib: alert per field
     if (!nipVal) {
@@ -53,12 +101,16 @@ async function simpanPegawai() {
     // CEK DUPLIKASI NIP / NIK
     const allPegawai = await dbManager.getAllPegawai();
     const currentNipLama = (document.getElementById('peg_nip_lama')?.value || '').trim();
-    const nikVal = (document.getElementById('peg_nik')?.value || '').trim();
+    const nipValFinal = (isEditMode && window._p5nip !== undefined) ? window._p5nip : nipVal;
+    const namaValFinal = (isEditMode && window._p5nama !== undefined) ? String(window._p5nama).toUpperCase() : namaVal;
+    const nikVal = (isEditMode && window._p5nik !== undefined) ? window._p5nik : (document.getElementById('peg_nik')?.value || '').trim();
+    const tglLahirFinal = (isEditMode && window._p5tgl !== undefined) ? window._p5tgl : tglLahir;
+    const statusPgwFinal = (isEditMode && window._p5status !== undefined) ? window._p5status : statusPgw;
 
-    if (nipVal) {
-        const existNip = allPegawai.find(p => p.nip === nipVal && p.nip !== window.currentEditUtamaNip);
+    if (nipValFinal) {
+        const existNip = allPegawai.find(p => p.nip === nipValFinal && p.nip !== window.currentEditUtamaNip);
         if (existNip) {
-            Swal.fire('Error', `NIP ${nipVal} sudah dipakai atas nama ${existNip.nama}. Data tidak bisa disimpan untuk mencegah tertimpa!`, 'error');
+            Swal.fire('Error', `NIP ${nipValFinal} sudah dipakai atas nama ${existNip.nama}. Data tidak bisa disimpan untuk mencegah tertimpa!`, 'error');
             return;
         }
     }
@@ -71,12 +123,12 @@ async function simpanPegawai() {
         }
     }
 
-    if (!namaVal) {
+    if (!namaValFinal) {
         Swal.fire('Peringatan', 'Kolom Nama wajib diisi!', 'warning');
         document.getElementById('peg_nama')?.focus();
         return;
     }
-    if (!tglLahir) {
+    if (!tglLahirFinal) {
         Swal.fire('Peringatan', 'Kolom Tanggal Lahir wajib diisi!', 'warning');
         document.getElementById('peg_tgl_lahir')?.focus();
         return;
@@ -86,7 +138,7 @@ async function simpanPegawai() {
         document.getElementById('peg_kelamin')?.focus();
         return;
     }
-    if (!statusPgw) {
+    if (!statusPgwFinal) {
         Swal.fire('Peringatan', 'Kolom Status Pegawai wajib dipilih!', 'warning');
         document.getElementById('statusPegawai')?.focus();
         return;
@@ -216,11 +268,11 @@ async function simpanPegawai() {
 
     const data = {
         foto: fotoData,
-        nip: nipVal,
-        nik: document.getElementById('peg_nik')?.value || '',
-        nama: namaVal,
+        nip: nipValFinal,
+        nik: nikVal,
+        nama: namaValFinal,
         tempatLahir: document.getElementById('peg_tempat_lahir')?.value || '',
-        tglLahir: tglLahir,
+        tglLahir: tglLahirFinal,
         kelamin: kelamin,
         agama: document.getElementById('peg_agama')?.value || '',
         statusKawin: document.getElementById('peg_status_kawin')?.value || '',
@@ -236,11 +288,11 @@ async function simpanPegawai() {
         hobby: document.getElementById('peg_hobby')?.value || '',
         isKebutuhanKhusus: document.getElementById('peg_is_kebutuhan_khusus')?.value || 'Tidak',
         uraianKebutuhanKhusus: document.getElementById('peg_uraian_kebutuhan_khusus')?.value || '',
-        statusPegawai: statusPgw,
+        statusPegawai: statusPgwFinal,
         golongan: golongan,
         jabatan: jabatan,
         tmtJabatan: tmtJabatan,
-        pendidikan: '',
+        pendidikan: pendidikan,
         unitKerja: unitKerja || 'Dinas',
         statusKepegawaian: 'Aktif',
         gajiPokok: gajiPokok,
@@ -480,8 +532,18 @@ async function renderTabelRekap() {
         if ($.fn.DataTable.isDataTable(id)) { try { $(id).DataTable().clear().destroy(); $(id + " tbody").empty(); } catch (e) { } }
         const data = allPegawai.filter(p => p.statusPegawai === statusFilter && p.statusKepegawaian === 'Aktif');
 
+        const getPendidikan = (p) => {
+            if (p.pendidikan) return p.pendidikan;
+            // Fallback: baca dari riwayatPendidikan untuk data lama
+            if (Array.isArray(p.riwayatPendidikan) && p.riwayatPendidikan.length > 0) {
+                const latest = getLatestRiwayat(p.riwayatPendidikan, 4, true);
+                if (latest && latest[0]) return latest[0];
+            }
+            return '-';
+        };
+
         const formatted = data.map(p => [
-            p.nama, p.nip, p.golongan || '-', p.jabatan || '-', p.pendidikan || '-', `<span class='badge bg-success'>Aktif</span>`,
+            p.nama, p.nip, p.golongan || '-', p.jabatan || '-', getPendidikan(p), `<span class='badge bg-success'>Aktif</span>`,
             `<button class='btn btn-sm btn-info text-white me-1' title='Lihat Profil' onclick='lihatPegawai("${p.nip}")'><i class='fas fa-eye'></i></button>
              <button class='btn btn-sm btn-secondary text-white me-1' title='Edit Status' onclick='editStatusPegawai("${p.nip}")'><i class='fas fa-user-edit'></i></button>`
         ]);
@@ -518,10 +580,13 @@ async function renderTabelRiwayat() {
     const getBadge = (s) => `<span class='badge ${badgeMap[s] || 'bg-secondary'}'>${s || '-'}</span>`;
     const getAksi = (nip) => `<button class='btn btn-sm btn-info text-white me-1' title='Lihat Profil' onclick='lihatPegawai("${nip}")'><i class='fas fa-eye'></i></button><button class='btn btn-sm btn-secondary text-white' title='Edit Status' onclick='editStatusPegawai("${nip}")'><i class='fas fa-user-edit'></i></button>`;
 
-    renderTabel('#tblPensiun', 'Pensiun', p => [p.nip, p.nama, getBadge(p.statusPegawai), p.tmtPensiun || '-', p.jabatan, getAksi(p.nip)]);
-    renderTabel('#tblMutasi', 'Mutasi', p => [p.nip, p.nama, getBadge(p.statusPegawai), '-', '-', getAksi(p.nip)]);
-    renderTabel('#tblMeninggal', 'Meninggal', p => [p.nip, p.nama, getBadge(p.statusPegawai), '-', p.jabatan, getAksi(p.nip)]);
-    renderTabel('#tblBerhenti', 'Berhenti', p => [p.nip, p.nama, getBadge(p.statusPegawai), '-', '-', getAksi(p.nip)]);
+    renderTabel('#tblPensiun', 'Pensiun', p => [p.nip, p.nama, getBadge(p.statusPegawai), p.tmtPensiun || '-', p.jabatan || '-', getAksi(p.nip)]);
+    renderTabel('#tblMutasi', 'Mutasi', p => [p.nip, p.nama, getBadge(p.statusPegawai), p.tmtMutasi || '-', p.mutasiKe || p.keteranganMutasi || '-', p.jabatan || '-', getAksi(p.nip)]);
+    renderTabel('#tblMeninggal', 'Meninggal', p => [p.nip, p.nama, getBadge(p.statusPegawai), p.jabatan || '-', p.tglMeninggal || p.tanggalMeninggal || '-', getAksi(p.nip)]);
+    renderTabel('#tblBerhenti', 'Berhenti', p => [p.nip, p.nama, getBadge(p.statusPegawai), p.tanggalBerhenti || '-', p.alasanBerhenti || p.keteranganBerhenti || '-', p.jabatan || '-', getAksi(p.nip)]);
+
+    const oldTglMeninggalLabel = document.querySelector('#tblMeninggal thead th:nth-child(5)');
+    if (oldTglMeninggalLabel) oldTglMeninggalLabel.textContent = 'Tanggal Meninggal';
 }
 
 function tambahBaris(tabelId) {
@@ -645,7 +710,7 @@ function tambahBaris(tabelId) {
             <td><input type='text' class='form-control form-control-sm'></td>
             <td><input type='date' class='form-control form-control-sm'></td>
             <td><input type='date' class='form-control form-control-sm'></td>
-            <td><input type='text' class='form-control form-control-sm'></td>
+            <td><input type='text' class='form-control form-control-sm format-rupiah'></td>
             <td><input type='number' class='form-control form-control-sm' placeholder='Thn'></td>
             <td><input type='number' class='form-control form-control-sm' placeholder='Bln'></td>
             <td><div class='d-flex'><input type='file' class='form-control form-control-sm' accept='application/pdf' onchange='handleFileUpload(this)'><input type='hidden' class='row-file-data'><button type='button' class='btn btn-sm btn-info ms-1 d-none btn-view-file' onclick='viewFileApp(this.previousElementSibling.value)'><i class='fas fa-eye'></i></button></div></td><td><button type='button' class='btn btn-sm btn-danger' onclick='this.parentElement.parentElement.remove()'><i class='fas fa-trash'></i></button></td>
@@ -707,28 +772,22 @@ function lihatKGB(btn) {
 }
 
 function toggleFormStatus(status) {
-    document.getElementById('form-pensiun-meninggal').classList.add('d-none');
-    document.getElementById('form-resign').classList.add('d-none');
-    document.getElementById('form-mutasi').classList.add('d-none');
+    const formPensiun = document.getElementById('form-pensiun-meninggal');
+    const formResign = document.getElementById('form-resign');
+    const formMutasi = document.getElementById('form-mutasi');
+    if (formPensiun) formPensiun.classList.add('d-none');
+    if (formResign) formResign.classList.add('d-none');
+    if (formMutasi) formMutasi.classList.add('d-none');
 
     if (status === 'Pensiun' || status === 'Meninggal') {
-        document.getElementById('form-pensiun-meninggal').classList.remove('d-none');
-        document.getElementById('labelTglPensiunMeninggal').innerText = status === 'Pensiun' ? 'Tanggal Pensiun' : 'Tanggal Meninggal';
-    } else if (status === 'Resign') {
-        document.getElementById('form-resign').classList.remove('d-none');
+        if (formPensiun) formPensiun.classList.remove('d-none');
+        const label = document.getElementById('labelTglPensiunMeninggal');
+        if (label) label.innerText = status === 'Pensiun' ? 'Tanggal Pensiun' : 'Tanggal Meninggal';
+    } else if (status === 'Berhenti') {
+        if (formResign) formResign.classList.remove('d-none');
     } else if (status === 'Mutasi') {
-        document.getElementById('form-mutasi').classList.remove('d-none');
+        if (formMutasi) formMutasi.classList.remove('d-none');
     }
-}
-
-function simpanStatusPegawai() {
-    const status = document.getElementById('statusPegawaiDropdown').value;
-    if (status !== 'Aktif') {
-        Swal.fire('Status Diubah!', 'Status diubah ke ' + status + '. Pegawai telah dipindahkan ke menu Pegawai Non Aktif.', 'info');
-    } else {
-        Swal.fire('Berhasil!', 'Status berhasil diupdate!', 'success');
-    }
-    bootstrap.Modal.getInstance(document.getElementById('modalEditStatusAktif')).hide();
 }
 
 async function validasiNIK(el) {
@@ -801,6 +860,10 @@ function bukaModalTambah() {
             } else {
                 el.value = '';
             }
+            if (el.id === 'statusPegawai') {
+                el.disabled = false;
+                el.removeAttribute('disabled');
+            }
         });
     }
 
@@ -808,7 +871,7 @@ function bukaModalTambah() {
     document.getElementById('peg_nip')?.classList.remove('is-invalid');
 
     const preview = document.getElementById('previewFotoPegawai');
-    if (preview) preview.src = 'https://via.placeholder.com/150';
+    if (preview) preview.src = 'logo-simpeel.png';
 
     ['tabelPangkat', 'tabelKontrak', 'tabelJabatan', 'tabelKGB', 'tabelPendidikan', 'tabelAnak', 'tabelDiklat'].forEach(id => {
         const tbody = document.querySelector(`#${id} tbody`);
@@ -897,6 +960,32 @@ async function editPegawai(nip) {
     setVal('statusPegawai', p.statusPegawai || 'PNS');
     if (typeof toggleSKFields === 'function') toggleSKFields(p.statusPegawai || 'PNS');
 
+    // === KUNCI UI: 5 Data Utama read-only saat Edit Data Lengkap ===
+    try {
+        var _ro = ['peg_nama', 'peg_nik', 'peg_tgl_lahir'];
+        _ro.forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) { el.readOnly = true; el.style.backgroundColor = '#e9ecef'; el.title = 'Ubah via Manajemen Akun - Edit Akun'; }
+        });
+        var _sSt = document.getElementById('statusPegawai');
+        if (_sSt) {
+            _sSt.disabled = true;
+            _sSt.setAttribute('disabled', 'disabled');
+            _sSt.style.backgroundColor = '#e9ecef';
+            _sSt.title = 'Ubah via Manajemen Akun - Edit Akun';
+        }
+        if (!document.getElementById('_alert5data')) {
+            var _mb = document.querySelector('#modalPegawai .modal-body');
+            if (_mb) {
+                var ssoToken = localStorage.getItem('SIMPEEL_TOKEN_OFFLINE'); var role = 'admin'; if (ssoToken) { try { role = JSON.parse(ssoToken).role; } catch (e) {} } if (role === 'pegawai') return; var _a = document.createElement('div');
+                _a.id = '_alert5data';
+                _a.className = 'alert alert-info py-2 px-3 mb-2';
+                _a.style.fontSize = '0.82rem';
+                _a.innerHTML = '<strong>5 Data Utama terkunci:</strong> NIP, Nama, NIK, Tgl Lahir & Status Pegawai hanya bisa diubah melalui <strong>Manajemen Akun - Edit Akun</strong>.';
+                _mb.insertBefore(_a, _mb.firstChild);
+            }
+        }
+    } catch (e) { console.warn('Kunci UI error:', e); }
     setVal('peg_gelar_depan', p.gelarDepan || '');
     setVal('peg_gelar_belakang', p.gelarBelakang || '');
     setVal('peg_pendidikan', p.pendidikan || 'S1');
@@ -913,6 +1002,10 @@ async function editPegawai(nip) {
                 rowData.forEach((val, index) => {
                     if (inputs[index]) {
                         inputs[index].value = val;
+                        if (inputs[index].classList.contains('format-rupiah') && val) {
+                            let cleanVal = String(val).replace(/\D/g, '');
+                            if (cleanVal) inputs[index].value = new Intl.NumberFormat('id-ID').format(cleanVal);
+                        }
                         // Show view button if it's the hidden file input and has value
                         if (inputs[index].type === 'hidden' && val) {
                             const btn = inputs[index].nextElementSibling;
@@ -976,7 +1069,7 @@ async function editPegawai(nip) {
         if (p.foto && p.foto.startsWith('data:')) {
             imgEl.src = p.foto;
         } else {
-            imgEl.src = 'https://via.placeholder.com/150';
+            imgEl.src = 'logo-simpeel.png';
         }
     }
 
@@ -990,7 +1083,7 @@ async function editPegawai(nip) {
             if (el.dataset.bsDismiss === 'modal') return; // Jangan disable tombol close
 
             if (el.tagName === 'BUTTON') {
-                if (el.onclick && (el.onclick.toString().includes('tambahBaris') || el.onclick.toString().includes('hapusBaris'))) {
+                if (el.onclick && (el.onclick.toString().includes('tambahBaris') || el.onclick.toString().includes('hapusBaris') || el.onclick.toString().includes('remove()'))) {
                     el.disabled = isLocked;
                 }
                 if (el.onclick && el.onclick.toString().includes('simpanPegawai')) {
@@ -1090,7 +1183,7 @@ async function prosesImportAkunExcel() {
                 try {
                     const payload = {
                         nip: row.nip, nama: row.nama, nik: row.nik,
-                        tglLahir: row.tglLahir, statusPegawai: row.statusPegawai,
+                        tglLahir: row.tglLahir, statusPegawai: row.statusPegawai || 'PNS',
                         password: row.password, aktif: 1
                     };
                     await dbManager.saveAkun(payload);
@@ -1100,7 +1193,7 @@ async function prosesImportAkunExcel() {
                     if (!existing) {
                         await dbManager.savePegawai({
                             nip: row.nip, nama: row.nama, nik: row.nik,
-                            tglLahir: row.tglLahir, statusPegawai: row.statusPegawai,
+                            tglLahir: row.tglLahir, statusPegawai: row.statusPegawai || 'PNS',
                             statusKepegawaian: 'Aktif'
                         });
                     }
@@ -1115,6 +1208,10 @@ async function prosesImportAkunExcel() {
             if (m) m.hide();
             fileInput.value = '';
             renderTabelAkun();
+            // Setelah menambah/ubah akun dan pegawai minimal, pastikan tabel pegawai ikut ter-refresh
+            if (typeof renderTabelPNS === 'function') renderTabelPNS();
+            // Pastikan tabel pegawai juga ter-refresh setelah import akun
+            if (typeof renderTabelPNS === 'function') renderTabelPNS();
         } catch (err) {
             Swal.fire('Error', 'Gagal membaca file Excel: ' + err.message, 'error');
         }
@@ -1200,7 +1297,7 @@ async function prosesImportExcel() {
                 const rNum = i + 2;
                 let nip = String(row['NIP'] || '').trim();
                 let nik = String(row['NIK'] || '').trim();
-                let nama = String(row['Nama Lengkap'] || '').trim();
+                let nama = String(row['Nama Lengkap'] || '').trim().toUpperCase();
 
                 if (!nip && !nama) continue;
                 if (!/^\d{18}$/.test(nip)) {
@@ -1371,12 +1468,28 @@ async function editStatusPegawai(nip) {
     const modalEl = document.getElementById('modalEditStatusAktif');
     if (modalEl) {
         const dropdown = document.getElementById('statusPegawaiDropdown');
-        if (dropdown) dropdown.value = p.statusKepegawaian || 'Aktif';
+        const currentStatus = p.statusKepegawaian || 'Aktif';
+        if (dropdown) dropdown.value = currentStatus;
 
-        // Trigger toggle if exists
-        if (typeof toggleFormStatus === 'function') toggleFormStatus(dropdown.value);
+        const tanggalKhusus = document.getElementById('statusTanggalKhusus');
+        const tanggalBerhenti = document.getElementById('statusTanggalBerhenti');
+        const alasanBerhenti = document.getElementById('statusAlasanBerhenti');
+        const tmtMutasi = document.getElementById('statusTmtMutasi');
+        const tujuanMutasi = document.getElementById('statusMutasiTujuan');
 
-        new bootstrap.Modal(modalEl).show();
+        if (tanggalKhusus) {
+            if (currentStatus === 'Pensiun') tanggalKhusus.value = p.tmtPensiun || '';
+            else if (currentStatus === 'Meninggal') tanggalKhusus.value = p.tglMeninggal || p.tanggalMeninggal || '';
+            else tanggalKhusus.value = '';
+        }
+        if (tanggalBerhenti) tanggalBerhenti.value = currentStatus === 'Berhenti' ? (p.tanggalBerhenti || '') : '';
+        if (alasanBerhenti) alasanBerhenti.value = currentStatus === 'Berhenti' ? (p.alasanBerhenti || p.keteranganBerhenti || '') : '';
+        if (tmtMutasi) tmtMutasi.value = currentStatus === 'Mutasi' ? (p.tmtMutasi || '') : '';
+        if (tujuanMutasi) tujuanMutasi.value = currentStatus === 'Mutasi' ? (p.mutasiKe || p.keteranganMutasi || '') : '';
+
+        if (typeof toggleFormStatus === 'function') toggleFormStatus(dropdown ? dropdown.value : currentStatus);
+
+        let modalInst = bootstrap.Modal.getInstance(modalEl); if(!modalInst) modalInst = new bootstrap.Modal(modalEl); modalInst.show();
     }
 }
 
@@ -1389,29 +1502,69 @@ async function simpanStatusPegawai() {
 
     const allPegawai = await dbManager.getAllPegawai();
     const p = allPegawai.find(x => x.nip === nip);
-    if (p) {
-        p.statusKepegawaian = statusBaru;
+    if (!p) return;
 
-        // Simpan ke DB
-        await dbManager.savePegawai(p);
+    p.statusKepegawaian = statusBaru;
+    const tanggalKhusus = document.getElementById('statusTanggalKhusus')?.value || '';
+    const tanggalBerhenti = document.getElementById('statusTanggalBerhenti')?.value || '';
+    const alasanBerhenti = document.getElementById('statusAlasanBerhenti')?.value || '';
+    const tmtMutasi = document.getElementById('statusTmtMutasi')?.value || '';
+    const mutasiTujuan = document.getElementById('statusMutasiTujuan')?.value || '';
 
-        // Tutup modal
-        const modalEl = document.getElementById('modalEditStatusAktif');
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
+    p.tmtPensiun = '';
+    p.tglMeninggal = '';
+    p.tanggalMeninggal = '';
+    p.tmtMutasi = '';
+    p.tanggalBerhenti = '';
+    p.alasanBerhenti = '';
+    p.keteranganBerhenti = '';
+    p.keteranganMutasi = '';
+    p.mutasiKe = '';
+    p.keteranganNonAktif = '';
 
-        Swal.fire({
-            title: 'Berhasil!',
-            text: 'Status pegawai berhasil diperbarui.',
-            icon: 'success',
-            timer: 1500,
-            showConfirmButton: false
-        });
-
-        // Refresh tabel
-        if (typeof renderTabelRekap === 'function') renderTabelRekap();
-        if (typeof renderTabelRiwayat === 'function') renderTabelRiwayat();
+    if (statusBaru === 'Pensiun') {
+        p.tmtPensiun = tanggalKhusus;
+        p.keteranganNonAktif = 'Pensiun';
+    } else if (statusBaru === 'Meninggal') {
+        p.tglMeninggal = tanggalKhusus;
+        p.tanggalMeninggal = tanggalKhusus;
+        p.keteranganNonAktif = 'Meninggal';
+    } else if (statusBaru === 'Mutasi') {
+        p.tmtMutasi = tmtMutasi;
+        p.mutasiKe = mutasiTujuan;
+        p.keteranganMutasi = mutasiTujuan;
+        p.keteranganNonAktif = 'Mutasi';
+    } else if (statusBaru === 'Berhenti' || statusBaru === 'Resign') {
+        p.tanggalBerhenti = tanggalBerhenti;
+        p.alasanBerhenti = alasanBerhenti;
+        p.keteranganBerhenti = alasanBerhenti;
+        p.keteranganNonAktif = 'Berhenti';
+    } else if (statusBaru === 'Aktif') {
+        p.statusKepegawaian = 'Aktif';
+        p.keteranganNonAktif = '';
     }
+
+    try {
+        await dbManager.savePegawai(p);
+    } catch (error) {
+        Swal.fire('Gagal!', error.message || 'Status pegawai gagal disimpan.', 'error');
+        return;
+    }
+
+    const modalEl = document.getElementById('modalEditStatusAktif');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+
+    Swal.fire({
+        title: 'Berhasil!',
+        text: 'Status pegawai berhasil diperbarui.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+    });
+
+    if (typeof renderTabelRekap === 'function') renderTabelRekap();
+    if (typeof renderTabelRiwayat === 'function') renderTabelRiwayat();
 }
 
 async function editKGB(nip) {
@@ -1426,7 +1579,7 @@ async function editKGB(nip) {
         document.getElementById('kgbNama').value = p.nama || '';
         document.getElementById('kgbTmtTerakhir').value = p.tmtKgb || '';
         document.getElementById('kgbTmtBerikutnya').value = p.tmtKgbBaru || '';
-        new bootstrap.Modal(modalEl).show();
+        let modalInst = bootstrap.Modal.getInstance(modalEl); if(!modalInst) modalInst = new bootstrap.Modal(modalEl); modalInst.show();
     }
 }
 
@@ -1529,7 +1682,7 @@ async function cetakCV(nip) {
     const p = allPegawai.find(x => x.nip === nip);
     if (!p) return;
 
-    let settings = JSON.parse(localStorage.getItem('pengaturanSiMPeEL')) || {};
+    let settings = await dbManager.getPengaturan() || {};
 
     // Construct HTML
     let html = `
@@ -1541,8 +1694,9 @@ async function cetakCV(nip) {
         <meta name="Originator" content="Microsoft Word 15">
         <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
         <style>
-            @page { size: 8.5in 13.0in; margin: 1in; }
-            body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; }
+            @page Section1 { size: 21.0cm 29.7cm; margin: 1cm 1.5cm 1.5cm 2.0cm; }
+              div.Section1 { page: Section1; }
+            body { font-family: 'Arial', sans-serif; font-size: 11pt; }
             table { width: 100%; border-collapse: collapse; }
             th, td { border: 1px solid black; padding: 5px; }
             .kop { text-align: center; margin-bottom: 20px; border-bottom: 3px solid black; padding-bottom: 10px; }
@@ -1559,13 +1713,29 @@ async function cetakCV(nip) {
         </style>
     </head>
     <body>
-        <div class="kop">
-            <div class="kop-kiri">${settings.kopKiri || ''}</div>
-            <div class="kop-tengah1">${settings.kopTengah1 || 'PEMERINTAH DAERAH'}</div>
-            <div class="kop-kanan">${settings.kopKanan || ''}</div>
-            <div class="kop-tengah2">${settings.kopTengah2 || 'INSTANSI / DINAS'}</div>
-            <div class="kop-tengah3">${settings.kopTengah3 || 'Alamat: ...'}</div>
-        </div>
+<div class="Section1">
+        <table style="width: 100%; border: none; margin-bottom: 5px;">
+            <tr>
+                <td style="width: 15%; border: none; text-align: center; vertical-align: middle;">
+                    ${settings.logoInstansi && settings.logoInstansi.includes('base64,') ? '<img src="cid:logoInstansi" width="80" height="80" />' : ''}
+                </td>
+                <td style="width: 70%; border: none; text-align: center; vertical-align: middle; line-height: 1.2;">
+                    <div style="font-size: 14pt; font-weight: bold;">${(settings.instansi || '').toUpperCase()}</div>
+                    ${settings.opd ? '<div style="font-size: 14pt; font-weight: bold;">' + settings.opd.toUpperCase() + '</div>' : ''}
+                    <div style="font-size: 16pt; font-weight: bold;">${(settings.sekolah || '').toUpperCase()}</div>
+                    <div style="font-size: 11pt; margin-top: 5px;">Alamat: ${settings.alamat || ''}</div>
+                    <div style="font-size: 11pt;">
+                        ${settings.email ? 'Email: ' + settings.email + ' &nbsp;' : ''}
+                        ${settings.web ? 'Web: ' + settings.web + ' &nbsp;' : ''}
+                        ${settings.hp ? 'Telp: ' + settings.hp : ''}
+                    </div>
+                </td>
+                <td style="width: 15%; border: none; text-align: center; vertical-align: middle;">
+                    ${settings.logoSekolah && settings.logoSekolah.includes(',') ? '<img src="cid:logoSekolah" width="80" height="80" />' : ''}
+                </td>
+            </tr>
+        </table>
+        <hr style="border: 0; border-top: 3px solid black; margin: 0 0 15px 0; padding: 0;">
         
         <div class="title">DATA INDUK PEGAWAI</div>
         
@@ -1644,18 +1814,43 @@ async function cetakCV(nip) {
         </table>
         <br><br>
 
-        <div class="signature-box">
-            <p>Pegawai Yang Bersangkutan,</p>
-            <p class="signature-name">${generateNamaBergelar(p.nama.toUpperCase(), p.riwayatPendidikan)}</p>
-            <p>NIP. ${p.nip}</p>
-        </div>
+        <table style="width: 100%; border: none; margin-top: 40px;">
+            <tr>
+                <td style="width: 60%; border: none;"></td>
+                <td style="width: 40%; border: none; text-align: center;">
+                    <p style="margin: 0;">Pegawai Yang Bersangkutan,</p>
+                    <br><br><br>
+                    <p class="signature-name" style="font-weight: bold; text-decoration: underline; margin: 0;">${generateNamaBergelar(p.nama.toUpperCase(), p.riwayatPendidikan)}</p>
+                    <p style="margin: 0;">NIP. ${p.nip}</p>
+                </td>
+            </tr>
+        </table>
         
-    </body>
+    </div>
+</body>
     </html>
     `;
 
+    // Convert to MHTML to support embedded base64 images
+    let mhtml = `MIME-Version: 1.0\nContent-Type: multipart/related; boundary="----=_NextPart_000_0000"\n\n------=_NextPart_000_0000\nContent-Type: text/html; charset="utf-8"\nContent-Transfer-Encoding: 8bit\n\n${html}\n\n`;
+    if (settings.logoInstansi && settings.logoInstansi.includes('base64,')) {
+        const parts = settings.logoInstansi.split(',');
+        const meta = parts[0];
+        const base64Data = parts[1];
+        const mimeType = meta.split(':')[1].split(';')[0];
+        mhtml += `------=_NextPart_000_0000\nContent-Type: ${mimeType}\nContent-Transfer-Encoding: base64\nContent-ID: <logoInstansi>\n\n${base64Data}\n`;
+    }
+    if (settings.logoSekolah && settings.logoSekolah.includes('base64,')) {
+        const parts = settings.logoSekolah.split(',');
+        const meta = parts[0];
+        const base64Data = parts[1];
+        const mimeType = meta.split(':')[1].split(';')[0];
+        mhtml += `------=_NextPart_000_0000\nContent-Type: ${mimeType}\nContent-Transfer-Encoding: base64\nContent-ID: <logoSekolah>\n\n${base64Data}\n`;
+    }
+    mhtml += `------=_NextPart_000_0000--\n`;
+
     // Download as .doc
-    const blob = new Blob(['\ufeff', html], {
+    const blob = new Blob([mhtml], {
         type: 'application/msword'
     });
     const url = URL.createObjectURL(blob);
@@ -2002,17 +2197,21 @@ function bukaModalTambahAkun() {
 window.editAkun = async function (nip) {
     try {
         const res = await dbManager.getAllAkun();
-        if (!res || res.success === false) return Swal.fire('Error', 'Gagal memuat data akun', 'error');
+        const akunList = Array.isArray(res) ? res : [];
+        if (!Array.isArray(res) && res && res.success === false) {
+            return Swal.fire('Error', 'Gagal memuat data akun', 'error');
+        }
 
-        let akun = Array.isArray(res) ? res.find(a => a.nip === nip) : null;
+        let akun = akunList.find(a => a.nip === nip);
         if (!akun) {
             const allPeg = await dbManager.getAllPegawai();
-            if (allPeg) akun = allPeg.find(a => a.nip === nip);
+            const pegList = Array.isArray(allPeg) ? allPeg : [];
+            akun = pegList.find(a => a.nip === nip);
             if (!akun) return Swal.fire('Error', 'Akun tidak ditemukan', 'error');
         }
 
         document.getElementById('akun_nip').value = akun.nip || '';
-        document.getElementById('akun_nama').value = akun.nama || '';
+        document.getElementById('akun_nama').value = (akun.nama || '').toUpperCase();
         document.getElementById('akun_nik').value = akun.nik || '';
         document.getElementById('akun_tglLahir').value = akun.tglLahir || '';
         if (akun.statusPegawai) document.getElementById('akun_statusPegawai').value = akun.statusPegawai;
@@ -2058,7 +2257,7 @@ async function simpanAkunPegawai() {
     const statusPegawai = document.getElementById('akun_statusPegawai').value;
     const nip = document.getElementById('akun_nip').value.trim();
     const password = document.getElementById('akun_password').value;
-    const nama = document.getElementById('akun_nama').value.trim();
+    const nama = document.getElementById('akun_nama').value.trim().toUpperCase();
     const nik = document.getElementById('akun_nik').value.trim();
     const tglLahir = document.getElementById('akun_tglLahir').value;
 
@@ -2071,13 +2270,26 @@ async function simpanAkunPegawai() {
         return;
     }
 
+    // Ambil data akun lama jika edit mode (untuk preservasi createdAt dan role)
+    let existingAkun = null;
+    if (isEditMode && originalNip) {
+        const allAkun = await dbManager.getAllAkun();
+        const akunList = Array.isArray(allAkun) ? allAkun : [];
+        existingAkun = akunList.find(a => a.nip === originalNip || a.nip === nip) || null;
+    }
+
+    const now = new Date().toISOString();
     const payload = {
         nip: nip,
         nama: nama,
+        namaLengkap: nama,
         nik: nik,
         tglLahir: tglLahir,
         statusPegawai: statusPegawai,
-        aktif: 1
+        aktif: 1,
+        role: existingAkun?.role || 'pegawai',
+        createdAt: existingAkun?.createdAt || now,
+        updatedAt: now
     };
     if (password) payload.password = password;
 
@@ -2087,7 +2299,7 @@ async function simpanAkunPegawai() {
         // Jika edit mode dan NIP berubah, perlu cascade update
         if (isEditMode && originalNip && originalNip !== nip) {
             // 1. Hapus akun lama dengan NIP lama
-            await dbManager.deleteAkun(originalNip);
+            await dbManager.deleteAkun(originalNip).catch(e => console.warn('deleteAkun lama:', e));
             // 2. Ambil data pegawai lama dan update NIP-nya
             const allPeg = await dbManager.getAllPegawai();
             if (allPeg) {
@@ -2098,9 +2310,10 @@ async function simpanAkunPegawai() {
                     pegLama.nik = nik;
                     pegLama.tglLahir = tglLahir;
                     pegLama.statusPegawai = statusPegawai;
+                    pegLama.updatedAt = now;
                     // Hapus data pegawai lama, simpan dengan NIP baru
-                    await dbManager.deletePegawai(originalNip);
-                    await dbManager.savePegawai(pegLama);
+                    await dbManager.deletePegawai(originalNip).catch(e => console.warn('deletePegawai lama:', e));
+                    await dbManager.savePegawai(pegLama).catch(e => console.warn('savePegawai cascade:', e));
                 }
             }
         }
@@ -2109,26 +2322,37 @@ async function simpanAkunPegawai() {
         const result = await dbManager.saveAkun(payload);
         const success = result && (result === true || result.success === true);
 
-        if (success || result) {
+        if (success) {
             if (!isEditMode) {
                 // Mode tambah: buat juga entri data pegawai minimal
-                const pegPayload = {
-                    nip: nip, nama: nama, nik: nik,
-                    statusPegawai: statusPegawai, tglLahir: tglLahir,
-                    statusKepegawaian: 'Aktif'
-                };
-                await dbManager.savePegawai(pegPayload);
+                // Dibungkus try/catch sendiri agar kegagalan ini tidak menghalangi refresh tabel akun
+                try {
+                    const pegPayload = {
+                        nip: nip, nama: nama, nik: nik,
+                        statusPegawai: statusPegawai, tglLahir: tglLahir,
+                        statusKepegawaian: 'Aktif',
+                        updatedAt: now
+                    };
+                    await dbManager.savePegawai(pegPayload);
+                } catch (pegErr) {
+                    console.warn('savePegawai saat tambah akun gagal (akun tetap tersimpan):', pegErr);
+                }
             } else {
                 // Mode edit: update data pegawai juga jika NIP tidak berubah
                 if (originalNip === nip) {
-                    const allPeg = await dbManager.getAllPegawai();
-                    if (allPeg) {
-                        const peg = allPeg.find(p => p.nip === nip);
-                        if (peg) {
-                            peg.nama = nama; peg.nik = nik;
-                            peg.tglLahir = tglLahir; peg.statusPegawai = statusPegawai;
-                            await dbManager.savePegawai(peg);
+                    try {
+                        const allPeg = await dbManager.getAllPegawai();
+                        if (allPeg) {
+                            const peg = allPeg.find(p => p.nip === nip);
+                            if (peg) {
+                                peg.nama = nama; peg.nik = nik;
+                                peg.tglLahir = tglLahir; peg.statusPegawai = statusPegawai;
+                                peg.updatedAt = now;
+                                await dbManager.savePegawai(peg);
+                            }
                         }
+                    } catch (pegErr) {
+                        console.warn('savePegawai saat edit akun gagal (akun tetap diperbarui):', pegErr);
                     }
                 }
             }
@@ -2142,6 +2366,7 @@ async function simpanAkunPegawai() {
             Swal.fire('Gagal', (result && result.message) || 'Gagal menyimpan akun', 'error');
         }
     } catch (e) {
+        console.error('simpanAkunPegawai error:', e);
         Swal.fire('Gagal', e.message || 'Terjadi kesalahan', 'error');
     }
 }
@@ -2155,7 +2380,11 @@ async function renderTabelAkun() {
 
     let dataAkun = [];
     try {
-        dataAkun = await dbManager.getAllAkun();
+        const res = await dbManager.getAllAkun();
+        dataAkun = Array.isArray(res) ? res : [];
+        if (!Array.isArray(res)) {
+            console.warn('renderTabelAkun received non-array data:', res);
+        }
     } catch (e) {
         console.error("Gagal mengambil data akun:", e);
     }
@@ -2425,235 +2654,427 @@ async function cetakSkumptk(nip) {
     const pengaturan = await dbManager.getPengaturan() || {};
 
     if (!data) return Swal.fire('Error', 'Data Pegawai tidak ditemukan.', 'error');
-
     Swal.close();
-    await new Promise(r => setTimeout(r, 300));
+    await new Promise(r => setTimeout(r, 200));
 
-    let latestKgb = data.riwayatKgb && data.riwayatKgb.length > 0 ? data.riwayatKgb[data.riwayatKgb.length - 1] : null;
-    let defaultGajiPokok = latestKgb ? (latestKgb.gajiLama || '') : '';
+    // Helper hitung masa kerja dari riwayat pangkat
+    const hitungMasaKerja = () => {
+        if (!data.riwayatPangkat || data.riwayatPangkat.length === 0) return { thnGol: '-', blnGol: '-', thnTotal: '-', blnTotal: '-', tmt: '' };
+        const lastPangkat = getLatestRiwayat(data.riwayatPangkat, 1) || data.riwayatPangkat[data.riwayatPangkat.length - 1];
+        const tmtGol = lastPangkat[1] || '';
+        const mkThnSK = parseInt(lastPangkat[5] || 0);
+        const mkBlnSK = parseInt(lastPangkat[6] || 0);
+        if (!tmtGol) return { thnGol: '-', blnGol: '-', thnTotal: '-', blnTotal: '-', tmt: '' };
+        const now = new Date();
+        const tmt = new Date(tmtGol);
+        let elThn = now.getFullYear() - tmt.getFullYear();
+        let elBln = now.getMonth() - tmt.getMonth();
+        if (elBln < 0) { elThn--; elBln += 12; }
+        // MK Golongan
+        let totalBlnGol = mkBlnSK + elBln;
+        let addThnGol = Math.floor(totalBlnGol / 12);
+        let remBlnGol = totalBlnGol % 12;
+        let thnGol = mkThnSK + elThn + addThnGol;
+        // MK Keseluruhan (perkiraan dari tmtCpns jika ada)
+        let thnTotal = '-', blnTotal = '-';
+        if (data.tmtCpns) {
+            const cpns = new Date(data.tmtCpns);
+            let yT = now.getFullYear() - cpns.getFullYear();
+            let mT = now.getMonth() - cpns.getMonth();
+            if (mT < 0) { yT--; mT += 12; }
+            thnTotal = yT < 0 ? 0 : yT;
+            blnTotal = mT < 0 ? 0 : mT;
+        }
+        return {
+            thnGol: String(thnGol).padStart(2, '0'),
+            blnGol: String(remBlnGol).padStart(2, '0'),
+            thnTotal: thnTotal === '-' ? '-' : String(thnTotal).padStart(2, '0'),
+            blnTotal: blnTotal === '-' ? '-' : String(blnTotal).padStart(2, '0'),
+            tmt: tmtGol
+        };
+    };
+
+    const mk = hitungMasaKerja();
+
+    // Helper format tanggal Indonesia
+    const fmtTgl = (tgl) => {
+        if (!tgl) return '-';
+        try {
+            return new Date(tgl).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+        } catch (e) { return tgl; }
+    };
+
+    // Helper format tanggal singkat (DD - MM - YYYY)
+    const fmtTglSingkat = (tgl) => {
+        if (!tgl) return '-';
+        try {
+            const d = new Date(tgl);
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yyyy = d.getFullYear();
+            return `${dd} - ${mm} - ${yyyy}`;
+        } catch (e) { return tgl; }
+    };
+
+    // Default gaji dari data pegawai
+    const defaultGaji = data.gajiPokok || '';
+    const defaultTmtGol = mk.tmt ? fmtTgl(mk.tmt) : '';
+
+    // Hitung jumlah keluarga tertanggung
+    const jumlahAnak = Array.isArray(data.riwayatAnak) ? data.riwayatAnak.filter(a => a && a[0]).length : 0;
+    const jumlahKeluarga = (data.pasanganNama ? 1 : 0) + jumlahAnak;
+
+    // Nama bergelar
+    const namaLengkap = generateNamaBergelar(data.nama || '', data.riwayatPendidikan);
 
     const { value: formValues } = await Swal.fire({
-        title: 'Lengkapi Data SKUMPTK',
-        html:
-            '<div class="text-start">' +
-            '<div class="mb-2"><label class="form-label small fw-bold">Gaji Bersih (Sesuai Amprah)</label>' +
-            '<input id="sk_gaji_bersih" class="form-control form-control-sm" placeholder="Contoh: Rp. 4.500.000"></div>' +
-            '<div class="mb-2"><label class="form-label small fw-bold">Gaji Pokok</label>' +
-            '<input id="sk_gaji_pokok" class="form-control form-control-sm" value="' + defaultGajiPokok + '" placeholder="Contoh: Rp. 3.000.000"></div>' +
-            '<div class="mb-2"><label class="form-label small fw-bold">Dasar Gaji (Berdasarkan PP)</label>' +
-            '<input id="sk_dasar_gaji" class="form-control form-control-sm" placeholder="Contoh: PP Nomor 15 Tahun 2019"></div>' +
-            '<div class="mb-2"><label class="form-label small fw-bold">Tempat Cetak TTD</label>' +
-            '<input id="sk_tempat" class="form-control form-control-sm" value="Tempat..."></div>' +
-            '<div class="mb-2"><label class="form-label small fw-bold">Tanggal Cetak TTD</label>' +
-            '<input type="date" id="sk_tanggal" class="form-control form-control-sm" value="' + new Date().toISOString().split('T')[0] + '"></div>' +
-            '</div>',
+        title: '📄 Lengkapi Data SKUMPTK',
+        width: '750px',
+        html: `
+        <div class="text-start" style="font-size:12px;">
+            <p class="text-muted small mb-2"><i class="fas fa-info-circle"></i> Data di bawah ini mengambil data terbaru. Kolom abu-abu terisi otomatis dari database. Kolom kuning perlu Anda lengkapi secara manual jika kosong.</p>
+            <div class="row g-2">
+                <div class="col-12 mt-2"><div class="fw-bold text-primary border-bottom pb-1 mb-1">🏢 Instansi & Bendahara</div></div>
+                <div class="col-md-6">
+                    <label class="form-label small mb-0 fw-semibold">Nama Instansi</label>
+                    <input id="sk_instansi_nama" class="form-control form-control-sm ${pengaturan.sekolah ? 'bg-light text-secondary' : 'bg-warning bg-opacity-10 border-warning'}" value="${pengaturan.sekolah || ''}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small mb-0 fw-semibold">Instansi Induk</label>
+                    <input id="sk_instansi_induk" class="form-control form-control-sm ${pengaturan.instansi ? 'bg-light text-secondary' : 'bg-warning bg-opacity-10 border-warning'}" value="${pengaturan.instansi || ''}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small mb-0 fw-semibold">Alamat Instansi</label>
+                    <input id="sk_instansi_alamat" class="form-control form-control-sm ${pengaturan.alamat ? 'bg-light text-secondary' : 'bg-warning bg-opacity-10 border-warning'}" value="${pengaturan.alamat || ''}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small mb-0 fw-semibold">Bendahara Pengeluaran</label>
+                    <input id="sk_bendahara" class="form-control form-control-sm ${pengaturan.bendaharaNama ? 'bg-light text-secondary' : 'bg-warning bg-opacity-10 border-warning'}" value="${pengaturan.bendaharaNama || ''}">
+                </div>
+
+                <div class="col-12 mt-2"><div class="fw-bold text-primary border-bottom pb-1 mb-1">👤 Kepegawaian & Gaji</div></div>
+                <div class="col-md-4">
+                    <label class="form-label small mb-0 fw-semibold">TMT Golongan</label>
+                    <input id="sk_tmt_gol" class="form-control form-control-sm ${defaultTmtGol ? 'bg-light text-secondary' : 'bg-warning bg-opacity-10 border-warning'}" value="${defaultTmtGol}" placeholder="01 April 2019">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small mb-0 fw-semibold">TMT CPNS</label>
+                    <input id="sk_tmt_cpns" class="form-control form-control-sm ${data.tmtCpns ? 'bg-light text-secondary' : 'bg-warning bg-opacity-10 border-warning'}" value="${data.tmtCpns ? fmtTgl(data.tmtCpns) : ''}" placeholder="01 Maret 2015">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small mb-0 fw-semibold">Eselon</label>
+                    <input id="sk_eselon" class="form-control form-control-sm bg-warning bg-opacity-10 border-warning" value="" placeholder="Cth: IV.b">
+                </div>
+                
+                <div class="col-md-4">
+                    <label class="form-label small mb-0 fw-semibold">PP/SK Penggajian</label>
+                    <input id="sk_pp_sk" class="form-control form-control-sm bg-warning bg-opacity-10 border-warning" value="" placeholder="Cth: PP No 5/2024">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small mb-0 fw-semibold">Gaji Pokok</label>
+                    <input id="sk_gaji_pokok" class="form-control form-control-sm format-rupiah ${defaultGaji ? 'bg-light text-secondary' : 'bg-warning bg-opacity-10 border-warning'}" value="${defaultGaji}" placeholder="Rp. 3.390.500,-">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small mb-0 fw-semibold">Gaji Bersih</label>
+                    <input id="sk_gaji_bersih" class="form-control form-control-sm format-rupiah bg-warning bg-opacity-10 border-warning" value="" placeholder="Cth: Rp. 4.292.100,-">
+                </div>
+                
+                <div class="col-md-4">
+                    <label class="form-label small mb-0 fw-semibold">Jenis Kepeg</label>
+                    <input id="sk_jenis_kepeg" class="form-control form-control-sm bg-light text-secondary" value="Pegawai Negeri Sipil Daerah">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small mb-0 fw-semibold">Status Kepeg</label>
+                    <input id="sk_status_kepeg" class="form-control form-control-sm bg-light text-secondary" value="Pegawai Negeri Sipil Provinsi">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small mb-0 fw-semibold">SK Terakhir</label>
+                    <input id="sk_terakhir" class="form-control form-control-sm bg-warning bg-opacity-10 border-warning" value="SK Berkala" placeholder="SK Berkala">
+                </div>
+                
+                <div class="col-md-4">
+                    <label class="form-label small mb-0 fw-semibold">Jml Keluarga</label>
+                    <input id="sk_jml_keluarga" class="form-control form-control-sm bg-light text-secondary" value="${jumlahKeluarga}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small mb-0 fw-semibold">MK Golongan</label>
+                    <input id="sk_mk_gol" class="form-control form-control-sm ${mk.thnGol !== '-' ? 'bg-light text-secondary' : 'bg-warning bg-opacity-10 border-warning'}" value="${mk.thnGol !== '-' ? mk.thnGol + ' Tahun ' + mk.blnGol + ' Bulan' : ''}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small mb-0 fw-semibold">MK Total</label>
+                    <input id="sk_mk_total" class="form-control form-control-sm ${mk.thnTotal !== '-' ? 'bg-light text-secondary' : 'bg-warning bg-opacity-10 border-warning'}" value="${mk.thnTotal !== '-' ? mk.thnTotal + ' Tahun ' + mk.blnTotal + ' Bulan' : ''}">
+                </div>
+
+                <div class="col-12 mt-2"><div class="fw-bold text-primary border-bottom pb-1 mb-1">✍️ Penandatangan</div></div>
+                <div class="col-md-3">
+                    <label class="form-label small mb-0 fw-semibold">Tempat TTD</label>
+                    <input id="sk_tempat" class="form-control form-control-sm ${data.tempatLahir ? 'bg-light text-secondary' : 'bg-warning bg-opacity-10 border-warning'}" value="${data.tempatLahir || ''}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small mb-0 fw-semibold">Tgl TTD</label>
+                    <input type="date" id="sk_tanggal" class="form-control form-control-sm bg-warning bg-opacity-10 border-warning" value="${new Date().toISOString().split('T')[0]}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small mb-0 fw-semibold">Atasan Nama</label>
+                    <input id="sk_atasan_nama" class="form-control form-control-sm ${pengaturan.kepsekNama ? 'bg-light text-secondary' : 'bg-warning bg-opacity-10 border-warning'}" value="${pengaturan.kepsekNama || ''}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small mb-0 fw-semibold">Atasan NIP</label>
+                    <input id="sk_atasan_nip" class="form-control form-control-sm ${pengaturan.kepsekNip ? 'bg-light text-secondary' : 'bg-warning bg-opacity-10 border-warning'}" value="${pengaturan.kepsekNip || ''}">
+                </div>
+            </div>
+        </div>`,
         focusConfirm: false,
         showCancelButton: true,
-        confirmButtonText: 'Cetak Dokumen',
-        preConfirm: () => {
-            return {
-                gajiBersih: document.getElementById('sk_gaji_bersih').value || '.......................................................',
-                gajiPokok: document.getElementById('sk_gaji_pokok').value || '.......................................................',
-                dasarGaji: document.getElementById('sk_dasar_gaji').value || '.......................................................',
-                tempat: document.getElementById('sk_tempat').value || '...',
-                tanggal: document.getElementById('sk_tanggal').value || '...',
-            }
-        }
+        confirmButtonText: '<i class="fas fa-file-word"></i> Cetak Dokumen Word',
+        cancelButtonText: 'Batal',
+        preConfirm: () => ({
+            instansiNama: document.getElementById('sk_instansi_nama').value || '...',
+            instansiAlamat: document.getElementById('sk_instansi_alamat').value || '...',
+            instansiInduk: document.getElementById('sk_instansi_induk').value || '...',
+            bendahara: document.getElementById('sk_bendahara').value || '...',
+            tmtGol: document.getElementById('sk_tmt_gol').value || '...',
+            tmtCpns: document.getElementById('sk_tmt_cpns').value || '...',
+            jenisKepeg: document.getElementById('sk_jenis_kepeg').value || 'Pegawai Negeri Sipil Daerah',
+            statusKepeg: document.getElementById('sk_status_kepeg').value || 'Pegawai Negeri Sipil Provinsi',
+            ppSk: document.getElementById('sk_pp_sk').value || '...',
+            eselon: document.getElementById('sk_eselon').value || '...',
+            gajiPokok: document.getElementById('sk_gaji_pokok').value || '...',
+            gajiBersih: document.getElementById('sk_gaji_bersih').value || '...',
+            skTerakhir: document.getElementById('sk_terakhir').value || 'SK Berkala',
+            jmlKeluarga: document.getElementById('sk_jml_keluarga').value || '...',
+            mkGol: document.getElementById('sk_mk_gol').value || '...',
+            mkTotal: document.getElementById('sk_mk_total').value || '...',
+            atasanNama: document.getElementById('sk_atasan_nama').value || '...',
+            atasanNip: document.getElementById('sk_atasan_nip').value || '...',
+            tempat: document.getElementById('sk_tempat').value || '...',
+            tanggal: document.getElementById('sk_tanggal').value || '',
+        })
     });
 
     if (!formValues) return;
 
-    // Formatting date
-    let tglCetakFormat = new Date(formValues.tanggal).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-    if (tglCetakFormat === 'Invalid Date') tglCetakFormat = formValues.tanggal;
+    const tglCetak = formValues.tanggal ? fmtTgl(formValues.tanggal) : '...';
 
-    // Constructing HTML for Word Document
-    let htmlContent = `
-<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+    // ============================================================
+    // HALAMAN 1 — PORTRAIT (Surat Keterangan)
+    // ============================================================
+    let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office'
+        xmlns:w='urn:schemas-microsoft-com:office:word'
+        xmlns='http://www.w3.org/TR/REC-html40'>
 <head><meta charset='utf-8'><title>SKUMPTK</title>
+<!--[if gte mso 9]>
+<xml>
+  <w:WordDocument>
+    <w:View>Print</w:View>
+    <w:Zoom>100</w:Zoom>
+    <w:DoNotOptimizeForBrowser/>
+  </w:WordDocument>
+</xml>
+<![endif]-->
 <style>
-    body { font-family: "Times New Roman", Times, serif; font-size: 11pt; color: #000; }
-    table { width: 100%; border-collapse: collapse; }
-    .table-border, .table-border th, .table-border td { border: 1px solid black; padding: 4px; text-align: left; }
-    .text-center { text-align: center; }
-    .fw-bold { font-weight: bold; }
-
-    /* Word Section Styles */
-    @page Section1 { size: 21cm 29.7cm; margin: 2cm 2cm 2cm 2cm; mso-page-orientation: portrait; }
-    div.Section1 { page: Section1; }
-    
-    @page Section2 { size: 29.7cm 21cm; margin: 2cm 2cm 2cm 2cm; mso-page-orientation: landscape; }
-    div.Section2 { page: Section2; }
+  body { font-family: "Times New Roman", serif; font-size: 12pt; color: #000; margin: 0; }
+  table { border-collapse: collapse; }
+  td, th { padding: 3px 5px; }
+  .border-table, .border-table td, .border-table th { border: 1px solid black; }
+  @page Section1 { size: 21.59cm 33.02cm; margin: 1.5cm 1.5cm 1cm 2cm; }
+  div.Section1 { page: Section1; }
+  @page Section2 { size: 33.02cm 21.59cm; margin: 1.5cm 1cm 1.5cm 1cm; mso-page-orientation: landscape; }
+  div.Section2 { page: Section2; }
 </style>
-</head>
-<body>
-    <div class="Section1">
-    `;
+</head><body>
+<div class="Section1">
 
-    // Kop Surat
-    const instansi = pengaturan.instansi || '';
-    const opd = pengaturan.opd || '';
-    const sekolah = pengaturan.sekolah || '';
-    const alamat = pengaturan.alamat || '';
-    const hp = pengaturan.hp || '';
-    const email = pengaturan.email || '';
-    const web = pengaturan.web || '';
+<div style="text-align:center; font-size:13pt; font-weight:bold; text-decoration:underline; margin-bottom:24px; letter-spacing:1px;">
+  SURAT KETERANGAN UNTUK MENDAPATKAN<br>PEMBAYARAN TUNJANGAN KELUARGA <b>(SKUMPTK)</b>
+</div>
 
-    htmlContent += `
-    <table style="width: 100%; border-bottom: 3px solid black; margin-bottom: 20px;">
-        <tr>
-            <td style="width: 15%; text-align: center; vertical-align: middle;">
-                ${pengaturan.logoInstansi ? `<img src="${pengaturan.logoInstansi}" style="width: 80px; height: 80px;">` : ''}
-            </td>
-            <td style="width: 70%; text-align: center; vertical-align: middle; line-height: 1.2;">
-                <div style="font-size: 14pt; font-weight: bold;">${instansi.toUpperCase()}</div>
-                ${opd ? `<div style="font-size: 14pt; font-weight: bold;">${opd.toUpperCase()}</div>` : ''}
-                <div style="font-size: 17pt; font-weight: bold;">${sekolah.toUpperCase()}</div>
-                <div style="font-size: 9pt;">${alamat}</div>
-                <div style="font-size: 9pt;">Telp/HP: ${hp} | Email: ${email} | Web: ${web}</div>
-            </td>
-            <td style="width: 15%; text-align: center; vertical-align: middle;">
-                ${pengaturan.logoSekolah ? `<img src="${pengaturan.logoSekolah}" style="width: 80px; height: 80px;">` : ''}
-            </td>
-        </tr>
-    </table>
-    `;
+<table style="width:100%; font-size:11pt; margin-bottom: 16px;">
+  <tr>
+    <td style="width:220px; font-weight:bold; padding:2px 5px; vertical-align:top;">NAMA INSTANSI&nbsp;/&nbsp;UNIT KERJA</td>
+    <td style="padding:2px 5px; vertical-align:top;">:&nbsp;${formValues.instansiNama}</td>
+  </tr>
+  <tr>
+    <td style="font-weight:bold; padding:2px 5px; vertical-align:top;">ALAMAT LENGKAP INSTANSI</td>
+    <td style="padding:2px 5px; vertical-align:top;">:&nbsp;${formValues.instansiAlamat}</td>
+  </tr>
+  <tr>
+    <td style="font-weight:bold; padding:2px 5px; vertical-align:top;">INSTANSI INDUK</td>
+    <td style="padding:2px 5px; vertical-align:top;">:&nbsp;${formValues.instansiInduk}</td>
+  </tr>
+  <tr>
+    <td style="font-weight:bold; padding:2px 5px; vertical-align:top;">BENDAHARA&nbsp;PENGELUARAN</td>
+    <td style="padding:2px 5px; vertical-align:top;">:&nbsp;${formValues.bendahara}</td>
+  </tr>
+</table>
 
-    htmlContent += `
-    <div style="text-align: right; font-size: 10pt; margin-bottom: 10px;">
-        LAMPIRAN SURAT EDARAN MENTERI KEUANGAN<br>REPUBLIK INDONESIA NO. SE-29/PJ.04/1989
-    </div>
-    
-    <div class="text-center fw-bold" style="font-size: 12pt; text-decoration: underline; margin-bottom: 20px;">
-        SURAT KETERANGAN UNTUK MENDAPATKAN PEMBAYARAN TUNJANGAN KELUARGA
-    </div>
 
-    <p style="text-align: justify;">Yang bertanda tangan di bawah ini:</p>
-    
-    <table style="margin-left: 20px; margin-bottom: 20px; width: 90%;">
-        <tr><td style="width: 250px;">1. Nama Lengkap</td><td>: ${data.nama || '-'}</td></tr>
-        <tr><td>2. NIP</td><td>: ${data.nip || '-'}</td></tr>
-        <tr><td>3. Pangkat / Golongan Ruang</td><td>: ${data.golongan || '-'}</td></tr>
-        <tr><td>4. Tempat, Tanggal Lahir</td><td>: ${data.tmptLahir || '-'}, ${data.tglLahir || '-'}</td></tr>
-        <tr><td>5. Jenis Kelamin</td><td>: ${data.kelamin || '-'}</td></tr>
-        <tr><td>6. Agama</td><td>: ${data.agama || '-'}</td></tr>
-        <tr><td>7. Jabatan Struktural / Fungsional</td><td>: ${data.jabatan || '-'}</td></tr>
-        <tr><td>8. Instansi / Unit Kerja</td><td>: ${sekolah || '-'}</td></tr>
-        <tr><td>9. Alamat Lengkap</td><td>: ${data.alamat || '-'}</td></tr>
-    </table>
 
-    <p style="text-align: justify;">
-        Menerangkan dengan sesungguhnya bahwa saya mempunyai penghasilan Gaji Pokok sebesar <b>${formValues.gajiPokok}</b> (Berdasarkan ${formValues.dasarGaji}) dengan Gaji Bersih sebesar <b>${formValues.gajiBersih}</b>.
-        <br><br>
-        Selanjutnya menerangkan bahwa saya mempunyai tanggungan keluarga sebagaimana terlampir. Keterangan ini saya buat dengan sesungguhnya dan apabila keterangan ini ternyata tidak benar (palsu), saya bersedia dituntut di muka pengadilan berdasarkan undang-undang yang berlaku, dan bersedia mengembalikan semua uang tunjangan yang telah saya terima yang seharusnya bukan menjadi hak saya.
-    </p>
+<div style="font-size:11pt; margin-bottom:14px;">
+  <b>DATA PEGAWAI&nbsp;:</b>
+</div>
 
-    <table style="width: 100%; margin-top: 50px;">
-        <tr>
-            <td style="width: 50%; text-align: center; vertical-align: bottom;">
-                Mengetahui / Mengesahkan,<br>
-                Kepala Sekolah / Pimpinan<br><br><br><br><br>
-                <b><u>${pengaturan.kepsekNama || '.....................................'}</u></b><br>
-                NIP. ${pengaturan.kepsekNip || '.....................................'}
-            </td>
-            <td style="width: 50%; text-align: center; vertical-align: bottom;">
-                ${formValues.tempat}, ${tglCetakFormat}<br>
-                Yang Menerangkan,<br><br><br><br><br>
-                <b><u>${data.nama || '.....................................'}</u></b><br>
-                NIP. ${data.nip || '.....................................'}
-            </td>
-        </tr>
-    </table>
-    </div>
+<table style="width:100%; font-size:11pt; margin-bottom:14px;">
+  <tr><td style="width:220px; padding:2px 5px;">Nama Lengkap</td><td style="padding:2px 5px;">:&nbsp;<b>${namaLengkap || data.nama || '-'}</b></td></tr>
+  <tr><td style="padding:2px 5px;">NIP</td><td style="padding:2px 5px;">:&nbsp;${data.nip || '-'}</td></tr>
+  <tr><td style="padding:2px 5px;">Pangkat / Golongan Ruang</td><td style="padding:2px 5px;">:&nbsp;${data.golongan || '-'}</td></tr>
+  <tr><td style="padding:2px 5px;">TMT Golongan</td><td style="padding:2px 5px;">:&nbsp;${formValues.tmtGol}</td></tr>
+  <tr><td style="padding:2px 5px;">Tempat/Tanggal Lahir</td><td style="padding:2px 5px;">:&nbsp;${data.tempatLahir || '-'},&nbsp;${fmtTgl(data.tglLahir)}</td></tr>
+  <tr><td style="padding:2px 5px;">Jenis Kelamin</td><td style="padding:2px 5px;">:&nbsp;${data.kelamin || '-'}</td></tr>
+  <tr><td style="padding:2px 5px;">Agama&nbsp;/&nbsp;Kebangsaan</td><td style="padding:2px 5px;">:&nbsp;${data.agama || '-'}&nbsp;&nbsp;/&nbsp;&nbsp;Indonesia</td></tr>
+  <tr><td style="padding:2px 5px;">Alamat Lengkap</td><td style="padding:2px 5px;">:&nbsp;${data.alamat || '-'}</td></tr>
+  <tr><td style="padding:2px 5px;">TMT Calon Pegawai</td><td style="padding:2px 5px;">:&nbsp;${formValues.tmtCpns}</td></tr>
+  <tr><td style="padding:2px 5px;">Jenis Kepegawaian</td><td style="padding:2px 5px;">:&nbsp;${formValues.jenisKepeg}</td></tr>
+  <tr><td style="padding:2px 5px;">Status Kepegawaian</td><td style="padding:2px 5px;">:&nbsp;${formValues.statusKepeg}</td></tr>
+  <tr><td style="padding:2px 5px;">Digaji menurut PP/SK</td><td style="padding:2px 5px;">:&nbsp;${formValues.ppSk}&nbsp;,&nbsp;Gaji Pokok&nbsp;:&nbsp;Rp.&nbsp;${formValues.gajiPokok},-</td></tr>
+  <tr><td style="padding:2px 5px;">Besarnya Penghasilan sebulan</td><td style="padding:2px 5px;">:&nbsp;Rp.&nbsp;${formValues.gajiBersih},-&nbsp;/&nbsp;bulan</td></tr>
+  <tr><td style="padding:2px 5px;">Jabatan Struktural</td><td style="padding:2px 5px;">:&nbsp;Eselon&nbsp;${formValues.eselon}</td></tr>
+  <tr><td style="padding:2px 5px;">Jumlah Keluarga tertanggung</td><td style="padding:2px 5px;">:&nbsp;${formValues.jmlKeluarga}&nbsp;orang</td></tr>
+  <tr><td style="padding:2px 5px;">SK Terakhir yang dimiliki</td><td style="padding:2px 5px;">:&nbsp;${formValues.skTerakhir}</td></tr>
+  <tr><td style="padding:2px 5px;">Masa Kerja Golongan</td><td style="padding:2px 5px;">:&nbsp;${formValues.mkGol}</td></tr>
+  <tr><td style="padding:2px 5px;">Masa Kerja Keseluruhan</td><td style="padding:2px 5px;">:&nbsp;${formValues.mkTotal}</td></tr>
+</table>
 
-    <!-- PAGE BREAK TO LANDSCAPE -->
-    <br clear="all" style="page-break-before:always; mso-break-type:section-break">
+<p style="text-align:justify; font-size:11pt; line-height:1.5; margin-bottom:30px;">
+  Keterangan ini saya buat dengan sesungguhnya dan apabila keterangan ini tidak benar (palsu), saya bersedia dituntut dimuka pengadilan berdasarkan Undang &ndash; undang yang berlaku, dan bersedia mengembalikan semua uang tunjangan yang telah saya terima yang seharusnya bukan menjadi hak saya.
+</p>
 
-    <div class="Section2">
-    <b>A. SUAMI / ISTRI</b>
-    <table class="table-border" style="margin-top: 10px; margin-bottom: 20px;">
-        <thead>
-            <tr>
-                <th>No</th>
-                <th>Nama Istri / Suami</th>
-                <th>Tempat, Tanggal Lahir</th>
-                <th>NIP / NIK</th>
-                <th>Pekerjaan</th>
-            </tr>
-        </thead>
-        <tbody>
-    `;
+<table style="width:100%; font-size:11pt;">
+  <tr>
+    <td style="width:50%; text-align:center; vertical-align:top;">
+      &nbsp;<br>
+      Mengetahui&nbsp;/&nbsp;Mengesahkan<br>
+      Atasan Langsung<br><br><br><br><br>
+      <b><u>${formValues.atasanNama}</u></b><br>
+      NIP.&nbsp;${formValues.atasanNip}
+    </td>
+    <td style="width:50%; text-align:center; vertical-align:top;">
+      ${formValues.tempat},&nbsp;${tglCetak}<br>
+      &nbsp;<br>
+      Pegawai yang bersangkutan<br><br><br><br><br>
+      <b><u>${namaLengkap || data.nama || '...'}</u></b><br>
+      NIP.&nbsp;${data.nip || '...'}
+    </td>
+  </tr>
+</table>
+
+</div>
+
+<!-- PAGE BREAK KE LANDSCAPE -->
+<br clear="all" style="page-break-before:always; mso-break-type:section-break">
+
+<div class="Section2">
+
+<div style="font-size:11pt; font-weight:bold; text-align:center; text-decoration:underline; margin-bottom:10px;">
+  DATA KELUARGA YANG MENJADI TANGGUNGAN PEGAWAI
+</div>
+<div style="font-size:10pt; font-weight:bold; margin-bottom:6px;">KAWIN SYAH DENGAN</div>`;
+
+    // ============================================================
+    // TABEL ISTRI / SUAMI (sesuai dokumen resmi — 9 kolom)
+    // ============================================================
+    html += `
+<table class="border-table" style="width:100%; font-size:9pt; margin-bottom:16px;">
+  <thead>
+    <tr style="background:#f0f0f0; text-align:center; font-weight:bold;">
+      <th style="width:25px;">NO</th>
+      <th>NAMA ISTRI/SUAMI</th>
+      <th>TEMPAT LAHIR</th>
+      <th>TANGGAL LAHIR</th>
+      <th>N.I.P&nbsp;/&nbsp;N.I.K</th>
+      <th>PEKERJAAN</th>
+      <th>TANGGAL PERKAWINAN</th>
+      <th>ISTRI&nbsp;/&nbsp;SUAMI KE-</th>
+      <th>PENGHASILAN&nbsp;/&nbsp;BULAN</th>
+    </tr>
+  </thead>
+  <tbody>`;
 
     if (data.pasanganNama) {
-        htmlContent += `
-            <tr>
-                <td class="text-center">1</td>
-                <td>${data.pasanganNama || '-'}</td>
-                <td>${data.pasanganTmptLahir || '-'}, ${data.pasanganTglLahir || '-'}</td>
-                <td>${data.pasanganNip || data.pasanganNik || '-'}</td>
-                <td>${data.pasanganPekerjaan || '-'}</td>
-            </tr>
-        `;
+        html += `
+    <tr style="text-align:center;">
+      <td>1</td>
+      <td style="text-align:left;">${data.pasanganNama || '-'}</td>
+      <td>${data.pasanganTmptLahir || '-'}</td>
+      <td>${fmtTglSingkat(data.pasanganTglLahir)}</td>
+      <td>${data.pasanganNik || data.pasanganNip || '-'}</td>
+      <td>${data.pasanganPekerjaan || '-'}</td>
+      <td>${data.pasanganTglNikah ? fmtTglSingkat(data.pasanganTglNikah) : '-'}</td>
+      <td>1</td>
+      <td>${data.pasanganPenghasilan || '-'}</td>
+    </tr>`;
     } else {
-        htmlContent += `<tr><td colspan="5" class="text-center">- Tidak ada data pasangan -</td></tr>`;
+        html += `<tr><td colspan="9" style="text-align:center; font-style:italic;">- Tidak ada data pasangan -</td></tr>`;
     }
 
-    htmlContent += `
-        </tbody>
-    </table>
+    html += `</tbody></table>`;
 
-    <b>B. ANAK-ANAK YANG MENJADI TANGGUNGAN</b>
-    <table class="table-border" style="margin-top: 10px; margin-bottom: 20px;">
-        <thead>
-            <tr>
-                <th>No</th>
-                <th>Nama Anak</th>
-                <th>Tempat, Tanggal Lahir</th>
-                <th>Status Anak</th>
-                <th>Jenis Kelamin</th>
-                <th>Pekerjaan / Sekolah</th>
-                <th>Dapat Tunjangan</th>
-            </tr>
-        </thead>
-        <tbody>
-    `;
+    // ============================================================
+    // TABEL ANAK (sesuai dokumen resmi — 11 kolom)
+    // ============================================================
+    html += `
+<div style="font-size:10pt; font-weight:bold; margin-bottom:4px; margin-top:30px;">ANAK-ANAK YANG MENJADI TANGGUNGAN</div>
+<div style="font-size:9pt; margin-bottom:4px;">
+  Menjadi Anak-anak seperti dalam daftar dibawah ini.<br>
+  Anak Kandung (AK) Anak Tiri (AT) Anak Angkat (AA) yang masih menjadi tanggungan belum mempunyai pekerjaan sendiri dan masuk dalam Daftar Gaji.<br>
+  Anak Kandung (AK) Anak Tiri (AT) Anak Angkat (AA) yang masih menjadi tanggungan tapi tidak&nbsp;masuk dalam Daftar Gaji.
+</div>
+<table class="border-table" style="width:100%; font-size:9pt;">
+  <thead>
+    <tr style="background:#f0f0f0; text-align:center; font-weight:bold;">
+      <th style="width:25px;">NO</th>
+      <th>NAMA ANAK</th>
+      <th>TEMPAT LAHIR</th>
+      <th>TANGGAL LAHIR</th>
+      <th>STATUS ANAK</th>
+      <th>DARI ISTRI/SUAMI KE-</th>
+      <th>JENIS KELAMIN</th>
+      <th>DAPAT/TIDAK TUNJANGAN</th>
+      <th>SUDAH/BELUM KAWIN</th>
+      <th>MASIH/TIDAK SEKOLAH/KULIAH</th>
+      <th>PUTUSAN PENGADILAN (KHUSUS AL)</th>
+    </tr>
+  </thead>
+  <tbody>`;
 
-    if (data.anak && data.anak.length > 0) {
-        data.anak.forEach((a, idx) => {
-            htmlContent += `
-            <tr>
-                <td class="text-center">${idx + 1}</td>
-                <td>${a.nama || '-'}</td>
-                <td>${a.kotaLahir || '-'}, ${a.tglLahir || '-'}</td>
-                <td>${a.statusKeluarga || '-'}</td>
-                <td>${a.kelamin || '-'}</td>
-                <td>${a.pekerjaan || a.statusSekolah || '-'}</td>
-                <td>${a.dapatTunjangan || '-'}</td>
-            </tr>
-            `;
+    const riwayatAnak = Array.isArray(data.riwayatAnak) ? data.riwayatAnak.filter(a => a && a[0]) : [];
+    if (riwayatAnak.length > 0) {
+        riwayatAnak.forEach((a, idx) => {
+            // riwayatAnak kolom: [0]Nama, [1]kotaLahir, [2]tglLahir, [3]statusAnak, [4]kelamin, [5]dapatTunjangan, [6]statusKawin, [7]statusSekolah, [8]dariIstri
+            html += `
+    <tr style="text-align:center;">
+      <td>${idx + 1}</td>
+      <td style="text-align:left;">${a[0] || '-'}</td>
+      <td>${a[1] || '-'}</td>
+      <td>${fmtTglSingkat(a[2]) || '-'}</td>
+      <td>${a[3] || 'AK'}</td>
+      <td>${a[8] || '1'}</td>
+      <td>${a[4] || '-'}</td>
+      <td>${a[5] || '-'}</td>
+      <td>${a[6] || 'BELUM'}</td>
+      <td>${a[7] || 'MASIH'}</td>
+      <td>-</td>
+    </tr>`;
         });
     } else {
-        htmlContent += `<tr><td colspan="7" class="text-center">- Tidak ada data anak -</td></tr>`;
+        html += `<tr><td colspan="11" style="text-align:center; font-style:italic;">- Tidak ada data anak -</td></tr>`;
     }
 
-    htmlContent += `
-        </tbody>
-    </table>
-    </div>
-</body></html>
-    `;
+    html += `</tbody></table>
+</div>
+</body></html>`;
 
-    // Create Blob and Download
-    const blob = new Blob(['\ufeff', htmlContent], {
-        type: 'application/msword'
-    });
+    // Download sebagai .doc
+    const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = "SKUMPTK_" + (data.nama || data.nip) + ".doc";
+    link.download = 'SKUMPTK_' + (data.nama || data.nip).replace(/[^a-zA-Z0-9]/g, '_') + '.doc';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 };
+
+
 
