@@ -62,23 +62,30 @@ const dbManager = {
     localData: JSON.parse(localStorage.getItem(CACHE_KEY)) || [],
 
     init: async function () {
-        if (API_URL) this.forceFetchFromServer();
+        if (API_URL) await this.forceFetchFromServer();
         return true;
     },
 
     // Tarik data terbaru dari Server secara Background
     forceFetchFromServer: async function () {
         if (!API_URL) return;
-        const res = await apiCall('getAllPegawai');
-        // GAS returns {success: true, data: [...]}. Unwrap it:
-        const dataArr = (res && res.success && Array.isArray(res.data)) ? res.data : (Array.isArray(res) ? res : null);
-        if (dataArr) {
-            this.localData = dataArr;
-            localStorage.setItem(CACHE_KEY, JSON.stringify(dataArr));
-            // Otomatis refresh UI 
-            if (document.getElementById('wrapper').classList.contains('d-none') === false) {
-                initApp();
+        try {
+            const res = await apiCall('getAllPegawai');
+            // GAS returns {success: true, data: [...]}. Unwrap it:
+            const dataArr = (res && res.success && Array.isArray(res.data)) ? res.data : (Array.isArray(res) ? res : null);
+            if (dataArr) {
+                this.localData = dataArr;
+                localStorage.setItem(CACHE_KEY, JSON.stringify(dataArr));
+                // Otomatis refresh UI 
+                if (document.getElementById('wrapper') && document.getElementById('wrapper').classList.contains('d-none') === false) {
+                    initApp();
+                }
+            } else {
+                console.error("forceFetchFromServer failed or returned invalid data:", res);
+                Swal.fire('Info', 'Gagal memuat data dari server: ' + (res ? res.message : 'Respons tidak valid'), 'warning');
             }
+        } catch (e) {
+            console.error("forceFetchFromServer exception:", e);
         }
     },
 
@@ -92,7 +99,7 @@ const dbManager = {
 
         if (res && res.success) {
             // Update memori lokal agar UI ikut terupdate saat refresh tabel
-            let index = this.localData.findIndex(p => p.nip === data.nip);
+            let index = this.localData.findIndex(p => String(p.nip) === String(data.nip));
             if (index !== -1) this.localData[index] = data;
             else this.localData.push(data);
             localStorage.setItem(CACHE_KEY, JSON.stringify(this.localData));
@@ -1788,7 +1795,7 @@ async function renderDashboardPegawai() {
     try {
         if (typeof dbManager !== 'undefined' && nip) {
             const allPegawai = await dbManager.getAllPegawai();
-            const pegawaiData = allPegawai.find(p => p.nip === nip);
+            const pegawaiData = allPegawai.find(p => String(p.nip) === String(nip));
             if (pegawaiData && pegawaiData.riwayatKGB && pegawaiData.riwayatKGB.length > 0) {
                 // Ambil data terbaru (terakhir di array jika sudah disort)
                 const riwayatKGB = pegawaiData.riwayatKGB;
