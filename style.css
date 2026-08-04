@@ -1,5 +1,7 @@
 :root {
     --primary: #4e73df;
+    --primary2: #224abe;
+    --primary3: #132a76;
     --primary-dark: #224abe;
     --success: #1cc88a;
     --info: #36b9cc;
@@ -8,7 +10,7 @@
     --dark: #5a5c69;
     --light: #f8f9fc;
     --sidebar-bg: var(--primary-dark);
-    --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--primary2) 50%, var(--primary3) 100%);
     --gradient-success: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
     --gradient-info: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
 }
@@ -779,3 +781,7 @@ body {
     object-fit: contain;
     background: white;
 }
+
+
+/* Force Uppercase on specific inputs */
+.text-uppercase { text-transform: uppercase !important; }
