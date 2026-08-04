@@ -70,9 +70,11 @@ const dbManager = {
     forceFetchFromServer: async function () {
         if (!API_URL) return;
         const res = await apiCall('getAllPegawai');
-        if (Array.isArray(res)) {
-            this.localData = res;
-            localStorage.setItem(CACHE_KEY, JSON.stringify(res));
+        // GAS returns {success: true, data: [...]}. Unwrap it:
+        const dataArr = (res && res.success && Array.isArray(res.data)) ? res.data : (Array.isArray(res) ? res : null);
+        if (dataArr) {
+            this.localData = dataArr;
+            localStorage.setItem(CACHE_KEY, JSON.stringify(dataArr));
             // Otomatis refresh UI 
             if (document.getElementById('wrapper').classList.contains('d-none') === false) {
                 initApp();
@@ -117,12 +119,15 @@ const dbManager = {
     // Pengaturan & Keamanan (Langsung ke Server)
     getPengaturan: async function () {
         if (!API_URL) return { success: false };
-        return await apiCall('getPengaturan');
+        const res = await apiCall('getPengaturan');
+        if (res && res.data) return res.data;
+        return res || {};
     },
 
     getAllAkun: async function () {
         if (!API_URL) return [];
         const res = await apiCall('getAllAkun');
+        if (res && res.success && Array.isArray(res.data)) return res.data;
         return Array.isArray(res) ? res : [];
     },
     saveAkun: async function (data) {
@@ -296,7 +301,8 @@ async function loadPengaturan() {
     applyTheme(data.warnaTema, data.bgLanding, data.warnaTema2, data.warnaTema3);
 
     if (API_URL) {
-        const config = await apiCall('getConfig');
+        const configRes = await apiCall('getConfig');
+        const config = configRes ? (configRes.data || configRes) : null;
         if (config && config.username) {
             document.getElementById('set_username').value = config.username;
             document.getElementById('set_password').value = config.password;
@@ -1068,7 +1074,8 @@ window.bukaModalSync = async function () {
     try {
         const m = document.getElementById('modalSync');
         if (m) {
-            const config = await apiCall('getConfig');
+            const configRes = await apiCall('getConfig');
+            const config = configRes ? (configRes.data || configRes) : null;
             if (config && config.syncUrl) {
                 document.getElementById('syncExecUrl').value = config.syncUrl;
             }
@@ -1216,7 +1223,7 @@ window.simpanUbahPassword = async function () {
         if (!nip) return Swal.fire('Error', 'Sesi tidak valid, silakan login ulang.', 'error');
 
         // Ambil data akun yang ada
-        const allAkun = await apiCall('getAllAkun');
+        const allAkun = await dbManager.getAllAkun();
         const akun = allAkun ? allAkun.find(a => String(a.nip) === String(nip)) : null;
         if (!akun) return Swal.fire('Error', 'Data akun tidak ditemukan!', 'error');
 
@@ -1252,7 +1259,7 @@ window.loadInputDataPegawai = async function () {
 
         container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Memuat data pegawai...</p></div>';
 
-        const allPegawai = await apiCall('getAllPegawai');
+        const allPegawai = await dbManager.getAllPegawai();
         const pegawai = Array.isArray(allPegawai) ? allPegawai.find(p => String(p.nip) === String(nip)) : null;
 
         if (!pegawai) {
@@ -1433,7 +1440,7 @@ window.simpanDataPegawaiSelf = async function () {
     const nip = container ? container.dataset.nip : null;
     if (!nip) return Swal.fire('Error', 'Data NIP tidak ditemukan. Refresh halaman.', 'error');
 
-    const allPegawai = await apiCall('getAllPegawai');
+    const allPegawai = await dbManager.getAllPegawai();
     const pegawaiAsli = Array.isArray(allPegawai) ? allPegawai.find(p => String(p.nip) === String(nip)) : null;
     if (!pegawaiAsli) return Swal.fire('Error', 'Data pegawai tidak ditemukan!', 'error');
 
