@@ -977,7 +977,7 @@ async function editPegawai(nip) {
         if (!document.getElementById('_alert5data')) {
             var _mb = document.querySelector('#modalPegawai .modal-body');
             if (_mb) {
-                var ssoToken = localStorage.getItem('SIMPEEL_TOKEN_OFFLINE'); var role = 'admin'; if (ssoToken) { try { role = JSON.parse(ssoToken).role; } catch (e) {} } if (role === 'pegawai') return; var _a = document.createElement('div');
+                var ssoToken = localStorage.getItem('SIMPEEL_TOKEN_ONLINE') || localStorage.getItem('SIMPEEL_TOKEN_OFFLINE'); var role = 'admin'; if (ssoToken) { try { role = JSON.parse(ssoToken).role; } catch (e) {} } if (role === 'pegawai') return; var _a = document.createElement('div');
                 _a.id = '_alert5data';
                 _a.className = 'alert alert-info py-2 px-3 mb-2';
                 _a.style.fontSize = '0.82rem';
